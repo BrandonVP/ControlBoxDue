@@ -1,7 +1,7 @@
 /*
  Name:    ControlBoxDue.ino
  Created: 11/15/2020 8:27:18 AM
- Author:  brand
+ Author:  Brandon Van Pelt
 */
 
 #include <SD.h>
@@ -14,46 +14,17 @@
 #include "CANBus.h"
 #include "definitions.h"
 #include "icons.h"
+#include "SDCard.h"
 
 // Initialize display
-UTFT myGLCD(ILI9488_16, 7, 38, 9, 10);    //(byte model, int RS, int WR, int CS, int RST, int SER)
-UTouch  myTouch(2, 6, 3, 4, 5);      //RTP: byte tclk, byte tcs, byte din, byte dout, byte irq
+//(byte model, int RS, int WR, int CS, int RST, int SER)
+UTFT myGLCD(ILI9488_16, 7, 38, 9, 10);    
+//RTP: byte tclk, byte tcs, byte din, byte dout, byte irq
+UTouch  myTouch(2, 6, 3, 4, 5);      
 
+// Objects for keeping track of current angle positions for both arms
 AxisPos arm1;
 AxisPos arm2;
-
-// Global LCD theme color variables
-#define themeBackground 0xFFFF // White
-#define menuBtnText 0xFFFF // White
-#define menuBtnBorder 0x0000 // Black
-#define menuBtnColor 0xFC00 // Orange
-#define menuBackground 0xC618 //Silver
-
-// For the draw shape functions
-#define LEFT 1
-#define CENTER 2
-#define RIGHT 3
-
-// Arm 1 IDs
-#define ARM1_RX 0x0CA;
-#define ARM1_T 0xA2
-#define ARM1_B 0xA1
-#define ARM1_CONTROL 0x0A0
-
-// Arm 1 IDs
-#define ARM1_RX 0x0CB;
-#define ARM1_T 0xB2
-#define ARM1_B 0xB1
-#define ARM1_CONTROL 0x0B0
-
-// Prevents physical button doubletap
-#define BUTTON_DELAY 200
-
-#define CSPIN 4   //slecting DPin-4 does not require to set direction
-File myFile;      //file pointer variavle declaration
-
-// DELETE ME
-byte test = 0x07;
 
 // For touch controls
 int x, y;
@@ -62,8 +33,13 @@ int x, y;
 // extern uint8_t SmallFont[];
 extern uint8_t BigFont[];
 
+// Object to control CAN Bus hardware
 CANBus can1;
 
+// Object to control SD Card Hardware
+SDCard sdCard;
+
+// Custom bitmap
 void print_icon(int x, int y, const unsigned char icon[]) {
     myGLCD.setColor(menuBtnColor);
     myGLCD.setBackColor(themeBackground);
@@ -175,7 +151,7 @@ void drawManualControl()
     drawSquareBtn(141, 1, 478, 319, "", themeBackground, themeBackground, themeBackground, CENTER);
     print_icon(435, 5, robotarm);
     drawSquareBtn(180, 10, 400, 45, "Manual Control", themeBackground, themeBackground, menuBtnColor, CENTER);
-    drawSquareBtn(165, 235, 220, 275, "Arm", themeBackground, themeBackground, menuBtnColor, CENTER);
+    drawSquareBtn(165, 225, 220, 265, "Arm", themeBackground, themeBackground, menuBtnColor, CENTER);
     // Manual control axis labels
     //myGLCD.setColor(VGA_BLACK);
     //myGLCD.setBackColor(VGA_BLACK);
@@ -422,12 +398,76 @@ void drawView()
     drawRoundBtn(200, yStart + 225, 305, yStop + 225, "deg", menuBackground, menuBackground, menuBtnColor, RIGHT);
 }
 
-void drawProgram()
+void drawProgramScroll(int scroll)
 {
-    drawSquareBtn(141, 1, 478, 319, "", themeBackground, themeBackground, themeBackground, CENTER);
-    print_icon(435, 5, robotarm);
+    // This array should populate from SD CARD
+    String alist[10] = { "1-Axis Test", "2-Demo", "3-Empty", "4-Empty", "5-Empty", "6-Empty", "7-Empty", "8-Empty", "9-Empty", "10-Empty" };
 
-    drawRoundBtn(180, 60, 360, 100, "Axis Test", menuBtnColor, menuBtnBorder, menuBtnText, CENTER);
+    int y = 50;
+    for (int i = 0; i < 5; i++)
+    {
+        drawSquareBtn(150, y, 410, y + 40, alist[scroll], menuBackground, menuBtnBorder, menuBtnText, LEFT);
+        y = y + 40;
+        scroll++;
+    }
+}
+
+void drawProgram(int scroll = 0)
+{
+    
+    drawSquareBtn(141, 1, 478, 319, "", themeBackground, themeBackground, themeBackground, CENTER);
+    drawSquareBtn(180, 10, 400, 45, "Program", themeBackground, themeBackground, menuBtnColor, CENTER);
+    print_icon(435, 5, robotarm);
+    int j = 50;
+    int k = scroll;
+    myGLCD.setColor(menuBtnColor);
+    myGLCD.setBackColor(themeBackground);
+    drawSquareBtn(420, 100, 470, 150, "/\\", menuBtnColor, menuBtnBorder, menuBtnText, CENTER);
+    drawSquareBtn(420, 150, 470, 200, "\\/", menuBtnColor, menuBtnBorder, menuBtnText, CENTER);
+    drawProgramScroll(scroll);
+}
+
+void program()
+{
+    static int scroll = 0;
+    
+        while (true)
+        {
+
+            // Touch screen controls
+            if (myTouch.dataAvailable())
+            {
+                myTouch.read();
+                x = myTouch.getX();
+                y = myTouch.getY();
+
+                if ((x >= 420) && (x <= 470))  
+                {
+                    if ((y >= 100) && (y <= 150)) 
+                    {
+                        waitForIt(420, 100, 470, 150);
+                        if (scroll > 0)
+                        {
+                            scroll--;
+                            drawProgramScroll(scroll);
+                        }
+                    }
+                }
+                if ((x >= 420) && (x <= 470))  
+                {
+                    if ((y >= 150) && (y <= 200))  
+                    {
+                        waitForIt(420, 150, 470, 200);
+                        if (scroll < 5)
+                        {
+                            scroll++;
+                            drawProgramScroll(scroll);
+                        }
+                    }
+                }
+            }
+            return;
+        }
 }
 
 void drawConfig()
@@ -436,6 +476,8 @@ void drawConfig()
     print_icon(435, 5, robotarm);
 
     drawRoundBtn(180, 60, 360, 100, "Settings", menuBtnColor, menuBtnBorder, menuBtnText, CENTER);
+
+    return;
 }
 
 //Only called once at startup to draw the menu
@@ -456,8 +498,20 @@ void drawMenu()
 // the setup function runs once when you press reset or power the board
 void setup() {
     Serial.begin(115200);
-
+  
     can1.startCAN();
+    bool hasFailed = sdCard.startSD();
+    if (!hasFailed)
+    {
+        Serial.println("SD failed");
+    }
+    else if (hasFailed)
+    {
+        Serial.println("SD Running");
+    }
+    sdCard.writeFile("off");
+    sdCard.writeFileln();
+   
 
     myGLCD.InitLCD();
     myGLCD.clrScr();
@@ -467,13 +521,17 @@ void setup() {
 
     myGLCD.setFont(BigFont);
     myGLCD.setBackColor(0, 0, 255);
+
+
     drawMenu();
 }
 
 void pageControl(int page, bool value = false)
 {
     byte test2[8] = { 0xAA, 0xBB, 0xCC, 0xDD, 0xEE, 0xFF, 0x11, 0x22 };
-
+    typedef byte test[8];
+    test a1;
+    int a2;
     can1.sendData(test2, 0x49);
     static bool hasDrawn;
     static bool isExecute;
@@ -503,6 +561,7 @@ void pageControl(int page, bool value = false)
                 hasDrawn = true;
             }
             // Call buttons if any
+            program();
             break;
         case 3:
             if (!hasDrawn)
@@ -519,11 +578,12 @@ void pageControl(int page, bool value = false)
                 hasDrawn = true;
             }
             // Call buttons if any
+            
             break;
         case 5:
             if (!hasDrawn)
             {
-                
+                can1.recordCAN(0xA1);
                 hasDrawn = true;
             }
             // Call buttons if any

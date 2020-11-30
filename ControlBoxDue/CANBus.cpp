@@ -1,36 +1,35 @@
-// 
-// 
-// 
+// CANBus manages the CAN bus hardware
 
 #include "CANBus.h"
 #include <due_can.h>
 #include "variant.h"
-void CANBus::init()
-{
-
-
-}
 
 CANBus::CANBus()
 {
-
 
 }
 
 void CANBus::startCAN()
 {
-    // Initialize CAN0 and CAN1, Set the proper baud rates here
+    // Initialize CAN1 and set the proper baud rates here
     Can0.begin(CAN_BPS_500K);
     Can0.watchFor();
+    return;
 }
 
+// CAN Bus send message
 void CANBus::sendData(byte *frame, int id)
 {
+    // Create message object
     CAN_FRAME myFrame;
-    myFrame.id = id;
-    myFrame.length = 8;
-    byte test2[8] = { 0xAA, 0xBB, 0xCC, 0xDD, 0xEE, 0xFF, 0x11, 0x22 };
 
+    // Outgoing message ID
+    myFrame.id = id;
+
+    // Message length
+    myFrame.length = 8;
+
+    // Assign object to message array
     myFrame.data.byte[0] = frame[0];
     myFrame.data.byte[1] = frame[1];
     myFrame.data.byte[2] = frame[2];
@@ -40,23 +39,49 @@ void CANBus::sendData(byte *frame, int id)
     myFrame.data.byte[6] = frame[6];
     myFrame.data.byte[7] = frame[7];
 
+    // Send object out
     Can0.sendFrame(myFrame);
     return;
 }
 
-void CANBus::receiveCAN()
+// Method used for CAN recording
+void CANBus::recordCAN(int IDFilter)
 {
+    // Create object to save message
     CAN_FRAME incoming;
 
+    // If buffer inbox has a message
     if (Can0.available() > 0) {
         Can0.read(incoming);
+        if (incoming.id == IDFilter)
+        {
+            SDPrint.writeFile("ID: ");
+            SDPrint.writeFile(incoming.id);
+            SDPrint.writeFile(" MSG:");
+            for (int count = 0; count < incoming.length; count++) {
+                SDPrint.writeFile(incoming.data.bytes[count], HEX);
+                SDPrint.writeFile(" ");
+            }
+            SDPrint.writeFileln();
+        }
     }
-    if (Can1.available() > 0) {
-        Can1.read(incoming);
-    }
-
+    return;
 }
 
+// Method used to manually get the ID and byte array
+void CANBus::getMessage(test& a, int& b)
+{
+    CAN_FRAME incoming;
+    if (Can0.available() > 0) {
+        Can0.read(incoming);
+        b = incoming.id;
+
+        for (int count = 0; count < incoming.length; count++) {
+            a[count] = incoming.data.bytes[count];
+        }
+
+    }
+}
 
 //MOVE TO METHODS
 /*
@@ -67,9 +92,6 @@ if (Can0.available() > 0) {
     Can0.read(incoming);
     test = incoming.data.byte[0];
     sendData(test);
-
-
-
 
 
     SD.begin(CSPIN);        //SD Card is initialized

@@ -5,13 +5,8 @@
 #include "variant.h"
 #include "AxisPos.h"
 
+// Default Constructor
 AxisPos::AxisPos()
-{
-	
-}
-
-
-void AxisPos::init()
 {
 	
 }
@@ -22,19 +17,24 @@ void armSearch()
 	bool isDoneCh2 = false;
 
 	unsigned long timer = millis();
-	while(isDoneCh1 || (millis() - timer > 10000))
-	if ((millis() - timer) > 1000)
+	while (isDoneCh1 || (millis() - timer > 10000))
 	{
-
-	}
-
-	timer = millis();
-	while (isDoneCh2 || (millis() - timer > 0000))
 		if ((millis() - timer) > 1000)
 		{
 
 		}
+	}
+
+	timer = millis();
+	while (isDoneCh2 || (millis() - timer > 0000))
+	{
+		if ((millis() - timer) > 1000)
+		{
+
+		}
+	}
 }
+
 void AxisPos::drawAxisPos(UTFT LCD)
 {
 	LCD.setColor(0xFFFF); // text color
@@ -46,6 +46,7 @@ void AxisPos::drawAxisPos(UTFT LCD)
 	LCD.print("180", 205, 228);
 	LCD.print("180", 205, 273);
 }
+
 void AxisPos::updateAxisPos(UTFT LCD)
 {
 	LCD.setColor(0xFFFF); // text color
@@ -57,6 +58,7 @@ void AxisPos::updateAxisPos(UTFT LCD)
 	LCD.print("180", 205, 228);
 	LCD.print("180", 205, 273);
 }
+
 void requestAxisPos()
 {
 

@@ -1,4 +1,5 @@
 // CANBus.h
+#include "SDCard.h"
 
 #ifndef _CANBus_h
 #define _CANBus_h
@@ -8,21 +9,20 @@
 #else
 	#include "WProgram.h"
 #endif
+class SDCard;
 
 class CANBus
 {
  private:
-
-
+	 SDCard SDPrint;
+	 typedef byte test[8];
  public:
+
 	CANBus();
-	void init();
-	void receiveCAN();
+	void recordCAN(int);
+	void getMessage(test&, int&);
 	void sendData(byte*, int);
 	void startCAN();
 };
-
-//extern CANBus ;
-
 #endif
 

@@ -1,1 +1,27 @@
 #pragma once
+// Global LCD theme color variables
+#define themeBackground 0xFFFF // White
+#define menuBtnText 0xFFFF // White
+#define menuBtnBorder 0x0000 // Black
+#define menuBtnColor 0xFC00 // Orange
+#define menuBackground 0xC618 //Silver
+
+// For the draw shape functions
+#define LEFT 1
+#define CENTER 2
+#define RIGHT 3
+
+// Arm 1 IDs
+#define ARM1_RX 0x0CA;
+#define ARM1_T 0xA2
+#define ARM1_B 0xA1
+#define ARM1_CONTROL 0x0A0
+
+// Arm 1 IDs
+#define ARM1_RX 0x0CB;
+#define ARM1_T 0xB2
+#define ARM1_B 0xB1
+#define ARM1_CONTROL 0x0B0
+
+// Prevents physical button doubletap
+#define BUTTON_DELAY 200

@@ -41,7 +41,5 @@ class AxisPos
 
 
 };
-
-
 #endif
 
