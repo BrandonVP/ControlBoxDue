@@ -47,21 +47,17 @@ void AxisPos::drawAxisPos(UTFT LCD)
 	LCD.print("180", 205, 273);
 }
 
-void AxisPos::updateAxisPos(UTFT LCD)
+void AxisPos::updateAxisPos()
 {
-	LCD.setColor(0xFFFF); // text color
-	LCD.setBackColor(0xC618); // text background
-	LCD.print("180", 205, 48);
-	LCD.print("180", 205, 93);
-	LCD.print("90", 205, 138);
-	LCD.print("180", 205, 183);
-	LCD.print("180", 205, 228);
-	LCD.print("180", 205, 273);
+	
+
 }
 
 void requestAxisPos()
 {
-
+	uint8_t msg[8] = { 0x00, 0x02, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
+	//returnData[2] = 0x01;
+	//returnData[3] = temp - 0xFF;
 }
 
 

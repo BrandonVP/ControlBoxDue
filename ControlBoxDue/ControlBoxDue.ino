@@ -144,14 +144,37 @@ void waitForIt(int x1, int y1, int x2, int y2)
     myGLCD.drawRoundRect(x1, y1, x2, y2);
 }
 
+void waitForItRect(int x1, int y1, int x2, int y2)
+{
+    myGLCD.setColor(themeBackground);
+    myGLCD.drawRect(x1, y1, x2, y2);
+    while (myTouch.dataAvailable())
+        myTouch.read();
+    myGLCD.setColor(menuBtnBorder);
+    myGLCD.drawRect(x1, y1, x2, y2);
+}
+
+void waitForItRect(int x1, int y1, int x2, int y2, int txId, byte data[])
+{
+    myGLCD.setColor(themeBackground);
+    myGLCD.drawRect(x1, y1, x2, y2);
+    while (myTouch.dataAvailable())
+    {
+        can1.sendFrame(txId, data);
+        myTouch.read();
+        delay(130);
+    }
+    myGLCD.setColor(menuBtnBorder);
+    myGLCD.drawRect(x1, y1, x2, y2);
+}
+
 // Draw the manual control page
 void drawManualControl()
 {
-
     drawSquareBtn(141, 1, 478, 319, "", themeBackground, themeBackground, themeBackground, CENTER);
     print_icon(435, 5, robotarm);
     drawSquareBtn(180, 10, 400, 45, "Manual Control", themeBackground, themeBackground, menuBtnColor, CENTER);
-    drawSquareBtn(165, 225, 220, 265, "Arm", themeBackground, themeBackground, menuBtnColor, CENTER);
+
     // Manual control axis labels
     //myGLCD.setColor(VGA_BLACK);
     //myGLCD.setBackColor(VGA_BLACK);
@@ -176,10 +199,15 @@ void drawManualControl()
         drawSquareBtn(i, 140, i + 54, 200, "\\/", menuBtnColor, menuBtnBorder, menuBtnText, CENTER);
     }
 
-    
     // Draw Select arm
+    drawSquareBtn(165, 225, 220, 265, "Arm", themeBackground, themeBackground, menuBtnColor, CENTER);
     drawSquareBtn(146, 260, 200, 315, "1", menuBtnText, menuBtnBorder, menuBtnColor, CENTER);
-    drawSquareBtn(201, 260, 255, 315, "2", menuBtnColor, menuBtnBorder, menuBtnText, CENTER);
+    drawSquareBtn(200, 260, 254, 315, "2", menuBtnColor, menuBtnBorder, menuBtnText, CENTER);
+
+    // Draw grip buttons
+    drawSquareBtn(270, 225, 450, 265, "Gripper", themeBackground, themeBackground, menuBtnColor, CENTER);
+    drawSquareBtn(270, 260, 360, 315, "Open", menuBtnColor, menuBtnBorder, menuBtnText, CENTER);
+    drawSquareBtn(360, 260, 450, 315, "Close", menuBtnColor, menuBtnBorder, menuBtnText, CENTER);
 
 return;
 }
@@ -191,8 +219,6 @@ void manualControlBtns()
     uint8_t reverse = 0x10;
     byte data[8] = { 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
 
-    while (true)
-    {
         if (digitalRead(A2) == HIGH)
         {
             // Select arm
@@ -220,150 +246,138 @@ void manualControlBtns()
             x = myTouch.getX();
             y = myTouch.getY();
 
-            if ((y >= 110) && (y <= 169))
+            if ((y >= 80) && (y <= 140))
             {
                 // A1 Up
                 // 30, 110, 90, 170
-                if ((x >= 30) && (x <= 90))
+                if ((x >= 146) && (x <= 200))
                 {
                     data[1] = 1 * multiply;
-                    waitForIt(30, 110, 90, 170);
+                    waitForItRect(146, 80, 200, 140, txId, data);
                     data[1] = 0;
                 }
                 // A2 Up
                 // 90, 110, 150, 170
-                if ((x >= 90) && (x <= 150))
+                if ((x >= 200) && (x <= 254))
                 {
                     data[2] = 1 * multiply;
-                    waitForIt(90, 110, 150, 170);
+                    waitForItRect(200, 80, 254, 140, txId, data);
                     data[2] = 0;
                 }
                 // A3 Up
                 // 150, 110, 210, 170
-                if ((x >= 150) && (x <= 210))
+                if ((x >= 254) && (x <= 308))
                 {
                     data[3] = 1 * multiply;
-                    waitForIt(150, 110, 210, 170);
+                    waitForItRect(254, 80, 308, 140, txId, data);
                     data[3] = 0;
                 }
                 // A4 Up
                 // 210, 110, 270, 170
-                if ((x >= 210) && (x <= 270))
+                if ((x >= 308) && (x <= 362))
                 {
                     data[4] = 1 * multiply;
-                    waitForIt(210, 110, 270, 170);
+                    waitForItRect(308, 80, 362, 140, txId, data);
                     data[4] = 0;
                 }
                 // A5 Up
                 // 270, 110, 330, 170
-                if ((x >= 270) && (x <= 330))
+                if ((x >= 362) && (x <= 416))
                 {
                     data[5] = 1 * multiply;
-                    waitForIt(270, 110, 330, 170);
+                    waitForItRect(362, 80, 416, 140, txId, data);
                     data[5] = 0;
                 }
                 // A6 Up
                 // 330, 110, 390, 170
-                if ((x >= 330) && (x <= 390))
+                if ((x >= 416) && (x <= 470))
                 {
                     data[6] = 1 * multiply;
-                    waitForIt(330, 110, 390, 170);
+                    waitForItRect(416, 80, 470, 140, txId, data);
                     data[6] = 0;
-                }
-                // A7 Up
-                // 390, 110, 450, 170
-                if ((x >= 390) && (x <= 450))
-                {
-                    data[7] = 1 * multiply;
-                    waitForIt(390, 110, 450, 170);
-                    data[7] = 0;
                 }
             }
             // A1 Down
             // 30, 170, 90, 230
-            if ((y >= 170) && (y <= 230))
+            if ((y >= 140) && (y <= 200))
             {
-                if ((x >= 30) && (x <= 90))
+                if ((x >= 156) && (x <= 200))
                 {
                     data[1] = (1 * multiply) + reverse;
-                    waitForIt(30, 170, 90, 230);
+                    waitForItRect(146, 140, 200, 200, txId, data);
                     data[1] = 0;
                 }
                 // A2 Down
                 // 90, 170, 150, 230
-                if ((x >= 90) && (x <= 150))
+                if ((x >= 200) && (x <= 254))
                 {
                     data[2] = (1 * multiply) + reverse;
-                    waitForIt(90, 170, 150, 230);
+                    waitForItRect(200, 140, 254, 200, txId, data);
                     data[2] = 0;
                 }
                 // A3 Down
                 // 150, 170, 210, 230
-                if ((x >= 150) && (x <= 210))
+                if ((x >= 254) && (x <= 308))
                 {
                     data[3] = (1 * multiply) + reverse;
-                    waitForIt(150, 170, 210, 230);
+                    waitForItRect(254, 140, 308, 200, txId, data);
                     data[3] = 0;
                 }
                 // A4 Down
                 // 210, 170, 270, 230
-                if ((x >= 210) && (x <= 270))
+                if ((x >= 308) && (x <= 362))
                 {
                     data[4] = (1 * multiply) + reverse;
-                    waitForIt(210, 170, 270, 230);
+                    waitForItRect(308, 140, 362, 200, txId, data);
                     data[4] = 0;
                 }
                 // A5 Down
                 // 270, 170, 330, 230
-                if ((x >= 270) && (x <= 330))
+                if ((x >= 362) && (x <= 416))
                 {
                     data[5] = (1 * multiply) + reverse;
-                    waitForIt(270, 170, 330, 230);
+                    waitForItRect(362, 140, 416, 200, txId, data);
                     data[5] = 0;
                 }
                 // A6 Down
                 // 330, 170, 390, 230
-                if ((x >= 330) && (x <= 390))
+                if ((x >= 416) && (x <= 470))
                 {
                     data[6] = (1 * multiply) + reverse;
-                    waitForIt(330, 170, 390, 230);
+                    waitForItRect(416, 140, 470, 200, txId, data);
                     data[6] = 0;
-                }
-                // A7 Down
-                // 390, 170, 450, 230
-                if ((x >= 390) && (x <= 450))
-                {
-                    data[7] = (1 * multiply) + reverse;
-                    waitForIt(390, 170, 450, 230);
-                    data[7] = 0;
                 }
             }
 
-            if ((y >= 275) && (y <= 315))  // Upper row
+            if ((y >= 260) && (y <= 315))  // Upper row
             {
-                if ((x >= 125) && (x <= 175))  // Button: 1
+                if ((x >= 146) && (x <= 200))  // Button: 1
                 {
                     // Select arm
-                    //drawRoundButton(75, 275, 125, 315, "1", themeColor);
-                    //drawRoundButton(125, 275, 175, 315, "2", themeSelected);
-                    txId = 0x0B3;
-                }
-                if ((x >= 75) && (x <= 125))  // Button: 1
-                {
-                    // Select arm
-                    //drawRoundButton(75, 275, 125, 315, "1", themeSelected);
-                    //drawRoundButton(125, 275, 175, 315, "2", themeColor);
+                    drawSquareBtn(146, 260, 200, 315, "1", menuBtnText, menuBtnBorder, menuBtnColor, CENTER);
+                    drawSquareBtn(200, 260, 254, 315, "2", menuBtnColor, menuBtnBorder, menuBtnText, CENTER);
                     txId = 0x0A3;
                 }
-                // Back Button
-                if ((x >= 365) && (x <= 475))
+                if ((x >= 200) && (x <= 254))  // Button: 1
                 {
-                    waitForIt(365, 275, 475, 315);
-                    return;
+                    drawSquareBtn(146, 260, 200, 315, "1", menuBtnColor, menuBtnBorder, menuBtnText, CENTER);
+                    drawSquareBtn(200, 260, 254, 315, "2", menuBtnText, menuBtnBorder, menuBtnColor, CENTER);
+                    txId = 0x0B3;
+                }
+                if ((x >= 270) && (x <= 360))  // Button: 1
+                {
+                    data[7] = 1 * multiply;
+                    waitForItRect(270, 260, 360, 315, txId, data);
+                    data[7] = 0;
+                }
+                if ((x >= 360) && (x <= 450))  // Button: 1
+                {
+                    data[7] = (1 * multiply) + reverse;
+                    waitForItRect(360, 260, 450, 315, txId, data);
+                    data[7] = 0;
                 }
             }
         }
-    }
 }
 
 // Draw the view page
@@ -398,6 +412,9 @@ void drawView()
     drawRoundBtn(200, yStart + 225, 305, yStop + 225, "deg", menuBackground, menuBackground, menuBtnColor, RIGHT);
 }
 
+/*==========================================================
+                    Program Arm
+============================================================*/
 void drawProgramScroll(int scroll)
 {
     // This array should populate from SD CARD
@@ -425,58 +442,183 @@ void drawProgram(int scroll = 0)
     drawSquareBtn(420, 100, 470, 150, "/\\", menuBtnColor, menuBtnBorder, menuBtnText, CENTER);
     drawSquareBtn(420, 150, 470, 200, "\\/", menuBtnColor, menuBtnBorder, menuBtnText, CENTER);
     drawProgramScroll(scroll);
+    drawSquareBtn(150, 260, 250, 300, "Create", menuBtnColor, menuBtnBorder, menuBtnText, CENTER);
+    drawSquareBtn(255, 260, 355, 300, "Edit", menuBtnColor, menuBtnBorder, menuBtnText, CENTER);
+    drawSquareBtn(360, 260, 460, 300, "Delete", menuBtnColor, menuBtnBorder, menuBtnText, CENTER);
+}
+
+void programRun()
+{
+
+}
+
+void programEdit()
+{
+
+}
+
+void programDelete()
+{
+
 }
 
 void program()
 {
     static int scroll = 0;
-    
-        while (true)
+        // Touch screen controls
+        if (myTouch.dataAvailable())
         {
+            myTouch.read();
+            x = myTouch.getX();
+            y = myTouch.getY();
 
-            // Touch screen controls
-            if (myTouch.dataAvailable())
+            if ((x >= 150) && (x <= 410))
             {
-                myTouch.read();
-                x = myTouch.getX();
-                y = myTouch.getY();
-
-                if ((x >= 420) && (x <= 470))  
+                if ((y >= 50) && (y <= 90))
                 {
-                    if ((y >= 100) && (y <= 150)) 
-                    {
-                        waitForIt(420, 100, 470, 150);
-                        if (scroll > 0)
-                        {
-                            scroll--;
-                            drawProgramScroll(scroll);
-                        }
-                    }
+                    waitForItRect(150, 50, 410, 90);
+                    Serial.println(1 + scroll);
                 }
-                if ((x >= 420) && (x <= 470))  
+                if ((y >= 90) && (y <= 130))
                 {
-                    if ((y >= 150) && (y <= 200))  
+                    waitForItRect(150, 90, 410, 130);
+                    Serial.println(2 + scroll);
+                }
+                if ((y >= 130) && (y <= 170))
+                {
+                    waitForItRect(150, 130, 410, 170);
+                    Serial.println(3 + scroll);
+                }
+                if ((y >= 170) && (y <= 210))
+                {
+                    waitForItRect(150, 170, 410, 210);
+                    Serial.println(4 + scroll);
+                }
+                if ((y >= 210) && (y <= 250))
+                {
+                    waitForItRect(150, 210, 410, 250);
+                    Serial.println(5 + scroll);
+                }
+            }
+            if ((x >= 420) && (x <= 470))  
+            {
+                if ((y >= 100) && (y <= 150)) 
+                {
+                    waitForIt(420, 100, 470, 150);
+                    if (scroll > 0)
                     {
-                        waitForIt(420, 150, 470, 200);
-                        if (scroll < 5)
-                        {
-                            scroll++;
-                            drawProgramScroll(scroll);
-                        }
+                        scroll--;
+                        drawProgramScroll(scroll);
                     }
                 }
             }
-            return;
+            if ((x >= 420) && (x <= 470))  
+            {
+                if ((y >= 150) && (y <= 200))  
+                {
+                    waitForIt(420, 150, 470, 200);
+                    if (scroll < 5)
+                    {
+                        scroll++;
+                        drawProgramScroll(scroll);
+                    }
+                }
+            }
+
+            if ((y >= 260) && (y <= 300))
+            {
+                if ((x >= 150) && (x <= 250))
+                {
+                    waitForItRect(150, 260, 250, 300);
+
+                }
+                if ((x >= 255) && (x <= 355))
+                {
+                    waitForItRect(255, 260, 355, 300);
+
+                }
+                if ((x >= 360) && (x <= 460))
+                {
+                    waitForItRect(360, 260, 460, 300);
+
+                }
+            }
         }
+        return;
 }
 
+/*==========================================================
+                    Configure Arm
+============================================================*/
 void drawConfig()
 {
+    drawSquareBtn(180, 10, 400, 45, "Configuration", themeBackground, themeBackground, menuBtnColor, CENTER);
     drawSquareBtn(141, 1, 478, 319, "", themeBackground, themeBackground, themeBackground, CENTER);
     print_icon(435, 5, robotarm);
+    drawSquareBtn(180, 10, 400, 45, "Configuration", themeBackground, themeBackground, menuBtnColor, CENTER);
+    drawRoundBtn(150, 60, 300, 100, "Home Ch1", menuBtnColor, menuBtnBorder, menuBtnText, CENTER);
+    drawRoundBtn(310, 60, 460, 100, "Set Ch1", menuBtnColor, menuBtnBorder, menuBtnText, CENTER);
+    drawRoundBtn(150, 110, 300, 150, "Home Ch2", menuBtnColor, menuBtnBorder, menuBtnText, CENTER);
+    drawRoundBtn(310, 110, 460, 150, "Set ch2", menuBtnColor, menuBtnBorder, menuBtnText, CENTER);
+    return;
+}
 
-    drawRoundBtn(180, 60, 360, 100, "Settings", menuBtnColor, menuBtnBorder, menuBtnText, CENTER);
+// Sends command to return arm to starting position
+void homeArm(uint8_t* armIDArray)
+{
+    byte data1[8] = { 0x00, 0x00, 0x00, 0xB4, 0x00, 0xB4, 0x00, 0x5A };
+    byte data2[8] = { 0x00, 0x00, 0x00, 0xB4, 0x00, 0xB4, 0x00, 0xB4 };
+    byte data3[8] = { 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
+    can1.sendFrame(armIDArray[0], data1);
+    delay(130);
+    can1.sendFrame(armIDArray[1], data2);
+    delay(130);
+    can1.sendFrame(armIDArray[2], data3);
+}
 
+void config()
+{
+    uint8_t setHomeId[8] = { 0x00, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
+    uint8_t* setHomeIdPtr = setHomeId;
+
+    uint8_t arm1IDArray[3] = { 0x0A1, 0x0A2, 0x0A0 };
+    uint8_t arm2IDArray[3] = { 0x0B1, 0x0B2, 0x0B0 };
+    uint8_t* arm1IDPtr = arm1IDArray;
+    uint8_t* arm2IDPtr = arm2IDArray;
+    // Touch screen controls
+    if (myTouch.dataAvailable())
+    {
+        myTouch.read();
+        x = myTouch.getX();
+        y = myTouch.getY();
+
+        if ((y >= 60) && (y <= 100))
+        {
+            if ((x >= 150) && (x <= 300))
+            {
+                waitForIt(150, 60, 300, 100);
+                homeArm(arm1IDPtr);
+            }
+            if ((x >= 310) && (x <= 460))
+            {
+                waitForIt(310, 60, 460, 100);
+                can1.sendFrame(arm1IDArray[2], setHomeIdPtr);
+            }
+        }
+        if ((y >= 110) && (y <= 150))
+        {
+            if ((x >= 150) && (x <= 300))
+            {
+                waitForIt(150, 110, 300, 150);
+                homeArm(arm2IDPtr);
+            }
+            if ((x >= 310) && (x <= 460))
+            {
+                waitForIt(310, 110, 460, 150);
+                can1.sendFrame(arm2IDArray[2], setHomeIdPtr);
+            }
+        }
+    }
     return;
 }
 
@@ -532,7 +674,7 @@ void pageControl(int page, bool value = false)
     typedef byte test[8];
     test a1;
     int a2;
-    can1.sendData(test2, 0x49);
+    
     static bool hasDrawn;
     static bool isExecute;
     hasDrawn = value;
@@ -549,7 +691,7 @@ void pageControl(int page, bool value = false)
             if (!hasDrawn)
             {
                 drawView();
-                arm1.updateAxisPos(myGLCD);
+                arm1.updateAxisPos();
                 hasDrawn = true;
             }
             // Call buttons if any
@@ -570,6 +712,7 @@ void pageControl(int page, bool value = false)
                 hasDrawn = true;
             }
             // Call buttons if any
+            manualControlBtns();
             break;
         case 4:
             if (!hasDrawn)
@@ -578,12 +721,12 @@ void pageControl(int page, bool value = false)
                 hasDrawn = true;
             }
             // Call buttons if any
-            
+            config();
             break;
         case 5:
             if (!hasDrawn)
             {
-                can1.recordCAN(0xA1);
+                can1.getFrame(0xA1);
                 hasDrawn = true;
             }
             // Call buttons if any

@@ -18,7 +18,7 @@ void CANBus::startCAN()
 }
 
 // CAN Bus send message
-void CANBus::sendData(byte *frame, int id)
+void CANBus::sendFrame(uint16_t id, byte* frame)
 {
     // Create message object
     CAN_FRAME myFrame;
@@ -45,7 +45,7 @@ void CANBus::sendData(byte *frame, int id)
 }
 
 // Method used for CAN recording
-void CANBus::recordCAN(int IDFilter)
+bool CANBus::getFrame(uint16_t IDFilter)
 {
     // Create object to save message
     CAN_FRAME incoming;
@@ -53,19 +53,9 @@ void CANBus::recordCAN(int IDFilter)
     // If buffer inbox has a message
     if (Can0.available() > 0) {
         Can0.read(incoming);
-        if (incoming.id == IDFilter)
-        {
-            SDPrint.writeFile("ID: ");
-            SDPrint.writeFile(incoming.id);
-            SDPrint.writeFile(" MSG:");
-            for (int count = 0; count < incoming.length; count++) {
-                SDPrint.writeFile(incoming.data.bytes[count], HEX);
-                SDPrint.writeFile(" ");
-            }
-            SDPrint.writeFileln();
-        }
+
     }
-    return;
+    return true;
 }
 
 // Method used to manually get the ID and byte array

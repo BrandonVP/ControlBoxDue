@@ -1,4 +1,5 @@
 // AxisPos.h
+#include "CANBus.h"
 #include <UTFT.h>
 #ifndef _AxisPos_h
 #define _AxisPos_h
@@ -8,11 +9,17 @@
 #else
 	#include "WProgram.h"
 #endif
-typedef uint8_t angle[2][8];
+class CANBus;
+
+typedef int armch1;
+typedef int armch2;
+
+//typedef uint8_t angle[2][8];
 
 class AxisPos
 {
  private:
+	 /*
 	 uint8_t numOfArms;
 	 angle arm1 = {
 		 {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00},
@@ -30,15 +37,28 @@ class AxisPos
 		 {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00},
 		 {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00},
 	 };
+	 */
+
+	 armch1 a1c1 = 180;
+	 armch1 a2c1 = 180;
+	 armch1 a3c1 = 90;
+	 armch1 a4c1 = 180;
+	 armch1 a5c1 = 180;
+	 armch1 a6c1 = 180;
+
+	 armch2 a1c2 = 180;
+	 armch2 a2c2 = 180;
+	 armch2 a3c2 = 90;
+	 armch2 a4c2 = 180;
+	 armch2 a5c2 = 180;
+	 armch2 a6c2 = 180;
 
 	 UTFT LCD;
 
  public:
-	void init();
 	AxisPos();
 	void drawAxisPos(UTFT);
-	void updateAxisPos(UTFT);
-
+	void updateAxisPos();
 
 };
 #endif

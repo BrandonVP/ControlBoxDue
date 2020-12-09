@@ -19,10 +19,10 @@ class CANBus
  public:
 
 	CANBus();
-	void recordCAN(int);
 	void getMessage(test&, int&);
-	void sendData(byte*, int);
 	void startCAN();
+	void sendFrame(uint16_t, byte*);
+	bool getFrame(uint16_t);
 };
 #endif
 
