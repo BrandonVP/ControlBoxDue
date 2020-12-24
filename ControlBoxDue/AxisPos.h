@@ -11,55 +11,49 @@
 #endif
 class CANBus;
 
-typedef int armch1;
-typedef int armch2;
-
-//typedef uint8_t angle[2][8];
-
 class AxisPos
 {
  private:
-	 /*
-	 uint8_t numOfArms;
-	 angle arm1 = {
-		 {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00},
-		 {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00},
-	 };
-	 angle arm2 = {
-		 {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00},
-		 {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00},
-	 };
-	 angle arm3 = {
-		 {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00},
-		 {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00},
-	 };
-	 angle arm4 = {
-		 {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00},
-		 {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00},
-	 };
-	 */
+	 uint16_t ARM1ID = 0x0A0;
+	 uint16_t ARM2ID = 0x0B0;
 
-	 armch1 a1c1 = 180;
-	 armch1 a2c1 = 180;
-	 armch1 a3c1 = 90;
-	 armch1 a4c1 = 180;
-	 armch1 a5c1 = 180;
-	 armch1 a6c1 = 180;
+	 bool isArm1 = 0;
+	 bool isArm2 = 0;
 
-	 armch2 a1c2 = 180;
-	 armch2 a2c2 = 180;
-	 armch2 a3c2 = 90;
-	 armch2 a4c2 = 180;
-	 armch2 a5c2 = 180;
-	 armch2 a6c2 = 180;
+	 int a1c1 = -1;
+	 int a2c1 = -1;
+	 int a3c1 = -1;
+	 int a4c1 = -1;
+	 int a5c1 = -1;
+	 int a6c1 = -1;
 
+	 int a1c2 = -1;
+	 int a2c2 = -1;
+	 int a3c2 = -1;
+	 int a4c2 = -1;
+	 int a5c2 = -1;
+	 int a6c2 = -1;
+
+	 CANBus can1;
 	 UTFT LCD;
 
  public:
 	AxisPos();
 	void drawAxisPos(UTFT);
 	void updateAxisPos();
-
+	void armSearch();
+	int getA1C1();
+	int getA2C1();
+	int getA3C1();
+	int getA4C1();
+	int getA5C1();
+	int getA6C1();
+	int getA1C2();
+	int getA2C2();
+	int getA3C2();
+	int getA4C2();
+	int getA5C2();
+	int getA6C2();
 };
 #endif
 

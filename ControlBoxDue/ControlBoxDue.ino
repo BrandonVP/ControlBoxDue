@@ -4,6 +4,7 @@
  Author:  Brandon Van Pelt
 */
 
+#include <LinkedList.h>
 #include <SD.h>
 #include <UTouchCD.h>
 #include <memorysaver.h>
@@ -15,6 +16,8 @@
 #include "definitions.h"
 #include "icons.h"
 #include "SDCard.h"
+#include "Program.h"
+
 
 // Initialize display
 //(byte model, int RS, int WR, int CS, int RST, int SER)
@@ -39,6 +42,15 @@ CANBus can1;
 // Object to control SD Card Hardware
 SDCard sdCard;
 
+AxisPos axisPos;
+
+LinkedList<Program*> runList = LinkedList<Program*>();
+
+
+
+/*=========================================================
+    Framework Functions
+===========================================================*/
 // Custom bitmap
 void print_icon(int x, int y, const unsigned char icon[]) {
     myGLCD.setColor(menuBtnColor);
@@ -162,12 +174,15 @@ void waitForItRect(int x1, int y1, int x2, int y2, int txId, byte data[])
     {
         can1.sendFrame(txId, data);
         myTouch.read();
-        delay(130);
+        delay(80);
     }
     myGLCD.setColor(menuBtnBorder);
     myGLCD.drawRect(x1, y1, x2, y2);
 }
 
+/*=========================================================
+    Manual control Functions
+===========================================================*/
 // Draw the manual control page
 void drawManualControl()
 {
@@ -215,7 +230,7 @@ return;
 void manualControlBtns()
 {
     int multiply = 1; // MOVE ME or something
-    unsigned int txId = 0x0A3;
+    static uint16_t txId = 0x0A3;
     uint8_t reverse = 0x10;
     byte data[8] = { 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
 
@@ -380,6 +395,10 @@ void manualControlBtns()
         }
 }
 
+
+/*=========================================================
+    View page Functions
+===========================================================*/
 // Draw the view page
 void drawView()
 {
@@ -410,6 +429,7 @@ void drawView()
     drawRoundBtn(200, yStart + 135, 305, yStop + 135, "deg", menuBackground, menuBackground, menuBtnColor, RIGHT);
     drawRoundBtn(200, yStart + 180, 305, yStop + 180, "deg", menuBackground, menuBackground, menuBtnColor, RIGHT);
     drawRoundBtn(200, yStart + 225, 305, yStop + 225, "deg", menuBackground, menuBackground, menuBtnColor, RIGHT);
+    axisPos.drawAxisPos(myGLCD);
 }
 
 /*==========================================================
@@ -445,25 +465,62 @@ void drawProgram(int scroll = 0)
     drawSquareBtn(150, 260, 250, 300, "Create", menuBtnColor, menuBtnBorder, menuBtnText, CENTER);
     drawSquareBtn(255, 260, 355, 300, "Edit", menuBtnColor, menuBtnBorder, menuBtnText, CENTER);
     drawSquareBtn(360, 260, 460, 300, "Delete", menuBtnColor, menuBtnBorder, menuBtnText, CENTER);
+    
+}
+
+void addNode(bool grip = false)
+{
+    uint8_t posArray[8] = { 0x00, 0x00, 0x00, 0x0, 0x00, 0x00, 0x00, 000 };
+    axisPos.updateAxisPos();
+    posArray[0] = axisPos.getA1C1();
+    posArray[1] = axisPos.getA2C1();
+    posArray[2] = axisPos.getA3C1();
+    posArray[3] = axisPos.getA4C1();
+    posArray[4] = axisPos.getA5C1();
+    posArray[5] = axisPos.getA6C1();
+    Program* node = new Program(posArray, grip);
+    runList.add(node);
+}
+
+void saveProgram(char* filename)
+{
+    //SW.write file
+    // for linkedlist
+    // write to SD
 }
 
 void programRun()
 {
+    int temp = runList.size();
 
+    //sendFrame(uint16_t id, byte * frame)
+    // Program class creates an object to store a move
+    //  - Needs Address ID, and 6 positions plus grip (8) 
+    // Linked list creates list of objects from program class
+    // SD card function to save entire linkedlist to SD card
+    // function to import linkedlist from SD card
+    // Dont need to edit or read line by line from SD, instead delete old file and save entire list when needed
 }
 
-void programEdit()
+void programEdit(int linkPos)
 {
-
+    //Loads list into linkedlist
+    
+    // for (EOF)
+    //{
+    // nextline = array
+    // runList.add(new object(array))
+    //}
 }
 
-void programDelete()
+void programDelete(char * filename)
 {
-
+    // SD.delete file
 }
 
 void program()
 {
+    static int test = 0;
     static int scroll = 0;
         // Touch screen controls
         if (myTouch.dataAvailable())
@@ -530,17 +587,53 @@ void program()
                 if ((x >= 150) && (x <= 250))
                 {
                     waitForItRect(150, 260, 250, 300);
-
+                    addNode();
                 }
                 if ((x >= 255) && (x <= 355))
                 {
                     waitForItRect(255, 260, 355, 300);
+                    uint8_t bAxis[8] = { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
+                    uint8_t tAxis[8] = { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
+                    uint8_t execMove[8] = { 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
 
+                    
+                    bAxis[2] = runList.get(0)->getA1();
+                    bAxis[4] = runList.get(0)->getA2();
+                    bAxis[7] = runList.get(0)->getA3();
+                    tAxis[2] = runList.get(0)->getA4();
+                    tAxis[4] = runList.get(0)->getA5();
+                    tAxis[7] = runList.get(0)->getA6();
+                    
+
+                    can1.sendFrame(0x0A1, bAxis);
+                    delay(500);
+                    can1.sendFrame(0x0A2, tAxis);
+                    delay(1000);
+                    can1.sendFrame(0x0A0, execMove);
+                    
+                    
                 }
                 if ((x >= 360) && (x <= 460))
                 {
                     waitForItRect(360, 260, 460, 300);
+                    uint8_t bAxis[8] = { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
+                    uint8_t tAxis[8] = { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
+                    uint8_t execMove[8] = { 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
 
+
+                    bAxis[2] = runList.get(1)->getA1();
+                    bAxis[4] = runList.get(1)->getA2();
+                    bAxis[7] = runList.get(1)->getA3();
+                    tAxis[2] = runList.get(1)->getA4();
+                    tAxis[4] = runList.get(1)->getA5();
+                    tAxis[7] = runList.get(1)->getA6();
+
+
+                    can1.sendFrame(0x0A1, bAxis);
+                    delay(500);
+                    can1.sendFrame(0x0A2, tAxis);
+                    delay(1000);
+                    can1.sendFrame(0x0A0, execMove);
                 }
             }
         }
@@ -578,7 +671,7 @@ void homeArm(uint8_t* armIDArray)
 
 void config()
 {
-    uint8_t setHomeId[8] = { 0x00, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
+    uint8_t setHomeId[8] = { 0x00, 0x03, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
     uint8_t* setHomeIdPtr = setHomeId;
 
     uint8_t arm1IDArray[3] = { 0x0A1, 0x0A2, 0x0A0 };
@@ -622,6 +715,9 @@ void config()
     return;
 }
 
+/*=========================================================
+    Framework Functions
+===========================================================*/
 //Only called once at startup to draw the menu
 void drawMenu()
 {
@@ -691,7 +787,7 @@ void pageControl(int page, bool value = false)
             if (!hasDrawn)
             {
                 drawView();
-                arm1.updateAxisPos();
+                //arm1.updateAxisPos();
                 hasDrawn = true;
             }
             // Call buttons if any

@@ -45,17 +45,30 @@ void CANBus::sendFrame(uint16_t id, byte* frame)
 }
 
 // Method used for CAN recording
-bool CANBus::getFrame(uint16_t IDFilter)
+uint8_t* CANBus::getFrame(uint16_t IDFilter)
 {
     // Create object to save message
     CAN_FRAME incoming;
 
-    // If buffer inbox has a message
-    if (Can0.available() > 0) {
-        Can0.read(incoming);
+    
 
+    // If buffer inbox has a message
+    if (Can0.available() > 0) 
+    {
+        Can0.read(incoming);
+        for (int i = 0; i < 8; i++)
+        {
+            MSGFrame[i] = incoming.data.byte[i];
+        }
+        hasMSG = false;
     }
-    return true;
+    return MSGFrame;
+}
+
+bool CANBus::hasMSGr() {
+    bool temp = hasMSG;
+    hasMSG = true;
+    return temp;
 }
 
 // Method used to manually get the ID and byte array
