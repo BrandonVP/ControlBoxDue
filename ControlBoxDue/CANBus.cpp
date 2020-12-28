@@ -25,7 +25,8 @@ void CANBus::sendFrame(uint16_t id, byte* frame)
 
     // Outgoing message ID
     myFrame.id = id;
-
+    Serial.print("ID: ");
+    Serial.println(id);
     // Message length
     myFrame.length = 8;
 
@@ -38,6 +39,22 @@ void CANBus::sendFrame(uint16_t id, byte* frame)
     myFrame.data.byte[5] = frame[5];
     myFrame.data.byte[6] = frame[6];
     myFrame.data.byte[7] = frame[7];
+    Serial.print("MSG: ");
+    Serial.print(frame[0]);
+    Serial.print(" ");
+    Serial.print(frame[1]);
+    Serial.print(" ");
+    Serial.print(frame[2]);
+    Serial.print(" ");
+    Serial.print(frame[3]);
+    Serial.print(" ");
+    Serial.print(frame[4]);
+    Serial.print(" ");
+    Serial.print(frame[5]);
+    Serial.print(" ");
+    Serial.print(frame[6]);
+    Serial.print(" ");
+    Serial.println(frame[7]);
 
     // Send object out
     Can0.sendFrame(myFrame);
@@ -63,6 +80,39 @@ uint8_t* CANBus::getFrame(uint16_t IDFilter)
         hasMSG = false;
     }
     return MSGFrame;
+}
+
+// Method used for CAN recording
+bool CANBus::msgCheck(uint16_t ID, uint8_t value, int8_t pos)
+{
+    // Create object to save message
+    CAN_FRAME incoming;
+
+
+
+    // If buffer inbox has a message
+    if (Can0.available() > 0)
+    {
+        Can0.read(incoming);
+        if (incoming.id == ID && incoming.data.byte[pos] == value)
+        {
+            return true;
+        }  
+    }
+    return false;
+}
+
+uint16_t CANBus::getFrameID()
+{
+    // Create object to save message
+    CAN_FRAME incoming;
+
+    // If buffer inbox has a message
+    if (Can0.available() > 0)
+    {
+        Can0.read(incoming);
+    }
+    return incoming.id;
 }
 
 bool CANBus::hasMSGr() {

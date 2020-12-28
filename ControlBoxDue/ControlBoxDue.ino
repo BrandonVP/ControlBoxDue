@@ -45,6 +45,8 @@ SDCard sdCard;
 AxisPos axisPos;
 
 LinkedList<Program*> runList = LinkedList<Program*>();
+uint8_t selectedProgram = 0;
+bool programLoaded = false;
 
 
 
@@ -468,9 +470,9 @@ void drawProgram(int scroll = 0)
     
 }
 
-void addNode(bool grip = false)
+void addNode(bool grip = false, uint8_t channel = 1)
 {
-    uint8_t posArray[8] = { 0x00, 0x00, 0x00, 0x0, 0x00, 0x00, 0x00, 000 };
+    uint16_t posArray[8] = { 0x000, 0x000, 0x000, 0x000, 0x000, 0x000, 0x000, 0x000 };
     axisPos.updateAxisPos();
     posArray[0] = axisPos.getA1C1();
     posArray[1] = axisPos.getA2C1();
@@ -478,7 +480,7 @@ void addNode(bool grip = false)
     posArray[3] = axisPos.getA4C1();
     posArray[4] = axisPos.getA5C1();
     posArray[5] = axisPos.getA6C1();
-    Program* node = new Program(posArray, grip);
+    Program* node = new Program(posArray, grip, channel);
     runList.add(node);
 }
 
@@ -489,17 +491,135 @@ void saveProgram(char* filename)
     // write to SD
 }
 
+void programDelete(char* filename)
+{
+    // SD.delete file
+}
+
+void loadProgram(char* filename)
+{
+    //SW.write file
+    // for linkedlist
+    // write to SD
+}
+
 void programRun()
 {
-    int temp = runList.size();
+    can1.getFrameID();
+    bool isWait = true;
+    if (programLoaded == false)
+    {
+        return;
+    }
+    uint8_t bAxis[8] = { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
+    uint8_t tAxis[8] = { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
+    uint8_t exeMove[8] = { 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };    
 
-    //sendFrame(uint16_t id, byte * frame)
-    // Program class creates an object to store a move
-    //  - Needs Address ID, and 6 positions plus grip (8) 
-    // Linked list creates list of objects from program class
-    // SD card function to save entire linkedlist to SD card
-    // function to import linkedlist from SD card
-    // Dont need to edit or read line by line from SD, instead delete old file and save entire list when needed
+    for (uint8_t i = 0; i < runList.size(); i++)
+    {
+        // Axis 1
+        if (runList.get(i)->getA1() <= 0xFF)
+        {
+            bAxis[3] = runList.get(i)->getA1();
+        }
+        else
+        {
+            bAxis[2] = runList.get(i)->getA1() - 0xFF;
+            bAxis[3] = 0xFF;
+        }
+
+        // Axis 2
+        if (runList.get(i)->getA2() <= 0xFF)
+        {
+            bAxis[5] = runList.get(i)->getA2();
+        }
+        else
+        {
+            bAxis[4] = runList.get(i)->getA2() - 0xFF;
+            bAxis[5] = 0xFF;
+        }
+
+        // Axis 3
+        if (runList.get(i)->getA3() <= 0xFF)
+        {
+            bAxis[7] = runList.get(i)->getA3();
+        }
+        else
+        {
+            bAxis[6] = runList.get(i)->getA3() - 0xFF;
+            bAxis[7] = 0xFF;
+        }
+
+        // Axis 4
+        if (runList.get(i)->getA4() <= 0xFF)
+        {
+            tAxis[3] = runList.get(i)->getA4();
+        }
+        else
+        {
+            tAxis[2] = runList.get(i)->getA4() - 0xFF;
+            tAxis[3] = 0xFF;
+        }
+
+        // Axis 5
+        if (runList.get(i)->getA5() <= 0xFF)
+        {
+            tAxis[5] = runList.get(i)->getA5();
+        }
+        else
+        {
+            tAxis[4] = runList.get(i)->getA5() - 0xFF;
+            tAxis[5] = 0xFF;
+        }
+
+        // Axis 6
+        if (runList.get(i)->getA5() <= 0xFF)
+        {
+            tAxis[7] = runList.get(i)->getA6();
+        }
+        else
+        {
+            tAxis[6] = runList.get(i)->getA6() - 0xFF;
+            tAxis[7] = 0xFF;
+        }
+        // Change to array of IDs
+        uint8_t ID = runList.get(i)->getID();
+
+        //Need a way to detect change or know what the current state is before sending
+        runList.get(i)->getGrip();
+
+        // Will need timeout
+        delay(10);
+        can1.sendFrame(0x0A1, bAxis);
+        while (isWait)
+        {
+            if (can1.msgCheck(0x0C1, 0x01, 0x01))
+            {
+                isWait = false;
+            }
+        }
+        isWait = true;
+        delay(10);
+        can1.sendFrame(0x0A2, tAxis);
+        while (isWait)
+        {
+            if (can1.msgCheck(0x0C1, 0x02, 0x01))
+            {
+                isWait = false;
+            }
+        }
+        isWait = true;
+        delay(10);
+        can1.sendFrame(0x0A0, exeMove);
+        while (isWait)
+        {
+            if (can1.msgCheck(0x0C1, 0x03, 0x01))
+            {
+                isWait = false;
+            }
+        }
+        isWait = true;
+    }
 }
 
 void programEdit(int linkPos)
@@ -513,12 +633,7 @@ void programEdit(int linkPos)
     //}
 }
 
-void programDelete(char * filename)
-{
-    // SD.delete file
-}
-
-void program()
+void programButtons()
 {
     static int test = 0;
     static int scroll = 0;
@@ -597,12 +712,12 @@ void program()
                     uint8_t execMove[8] = { 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
 
                     
-                    bAxis[2] = runList.get(0)->getA1();
-                    bAxis[4] = runList.get(0)->getA2();
-                    bAxis[7] = runList.get(0)->getA3();
-                    tAxis[2] = runList.get(0)->getA4();
-                    tAxis[4] = runList.get(0)->getA5();
-                    tAxis[7] = runList.get(0)->getA6();
+                    bAxis[2] = runList.get(test)->getA1();
+                    bAxis[4] = runList.get(test)->getA2();
+                    bAxis[7] = runList.get(test)->getA3();
+                    tAxis[2] = runList.get(test)->getA4();
+                    tAxis[4] = runList.get(test)->getA5();
+                    tAxis[7] = runList.get(test)->getA6();
                     
 
                     can1.sendFrame(0x0A1, bAxis);
@@ -610,30 +725,14 @@ void program()
                     can1.sendFrame(0x0A2, tAxis);
                     delay(1000);
                     can1.sendFrame(0x0A0, execMove);
-                    
+                    test++;
                     
                 }
                 if ((x >= 360) && (x <= 460))
                 {
                     waitForItRect(360, 260, 460, 300);
-                    uint8_t bAxis[8] = { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
-                    uint8_t tAxis[8] = { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
-                    uint8_t execMove[8] = { 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
-
-
-                    bAxis[2] = runList.get(1)->getA1();
-                    bAxis[4] = runList.get(1)->getA2();
-                    bAxis[7] = runList.get(1)->getA3();
-                    tAxis[2] = runList.get(1)->getA4();
-                    tAxis[4] = runList.get(1)->getA5();
-                    tAxis[7] = runList.get(1)->getA6();
-
-
-                    can1.sendFrame(0x0A1, bAxis);
-                    delay(500);
-                    can1.sendFrame(0x0A2, tAxis);
-                    delay(1000);
-                    can1.sendFrame(0x0A0, execMove);
+                    programLoaded = true;
+                    programRun();
                 }
             }
         }
@@ -766,10 +865,10 @@ void setup() {
 
 void pageControl(int page, bool value = false)
 {
-    byte test2[8] = { 0xAA, 0xBB, 0xCC, 0xDD, 0xEE, 0xFF, 0x11, 0x22 };
-    typedef byte test[8];
-    test a1;
-    int a2;
+    //byte test2[8] = { 0xAA, 0xBB, 0xCC, 0xDD, 0xEE, 0xFF, 0x11, 0x22 };
+    //typedef byte test[8];
+    //test a1;
+    //int a2;
     
     static bool hasDrawn;
     static bool isExecute;
@@ -799,7 +898,7 @@ void pageControl(int page, bool value = false)
                 hasDrawn = true;
             }
             // Call buttons if any
-            program();
+            programButtons();
             break;
         case 3:
             if (!hasDrawn)
@@ -822,8 +921,9 @@ void pageControl(int page, bool value = false)
         case 5:
             if (!hasDrawn)
             {
-                can1.getFrame(0xA1);
                 hasDrawn = true;
+                programLoaded = true;
+                programRun();
             }
             // Call buttons if any
             break;

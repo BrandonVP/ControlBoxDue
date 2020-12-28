@@ -26,7 +26,9 @@ class CANBus
 	void getMessage(test&, int&);
 	void startCAN();
 	void sendFrame(uint16_t, byte*);
+	bool msgCheck(uint16_t, uint8_t, int8_t);
 	uint8_t* getFrame(uint16_t);
+	uint16_t getFrameID();
 	bool hasMSGr();
 };
 #endif

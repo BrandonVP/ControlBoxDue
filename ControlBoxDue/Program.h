@@ -12,21 +12,23 @@
 class Program
 {
  protected:
-	 uint8_t a1 = 0;
-	 uint8_t a2 = 0;
-	 uint8_t a3 = 0;
-	 uint8_t a4 = 0;
-	 uint8_t a5 = 0;
-	 uint8_t a6 = 0;
-	 bool grip = 0;
+	 bool gripStatus = true;
+	 uint16_t a1 = 0;
+	 uint16_t a2 = 0;
+	 uint16_t a3 = 0;
+	 uint16_t a4 = 0;
+	 uint16_t a5 = 0;
+	 uint16_t a6 = 0;
+	 uint8_t channel = 0;
  public:
-	Program(uint8_t*, bool);
-	uint8_t getA1();
-	uint8_t getA2();
-	uint8_t getA3();
-	uint8_t getA4();
-	uint8_t getA5();
-	uint8_t getA6();
+	Program(uint16_t*, bool, uint8_t);
+	uint16_t getA1();
+	uint16_t getA2();
+	uint16_t getA3();
+	uint16_t getA4();
+	uint16_t getA5();
+	uint16_t getA6();
+	uint8_t getID();
 	bool getGrip();
 };
 
