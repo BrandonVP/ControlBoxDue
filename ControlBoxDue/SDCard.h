@@ -17,10 +17,12 @@ class SDCard
 
  public:
 	bool startSD();
-	void writeFile(uint8_t, int);
-	void writeFile(String);
-	void writeFile(int);
-	void writeFileln();
+	void writeFile(String, uint8_t);
+	void writeFile(String, String);
+	void writeFile(char*, int, int);
+	void writeFile(char*, String);
+	void writeFileln(String);
+	void deleteFile(char*);
 	String readFile();
 };
 

@@ -15,13 +15,17 @@ bool SDCard::startSD()
     return true;
 }
 
-void SDCard::writeFile(String incoming)
+/*=========================================================
+    Write File Methods
+===========================================================*/
+// Write string to SD Card
+void SDCard::writeFile(char* filename, String incoming)
 {
     // File created and opened for writing
-    myFile = SD.open("CANLOG.txt", FILE_WRITE);  
+    myFile = SD.open(filename, FILE_WRITE);
 
     // Check if file was sucsefully open
-    if (myFile)        
+    if (myFile)
     {
         myFile.print(incoming);
         myFile.close();
@@ -29,13 +33,14 @@ void SDCard::writeFile(String incoming)
     return;
 }
 
-void SDCard::writeFile(int incoming)
+// Write string to SD Card
+void SDCard::writeFile(String filename, String incoming)
 {
     // File created and opened for writing
-    myFile = SD.open("CANLOG.txt", FILE_WRITE); 
+    myFile = SD.open(filename, FILE_WRITE);
 
     // Check if file was sucsefully open
-    if (myFile)      
+    if (myFile)
     {
         myFile.print(incoming);
         myFile.close();
@@ -43,13 +48,28 @@ void SDCard::writeFile(int incoming)
     return;
 }
 
-void SDCard::writeFile(uint8_t incoming, int base)
+void SDCard::writeFile(String filename, uint8_t incoming)
 {
     // File created and opened for writing
-    myFile = SD.open("CANLOG.txt", FILE_WRITE); 
+    myFile = SD.open(filename, FILE_WRITE);
 
     // Check if file was sucsefully open
-    if (myFile)        
+    if (myFile)
+    {
+        myFile.print(incoming);
+        myFile.close();
+    }
+    return;
+}
+
+// Write integer and base to SD Card
+void SDCard::writeFile(char* filename, int incoming, int base)
+{
+    // File created and opened for writing
+    myFile = SD.open(filename, FILE_WRITE);
+
+    // Check if file was sucsefully open
+    if (myFile)
     {
         myFile.print(incoming, base);
         myFile.close();
@@ -57,19 +77,32 @@ void SDCard::writeFile(uint8_t incoming, int base)
     return;
 }
 
-void SDCard::writeFileln()
+// Write return to SD Card file
+void SDCard::writeFileln(String filename)
 {
     // File created and opened for writing
-    myFile = SD.open("CANLOG.txt", FILE_WRITE);
+    myFile = SD.open(filename, FILE_WRITE);
 
     // Check if file was sucsefully open
-    if (myFile) 
+    if (myFile)
     {
         myFile.println(" ");
         myFile.close();
     }
     return;
 }
+
+
+/*=========================================================
+    Delete File Methods
+===========================================================*/
+// Delete SD Card file
+void SDCard::deleteFile(char* filename)
+{
+    //remove any existing file with this name
+    SD.remove(filename);
+}
+
 
 String SDCard::readFile()
 {

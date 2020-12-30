@@ -42,12 +42,23 @@ CANBus can1;
 // Object to control SD Card Hardware
 SDCard sdCard;
 
+// AxisPos object used to get current angles of robot arm
 AxisPos axisPos;
 
+// Linked list of nodes for a program
 LinkedList<Program*> runList = LinkedList<Program*>();
+
+// Current selected program
 uint8_t selectedProgram = 0;
+
+// Has a program been loaded
 bool programLoaded = false;
 
+// UPDATE THESE TWO LINES FROM SD CARD DURING SETUP
+// List for populated program slots
+uint8_t emptyList[10] = { 1, 1, 0, 0, 0, 0, 0, 0, 0, 0 };
+// This array should populate from SD CARD
+String aList[10] = { "Program1", "Program2", "Program3", "Program4", "Program5", "Program6", "Program7", "Program8", "Program9", "Program10" };
 
 
 /*=========================================================
@@ -389,9 +400,9 @@ void manualControlBtns()
                 }
                 if ((x >= 360) && (x <= 450))  // Button: 1
                 {
-                    data[7] = (1 * multiply) + reverse;
-                    waitForItRect(360, 260, 450, 315, txId, data);
-                    data[7] = 0;
+data[7] = (1 * multiply) + reverse;
+waitForItRect(360, 260, 450, 315, txId, data);
+data[7] = 0;
                 }
             }
         }
@@ -439,13 +450,12 @@ void drawView()
 ============================================================*/
 void drawProgramScroll(int scroll)
 {
-    // This array should populate from SD CARD
-    String alist[10] = { "1-Axis Test", "2-Demo", "3-Empty", "4-Empty", "5-Empty", "6-Empty", "7-Empty", "8-Empty", "9-Empty", "10-Empty" };
-
+    // selected position = scroll * position
+    // if selected draw different color border
     int y = 50;
     for (int i = 0; i < 5; i++)
     {
-        drawSquareBtn(150, y, 410, y + 40, alist[scroll], menuBackground, menuBtnBorder, menuBtnText, LEFT);
+        drawSquareBtn(150, y, 410, y + 40, aList[scroll], menuBackground, menuBtnBorder, menuBtnText, LEFT);
         y = y + 40;
         scroll++;
     }
@@ -453,7 +463,7 @@ void drawProgramScroll(int scroll)
 
 void drawProgram(int scroll = 0)
 {
-    
+
     drawSquareBtn(141, 1, 478, 319, "", themeBackground, themeBackground, themeBackground, CENTER);
     drawSquareBtn(180, 10, 400, 45, "Program", themeBackground, themeBackground, menuBtnColor, CENTER);
     print_icon(435, 5, robotarm);
@@ -467,7 +477,7 @@ void drawProgram(int scroll = 0)
     drawSquareBtn(150, 260, 250, 300, "Create", menuBtnColor, menuBtnBorder, menuBtnText, CENTER);
     drawSquareBtn(255, 260, 355, 300, "Edit", menuBtnColor, menuBtnBorder, menuBtnText, CENTER);
     drawSquareBtn(360, 260, 460, 300, "Delete", menuBtnColor, menuBtnBorder, menuBtnText, CENTER);
-    
+
 }
 
 void addNode(bool grip = false, uint8_t channel = 1)
@@ -484,23 +494,42 @@ void addNode(bool grip = false, uint8_t channel = 1)
     runList.add(node);
 }
 
-void saveProgram(char* filename)
+void saveProgram()
 {
-    //SW.write file
-    // for linkedlist
-    // write to SD
+    String space = ", ";
+    // Write out linkedlist data to text file
+    for (uint8_t i = 0; i < runList.size(); i++)
+    {
+        sdCard.writeFile(aList[selectedProgram], runList.get(i)->getA1());
+        sdCard.writeFile(aList[selectedProgram], space);
+        sdCard.writeFile(aList[selectedProgram], runList.get(i)->getA2());
+        sdCard.writeFile(aList[selectedProgram], space);
+        sdCard.writeFile(aList[selectedProgram], runList.get(i)->getA3());
+        sdCard.writeFile(aList[selectedProgram], space);
+        sdCard.writeFile(aList[selectedProgram], runList.get(i)->getA4());
+        sdCard.writeFile(aList[selectedProgram], space);
+        sdCard.writeFile(aList[selectedProgram], runList.get(i)->getA5());
+        sdCard.writeFile(aList[selectedProgram], space);
+        sdCard.writeFile(aList[selectedProgram], runList.get(i)->getA6());
+        sdCard.writeFile(aList[selectedProgram], space);
+        sdCard.writeFile(aList[selectedProgram], runList.get(i)->getID());
+        sdCard.writeFile(aList[selectedProgram], space);
+        sdCard.writeFile(aList[selectedProgram], runList.get(i)->getGrip());
+        sdCard.writeFileln(aList[selectedProgram]);
+    }
 }
 
 void programDelete(char* filename)
 {
-    // SD.delete file
+    // Delete SD file then create new blank file
+    // Also clear out the nodes in the linked list
+    // myList.clear();
 }
 
 void loadProgram(char* filename)
 {
-    //SW.write file
-    // for linkedlist
-    // write to SD
+    // Load out text file data to linked list
+    // Once a program is loaded it is ready to run if the user presses exec
 }
 
 void programRun()
@@ -622,15 +651,25 @@ void programRun()
     }
 }
 
-void programEdit(int linkPos)
+// Edit and Create use the same function
+void programEdit(uint8_t scroll = 0)
 {
-    //Loads list into linkedlist
-    
-    // for (EOF)
-    //{
-    // nextline = array
-    // runList.add(new object(array))
-    //}
+    // Each node should be listed with all information, might need small text
+    int y = 50;
+    for (int i = 0; i < 5; i++)
+    {
+        runList.get(i)->getA1();
+        drawSquareBtn(150, y, 410, y + 40, aList[scroll], menuBackground, menuBtnBorder, menuBtnText, LEFT);
+        y = y + 40;
+        scroll++;
+    }
+    // Load linked list from SD card unless already in linked list
+    // Need some gui to edit, add and instert nodes
+    // Save button will write to SD card and return
+    // cancel button will return without saving
+    // 5 buttons in total
+
+    // To edit a node just replace with a new position
 }
 
 void programButtons()
@@ -650,26 +689,31 @@ void programButtons()
                 {
                     waitForItRect(150, 50, 410, 90);
                     Serial.println(1 + scroll);
+                    selectedProgram = 0 + scroll;
                 }
                 if ((y >= 90) && (y <= 130))
                 {
                     waitForItRect(150, 90, 410, 130);
                     Serial.println(2 + scroll);
+                    selectedProgram = 1 + scroll;
                 }
                 if ((y >= 130) && (y <= 170))
                 {
                     waitForItRect(150, 130, 410, 170);
                     Serial.println(3 + scroll);
+                    selectedProgram = 2 + scroll;
                 }
                 if ((y >= 170) && (y <= 210))
                 {
                     waitForItRect(150, 170, 410, 210);
                     Serial.println(4 + scroll);
+                    selectedProgram = 3 + scroll;
                 }
                 if ((y >= 210) && (y <= 250))
                 {
                     waitForItRect(150, 210, 410, 250);
                     Serial.println(5 + scroll);
+                    selectedProgram = 4 + scroll;
                 }
             }
             if ((x >= 420) && (x <= 470))  
@@ -731,8 +775,7 @@ void programButtons()
                 if ((x >= 360) && (x <= 460))
                 {
                     waitForItRect(360, 260, 460, 300);
-                    programLoaded = true;
-                    programRun();
+                    saveProgram();
                 }
             }
         }
@@ -846,8 +889,6 @@ void setup() {
     {
         Serial.println("SD Running");
     }
-    sdCard.writeFile("off");
-    sdCard.writeFileln();
    
 
     myGLCD.InitLCD();
