@@ -1,4 +1,6 @@
 // SDCard.h
+#include <LinkedList.h>
+#include "Program.h"
 
 #ifndef _SDCard_h
 #define _SDCard_h
@@ -22,8 +24,8 @@ class SDCard
 	void writeFile(char*, int, int);
 	void writeFile(char*, String);
 	void writeFileln(String);
-	void deleteFile(char*);
-	String readFile();
+	void deleteFile(String);
+	void readFile(String, LinkedList<Program*> &);
 };
 
 #endif

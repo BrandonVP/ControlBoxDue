@@ -28,3 +28,5 @@
 // Prevents physical button doubletap
 #define BUTTON_DELAY 200
 
+
+void pageControl(int page, bool value);

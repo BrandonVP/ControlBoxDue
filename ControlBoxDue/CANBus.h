@@ -10,6 +10,7 @@
 	#include "WProgram.h"
 #endif
 class SDCard;
+class Program;
 
 class CANBus
 {
