@@ -49,6 +49,9 @@ LinkedList<Program*> runList = LinkedList<Program*>();
 // Current selected program
 uint8_t selectedProgram = 0;
 
+// Current selected node
+uint8_t selectedNode = 0;
+
 // Has a program been loaded
 bool programLoaded = false;
 
@@ -58,6 +61,8 @@ uint8_t emptyList[10] = { 1, 1, 0, 0, 0, 0, 0, 0, 0, 0 };
 // This array should populate from SD CARD
 String aList[10] = { "Program1", "Program2", "Program3", "Program4", "Program5", "Program6", "Program7", "Program8", "Program9", "Program10" };
 
+uint8_t controlPage = 1;
+bool programOpen = false;
 
 /*=========================================================
     Framework Functions
@@ -157,6 +162,7 @@ void drawSquareBtn(int x_start, int y_start, int x_stop, int y_stop, String butt
     }
 }
 
+// Highlights round buttons when selected
 void waitForIt(int x1, int y1, int x2, int y2)
 {
     myGLCD.setColor(themeBackground);
@@ -167,6 +173,7 @@ void waitForIt(int x1, int y1, int x2, int y2)
     myGLCD.drawRoundRect(x1, y1, x2, y2);
 }
 
+// Highlights square buttons when selected
 void waitForItRect(int x1, int y1, int x2, int y2)
 {
     myGLCD.setColor(themeBackground);
@@ -177,6 +184,8 @@ void waitForItRect(int x1, int y1, int x2, int y2)
     myGLCD.drawRect(x1, y1, x2, y2);
 }
 
+// Highlights square buttons when selected and sends CAN message
+// This function is used for manual control
 void waitForItRect(int x1, int y1, int x2, int y2, int txId, byte data[])
 {
     myGLCD.setColor(themeBackground);
@@ -245,7 +254,7 @@ return;
 }
 
 // Draw page button function
-void manualControlBtns()
+void manualControlButtons()
 {
     // Mutiply is a future funtion to allow movement of multiple angles at a time instead of just 1
     int multiply = 1; 
@@ -468,9 +477,9 @@ void drawProgramScroll(int scroll)
     
     for (int i = 0; i < 5; i++)
     {
-        drawSquareBtn(150, y, 410, y + 40, aList[scroll], menuBackground, menuBtnBorder, menuBtnText, LEFT);
+        drawSquareBtn(150, y, 410, y + 40, aList[i + scroll], menuBackground, menuBtnBorder, menuBtnText, LEFT);
         y = y + 40;
-        scroll++;
+        //scroll++;
     }
 }
 
@@ -499,59 +508,6 @@ void drawProgram(int scroll = 0)
     drawSquareBtn(150, 260, 250, 300, "Open", menuBtnColor, menuBtnBorder, menuBtnText, CENTER);
     drawSquareBtn(255, 260, 355, 300, "Load", menuBtnColor, menuBtnBorder, menuBtnText, CENTER);
     drawSquareBtn(360, 260, 460, 300, "Delete", menuBtnColor, menuBtnBorder, menuBtnText, CENTER);
-}
-
-// Adds current position to program linked list 
-void addNode(bool grip = false, uint8_t channel = 1)
-{
-    // Array of arm axis positions
-    uint16_t posArray[8] = { 0x000, 0x000, 0x000, 0x000, 0x000, 0x000, 0x000, 0x000 };
-
-    // Request and update 
-    axisPos.updateAxisPos();
-
-    // Update array value with data collected from the axis position update
-    posArray[0] = axisPos.getA1C1();
-    posArray[1] = axisPos.getA2C1();
-    posArray[2] = axisPos.getA3C1();
-    posArray[3] = axisPos.getA4C1();
-    posArray[4] = axisPos.getA5C1();
-    posArray[5] = axisPos.getA6C1();
-
-    // Create program object with array positions, grip on/off, and channel
-    Program* node = new Program(posArray, grip, channel);
-
-    // Add created object to linked list
-    runList.add(node);
-}
-
-// Writes current selected linked list to SD card
-void saveProgram()
-{
-    // Delimiter 
-    String space = ", ";
-
-    // Write out linkedlist data to text file
-    for (uint8_t i = 0; i < runList.size(); i++)
-    {
-        sdCard.writeFile(aList[selectedProgram], ",");
-        sdCard.writeFile(aList[selectedProgram], runList.get(i)->getA1());
-        sdCard.writeFile(aList[selectedProgram], space);
-        sdCard.writeFile(aList[selectedProgram], runList.get(i)->getA2());
-        sdCard.writeFile(aList[selectedProgram], space);
-        sdCard.writeFile(aList[selectedProgram], runList.get(i)->getA3());
-        sdCard.writeFile(aList[selectedProgram], space);
-        sdCard.writeFile(aList[selectedProgram], runList.get(i)->getA4());
-        sdCard.writeFile(aList[selectedProgram], space);
-        sdCard.writeFile(aList[selectedProgram], runList.get(i)->getA5());
-        sdCard.writeFile(aList[selectedProgram], space);
-        sdCard.writeFile(aList[selectedProgram], runList.get(i)->getA6());
-        sdCard.writeFile(aList[selectedProgram], space);
-        sdCard.writeFile(aList[selectedProgram], runList.get(i)->getID());
-        sdCard.writeFile(aList[selectedProgram], space);
-        sdCard.writeFile(aList[selectedProgram], runList.get(i)->getGrip());
-        sdCard.writeFileln(aList[selectedProgram]);
-    }
 }
 
 // Deletes current selected program from 
@@ -795,6 +751,7 @@ void programButtons()
                 waitForItRect(150, 260, 250, 300);
                 runList.clear();
                 loadProgram();
+                programOpen = true;
                 pageControl(6, 0);
             }
             if ((x >= 255) && (x <= 355))
@@ -817,19 +774,37 @@ void programButtons()
     return;
 }
 
+
 /*==========================================================
                     Edit Program 
 ============================================================*/
+// Draws scrollable box that contains all the nodes in a program
 void drawProgramEditScroll(uint8_t scroll = 0)
 {
+    myGLCD.setFont(SmallFont);
+    uint8_t nodeSize = runList.size();
+    Serial.println(nodeSize);
     // Each node should be listed with all information, might need small text
-    int y = 50;
+    int row = 50;
     for (int i = 0; i < 5; i++)
     {
-
-        drawSquareBtn(150, y, 410, y + 40, String(runList.get(i)->getA1()), menuBackground, menuBtnBorder, menuBtnText, LEFT);
-        y = y + 40;
-        scroll++;
+        String position = String(i + scroll);
+        String a = ":";
+        String b = " ";
+        String label = position + a + String(runList.get(i + scroll)->getA1()) + b + String(runList.get(i + scroll)->getA2())
+            + b + String(runList.get(i + scroll)->getA3()) + b + String(runList.get(i + scroll)->getA4()) + b + String(runList.get(i + scroll)->getA5())
+            + b + String(runList.get(i + scroll)->getA6()) + b + String(runList.get(i + scroll)->getGrip()) + b + String(runList.get(i + scroll)->getID());
+        if (i + scroll < nodeSize)
+        {
+            drawSquareBtn(150, row, 410, row + 40, label, menuBackground, menuBtnBorder, menuBtnText, LEFT);
+        }
+        else
+        {
+            drawSquareBtn(150, row, 410, row + 40, "", menuBackground, menuBtnBorder, menuBtnText, LEFT);
+        }
+        
+        row = row + 40;
+        //scroll++;
     }
     // Load linked list from SD card unless already in linked list
     // Need some gui to edit, add and instert nodes
@@ -838,18 +813,111 @@ void drawProgramEditScroll(uint8_t scroll = 0)
     // 5 buttons in total
 
     // To edit a node just replace with a new position
+    myGLCD.setFont(BigFont);
 }
 
+// Draws buttons for edit program function
 void drawProgramEdit(uint8_t scroll = 0)
 {
-    drawSquareBtn(150, 260, 250, 300, "Add", menuBtnColor, menuBtnBorder, menuBtnText, CENTER);
-    drawSquareBtn(255, 260, 355, 300, "Insert", menuBtnColor, menuBtnBorder, menuBtnText, CENTER);
-    drawSquareBtn(360, 260, 460, 300, "Delete", menuBtnColor, menuBtnBorder, menuBtnText, CENTER);
+    // Clear LCD to be written
+    drawSquareBtn(141, 1, 478, 319, "", themeBackground, themeBackground, themeBackground, CENTER);
+
+    // Print arm logo
+    print_icon(435, 5, robotarm);
+
+    // Print page title
+    drawSquareBtn(180, 10, 400, 45, "Edit", themeBackground, themeBackground, menuBtnColor, CENTER);
+
+    // Scroll buttons
+    myGLCD.setColor(menuBtnColor);
+    myGLCD.setBackColor(themeBackground);
+    drawSquareBtn(420, 100, 470, 150, "/\\", menuBtnColor, menuBtnBorder, menuBtnText, CENTER);
+    drawSquareBtn(420, 150, 470, 200, "\\/", menuBtnColor, menuBtnBorder, menuBtnText, CENTER);
+
+    // Draw program edit buttons
+    drawSquareBtn(150, 260, 230, 310, "Add", menuBtnColor, menuBtnBorder, menuBtnText, CENTER);
+    drawSquareBtn(230, 260, 310, 310, "Ins", menuBtnColor, menuBtnBorder, menuBtnText, CENTER);
+    drawSquareBtn(310, 260, 390, 310, "Del", menuBtnColor, menuBtnBorder, menuBtnText, CENTER);
+    drawSquareBtn(390, 260, 470, 310, "Save", menuBtnColor, menuBtnBorder, menuBtnText, CENTER);
+
+    drawSquareBtn(420, 50, 470, 90, "X", menuBtnColor, menuBtnBorder, menuBtnText, CENTER);
 }
 
+// Adds current position to program linked list 
+void addNode(int insert = -1, bool grip = false, uint8_t channel = 1)
+{
+    // Array of arm axis positions
+    uint16_t posArray[8] = { 0x000, 0x000, 0x000, 0x000, 0x000, 0x000, 0x000, 0x000 };
+
+    // Request and update 
+    axisPos.updateAxisPos();
+
+    // Update array value with data collected from the axis position update
+    posArray[0] = axisPos.getA1C1();
+    posArray[1] = axisPos.getA2C1();
+    posArray[2] = axisPos.getA3C1();
+    posArray[3] = axisPos.getA4C1();
+    posArray[4] = axisPos.getA5C1();
+    posArray[5] = axisPos.getA6C1();
+
+    // Create program object with array positions, grip on/off, and channel
+    Program* node = new Program(posArray, grip, channel);
+
+    if (insert < 0)
+    {
+        // Add created object to linked list
+        runList.add(node);
+    }
+    else
+    {
+        runList.add(insert, node);
+    }
+   
+}
+
+void deleteNode(uint16_t nodeLocation)
+{
+    runList.remove(nodeLocation);
+}
+
+// Insert current position to program linked list
+void insertNode()
+{
+
+}
+
+// Writes current selected linked list to SD card
+void saveProgram()
+{
+    // Delimiter 
+    String space = ", ";
+
+    // Write out linkedlist data to text file
+    for (uint8_t i = 0; i < runList.size(); i++)
+    {
+        sdCard.writeFile(aList[selectedProgram], ",");
+        sdCard.writeFile(aList[selectedProgram], runList.get(i)->getA1());
+        sdCard.writeFile(aList[selectedProgram], space);
+        sdCard.writeFile(aList[selectedProgram], runList.get(i)->getA2());
+        sdCard.writeFile(aList[selectedProgram], space);
+        sdCard.writeFile(aList[selectedProgram], runList.get(i)->getA3());
+        sdCard.writeFile(aList[selectedProgram], space);
+        sdCard.writeFile(aList[selectedProgram], runList.get(i)->getA4());
+        sdCard.writeFile(aList[selectedProgram], space);
+        sdCard.writeFile(aList[selectedProgram], runList.get(i)->getA5());
+        sdCard.writeFile(aList[selectedProgram], space);
+        sdCard.writeFile(aList[selectedProgram], runList.get(i)->getA6());
+        sdCard.writeFile(aList[selectedProgram], space);
+        sdCard.writeFile(aList[selectedProgram], runList.get(i)->getID());
+        sdCard.writeFile(aList[selectedProgram], space);
+        sdCard.writeFile(aList[selectedProgram], runList.get(i)->getGrip());
+        sdCard.writeFileln(aList[selectedProgram]);
+    }
+}
+
+// Button functions for edit program page
 void programEditButtons()
 {
-    static int test = 0;
     static int scroll = 0;
     // Touch screen controls
     if (myTouch.dataAvailable())
@@ -864,35 +932,47 @@ void programEditButtons()
             {
                 waitForItRect(150, 50, 410, 90);
                 Serial.println(1 + scroll);
-
+                selectedNode = 0 + scroll;
+                drawProgramEditScroll(scroll);
             }
             if ((y >= 90) && (y <= 130))
             {
                 waitForItRect(150, 90, 410, 130);
                 Serial.println(2 + scroll);
-
+                selectedNode = 1 + scroll;
+                drawProgramEditScroll(scroll);
             }
             if ((y >= 130) && (y <= 170))
             {
                 waitForItRect(150, 130, 410, 170);
                 Serial.println(3 + scroll);
-
+                selectedNode = 2 + scroll;
+                drawProgramEditScroll(scroll);
             }
             if ((y >= 170) && (y <= 210))
             {
                 waitForItRect(150, 170, 410, 210);
                 Serial.println(4 + scroll);
-
+                selectedNode = 3 + scroll;
+                drawProgramEditScroll(scroll);
             }
             if ((y >= 210) && (y <= 250))
             {
                 waitForItRect(150, 210, 410, 250);
                 Serial.println(5 + scroll);
-
+                selectedNode = 4 + scroll;
+                drawProgramEditScroll(scroll);
             }
         }
         if ((x >= 420) && (x <= 470))
         {
+            if ((y >= 50) && (y <= 90))
+            {
+                // Cancel
+                waitForItRect(420, 50, 470, 90);
+                programOpen = false;
+                pageControl(2, false);
+            }
             if ((y >= 100) && (y <= 150))
             {
                 waitForIt(420, 100, 470, 150);
@@ -902,13 +982,10 @@ void programEditButtons()
                     drawProgramEditScroll(scroll);
                 }
             }
-        }
-        if ((x >= 420) && (x <= 470))
-        {
             if ((y >= 150) && (y <= 200))
             {
                 waitForIt(420, 150, 470, 200);
-                if (scroll < 5)
+                if (scroll < 10)
                 {
                     scroll++;
                     drawProgramEditScroll(scroll);
@@ -916,32 +993,48 @@ void programEditButtons()
             }
         }
 
-        if ((y >= 260) && (y <= 300))
+        if ((y >= 260) && (y <= 310))
         {
-            if ((x >= 150) && (x <= 250))
+            if ((x >= 150) && (x <= 230))
             {
-                waitForItRect(150, 260, 250, 300);
+                // Add node
+                waitForItRect(150, 260, 230, 310);
                 addNode();
+                drawProgramEditScroll(scroll);
             }
-            if ((x >= 255) && (x <= 355))
+            if ((x >= 230) && (x <= 310))
             {
-                waitForItRect(255, 260, 355, 300);
-                //Replace node with new node
-
+                // Insert node
+                waitForItRect(230, 260, 310, 310);
+                addNode(selectedNode);
+                drawProgramEditScroll(scroll);
             }
-            if ((x >= 360) && (x <= 460))
+            if ((x >= 310) && (x <= 390))
             {
-                waitForItRect(360, 260, 460, 300);
-                // Selected node.delete from list
+                // Delete node
+                waitForItRect(310, 260, 390, 310);
+                deleteNode(selectedNode);
+                drawProgramEditScroll(scroll);
+            }
+            if ((x >= 390) && (x <= 470))
+            {
+                // Save program
+                waitForItRect(390, 260, 470, 310);
+                programDelete();
+                saveProgram();
+                programOpen = false;
+                pageControl(2, false);
             }
         }
     }
     return;
 }
 
+
 /*==========================================================
                     Configure Arm
 ============================================================*/
+// Draws the config page
 void drawConfig()
 {
     drawSquareBtn(180, 10, 400, 45, "Configuration", themeBackground, themeBackground, menuBtnColor, CENTER);
@@ -968,7 +1061,8 @@ void homeArm(uint8_t* armIDArray)
     can1.sendFrame(armIDArray[2], data3);
 }
 
-void config()
+// Button functions for config page
+void configButtons()
 {
     uint8_t setHomeId[8] = { 0x00, 0x03, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
     uint8_t* setHomeIdPtr = setHomeId;
@@ -1013,6 +1107,7 @@ void config()
     }
     return;
 }
+
 
 /*=========================================================
     Framework Functions
@@ -1059,6 +1154,7 @@ void setup() {
     drawMenu();
 }
 
+// Page control framework
 void pageControl(int page, bool value = false)
 {
     // Static bool ensures the page is drawn only once while the loop is running
@@ -1081,15 +1177,21 @@ void pageControl(int page, bool value = false)
                 drawView();
                 axisPos.drawAxisPos(myGLCD);
                 hasDrawn = true;
+                controlPage = page;
             }
             // Call buttons if any
             break;
         case 2:
+            if (programOpen)
+            {
+                pageControl(6);
+            }
             // Draw page
             if (!hasDrawn)
             {
                 drawProgram();
                 hasDrawn = true;
+                controlPage = page;
             }
             // Call buttons if any
             programButtons();
@@ -1100,9 +1202,10 @@ void pageControl(int page, bool value = false)
             {
                 drawManualControl();
                 hasDrawn = true;
+                controlPage = page;
             }
             // Call buttons if any
-            manualControlBtns();
+            manualControlButtons();
             break;
         case 4:
             // Draw page
@@ -1110,9 +1213,10 @@ void pageControl(int page, bool value = false)
             {
                 drawConfig();
                 hasDrawn = true;
+                controlPage = page;
             }
             // Call buttons if any
-            config();
+            configButtons();
             break;
         case 5:
             // Draw page
@@ -1121,7 +1225,7 @@ void pageControl(int page, bool value = false)
                 hasDrawn = true;
                 programLoaded = true;
                 programRun();
-                pageControl(2);
+                pageControl(controlPage, true);
             }
             page = 2;
             // Call buttons if any
@@ -1134,6 +1238,7 @@ void pageControl(int page, bool value = false)
                 programLoaded = true;
                 drawProgramEdit();
                 drawProgramEditScroll();
+                controlPage = page;
             }
             // Call buttons if any
             programEditButtons();
@@ -1153,6 +1258,7 @@ void errorMSG(String title, String eMessage1, String eMessage2)
     drawRoundBtn(400, 140, 450, 170, "X", menuBtnColor, menuBtnColor, menuBtnText, CENTER);
 }
 
+// Error message without confirmation
 uint8_t errorMSGBtn(uint8_t page)
 {
     // Touch screen controls
@@ -1173,6 +1279,7 @@ uint8_t errorMSGBtn(uint8_t page)
     }
 }
 
+// Buttons for the main menu
 void menuButtons()
 {
     while (true)
@@ -1262,5 +1369,5 @@ void menuButtons()
 // Calls pageControl with a value of 1 to set view page as the home page
 void loop() 
 {
-    pageControl(1);
+    pageControl(controlPage);
 }
