@@ -3,6 +3,14 @@
 #include <UTFT.h>
 #ifndef _AxisPos_h
 #define _AxisPos_h
+#define LOWER 0x01
+#define ARM1ID 0xA0
+#define ARM1RXID 0xC1
+#define UPPER 0x02
+#define ARM2ID 0x0B0
+#define ARM2RXID 0xC2
+#define MSGDELAY 0x0A
+
 
 #if defined(ARDUINO) && ARDUINO >= 100
 	#include "arduino.h"
@@ -14,34 +22,32 @@ class CANBus;
 class AxisPos
 {
  private:
-	 uint16_t ARM1ID = 0x0A0;
-	 uint16_t ARM2ID = 0x0B0;
 
-	 bool isArm1 = 0;
-	 bool isArm2 = 0;
+	 uint16_t a1c1 = 0;
+	 uint16_t a2c1 = 0;
+	 uint16_t a3c1 = 0;
+	 uint16_t a4c1 = 0;
+	 uint16_t a5c1 = 0;
+	 uint16_t a6c1 = 0;
 
-	 int a1c1 = -1;
-	 int a2c1 = -1;
-	 int a3c1 = -1;
-	 int a4c1 = -1;
-	 int a5c1 = -1;
-	 int a6c1 = -1;
-
-	 int a1c2 = -1;
-	 int a2c2 = -1;
-	 int a3c2 = -1;
-	 int a4c2 = -1;
-	 int a5c2 = -1;
-	 int a6c2 = -1;
+	 uint16_t a1c2 = 0;
+	 uint16_t a2c2 = 0;
+	 uint16_t a3c2 = 0;
+	 uint16_t a4c2 = 0;
+	 uint16_t a5c2 = 0;
+	 uint16_t a6c2 = 0;
 
 	 CANBus can1;
 	 UTFT LCD;
 
+	 bool isResponseCh1 = false;
+	 bool isResponseCh2 = false;
+
  public:
 	AxisPos();
-	void drawAxisPos(UTFT);
+	void drawAxisPos(UTFT, bool);
 	void updateAxisPos();
-	void armSearch();
+	void armSearch(uint16_t*);
 	int getA1C1();
 	int getA2C1();
 	int getA3C1();
@@ -56,4 +62,3 @@ class AxisPos
 	int getA6C2();
 };
 #endif
-

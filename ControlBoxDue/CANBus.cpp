@@ -67,8 +67,6 @@ uint8_t* CANBus::getFrame(uint16_t IDFilter)
     // Create object to save message
     CAN_FRAME incoming;
 
-    
-
     // If buffer inbox has a message
     if (Can0.available() > 0) 
     {
@@ -80,6 +78,14 @@ uint8_t* CANBus::getFrame(uint16_t IDFilter)
         hasMSG = false;
     }
     return MSGFrame;
+}
+
+void CANBus::resetMSGFrame()
+{
+    for (uint8_t i = 0; i < 8; i++)
+    {
+        MSGFrame[i] = 0x00;
+    }
 }
 
 // Method used for CAN recording
@@ -115,6 +121,7 @@ uint16_t CANBus::getFrameID()
     return incoming.id;
 }
 
+// Reset hasMSG to true
 bool CANBus::hasMSGr() {
     bool temp = hasMSG;
     hasMSG = true;
@@ -122,7 +129,7 @@ bool CANBus::hasMSGr() {
 }
 
 // Method used to manually get the ID and byte array
-void CANBus::getMessage(test& a, int& b)
+void CANBus::getMessage(frame& a, int& b)
 {
     CAN_FRAME incoming;
     if (Can0.available() > 0) {
@@ -135,34 +142,3 @@ void CANBus::getMessage(test& a, int& b)
 
     }
 }
-
-//MOVE TO METHODS
-/*
-CAN_FRAME incoming;
-static unsigned long lastTime = 0;
-
-if (Can0.available() > 0) {
-    Can0.read(incoming);
-    test = incoming.data.byte[0];
-    sendData(test);
-
-
-    SD.begin(CSPIN);        //SD Card is initialized
-    //SD.remove("Test2.txt"); //remove any existing file with this name
-    myFile = SD.open("Test2.txt", FILE_WRITE);  //file created and opened for writing
-
-    if (myFile)        //file has really been opened
-    {
-        myFile.print("ID: ");
-        myFile.print(incoming.id);
-        myFile.print(" MSG:");
-        for (int count = 0; count < incoming.length; count++) {
-            myFile.print(incoming.data.bytes[count], HEX);
-            myFile.print(" ");
-        }
-        myFile.println();
-        myFile.close();
-
-    }
-}
-*/

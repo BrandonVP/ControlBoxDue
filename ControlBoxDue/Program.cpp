@@ -4,7 +4,7 @@
 
 #include "Program.h"
 
-Program::Program(uint16_t* posArray, bool grip, uint8_t ch)
+Program::Program(uint16_t* posArray, uint8_t grip, uint8_t ch)
 {
 	a1 = posArray[0];
 	a2 = posArray[1];
@@ -40,11 +40,11 @@ uint16_t Program::getA6()
 {
 	return a6;
 }
-bool Program::getGrip()
+uint8_t Program::getGrip()
 {
 	return gripStatus;
 }
-uint8_t Program::getID()
+uint16_t Program::getID()
 {
 	return channel;
 }

@@ -4,14 +4,13 @@
 #include "SDCard.h"
 #include <string>
 
-
 // File object
 File myFile;
 
 // Called at setup to initialize the SD Card
 bool SDCard::startSD()
 {
-    if (!SD.begin(8)) {
+    if (!SD.begin(SD_CARD_CS)) {
         return false;
     }
     return true;
@@ -105,6 +104,13 @@ void SDCard::deleteFile(String filename)
     SD.remove(filename);
 }
 
+bool SDCard::fileExists(String filename)
+{
+    myFile = SD.open(filename);
+    bool value = myFile.available();
+    myFile.close();
+    return value;
+}
 
 // Modified SdFat library code to read field in text file from sd
 void SDCard::readFile(String filename, LinkedList<Program*> &runList)
@@ -112,7 +118,7 @@ void SDCard::readFile(String filename, LinkedList<Program*> &runList)
     String tempStr;
     uint16_t posArray[6];
     uint8_t channel;
-    bool grip;
+    uint8_t grip;
     char c[20];
     myFile = SD.open(filename);
     myFile.readStringUntil(',');
@@ -148,44 +154,4 @@ void SDCard::readFile(String filename, LinkedList<Program*> &runList)
         
     }
     myFile.close();
-
-    /*
-    uint8_t size = 10;
-    char str[10];
-    char ch;
-    char* ptr;
-    size_t n = 0;
-    const char* delim = ",";
-    while (myFile.available()) {
-        while ((n + 1) < size && myFile.read(&ch, 1) == 1) {
-
-            str[n++] = ch;
-            if (strchr(delim, ch)) {
-                break;
-            }
-        }
-        str[n] = '\0';
-        Serial.println(strtol(str, &ptr, 16));
-    }
-    */
-
-
-
-    /*
-    myFile = SD.open(filename);
-    if (myFile) {
-        Serial.println(filename);
-
-        // read from the file until there's nothing else in it:
-        while (myFile.available()) {
-            Serial.write(myFile.read());
-        }
-        // close the file:
-        myFile.close();
-    }
-    else {
-        // if the file didn't open, print an error:
-        Serial.println(F("Unable to open file"));
-    }
-    */
 }
