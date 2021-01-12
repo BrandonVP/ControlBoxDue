@@ -12,19 +12,19 @@
 #define RIGHT 3
 
 // Arm 1 IDs
-#define ARM1_RX 0x0CA
-#define ARM1_M 0xA3
-#define ARM1_T 0xA2
-#define ARM1_B 0xA1
-#define ARM1_CONTROL 0x0A0
+constexpr auto ARM1_RX = 0x0C1;
+constexpr auto ARM1_M = 0x0A3;
+constexpr auto ARM1_T = 0x0A2;
+constexpr auto ARM1_B = 0x0A1;
+constexpr auto ARM1_CONTROL = 0x0A0;
 #define CHANNEL1 0
 
 // Arm 2 IDs
-#define ARM2_RX 0x0CB
-#define ARM2_M 0xB3
-#define ARM2_T 0xB2
-#define ARM2_B 0xB1
-#define ARM2_CONTROL 0x0B0
+constexpr auto ARM2_RX = 0x0C2;
+constexpr auto ARM2_M = 0x0B3;
+constexpr auto ARM2_T = 0x0B2;
+constexpr auto ARM2_B = 0x0B1;
+constexpr auto ARM2_CONTROL = 0x0B0;
 #define CHANNEL2 1
 
 // Prevents physical button doubletap

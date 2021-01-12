@@ -49,7 +49,7 @@ uint8_t controlPage = 1;
 uint8_t selectedProgram = 0;
 
 // CAN message ID and frame, value can be changed in manualControlButtons
-uint16_t txIdManual = 0x0A3;
+uint16_t txIdManual = ARM1_M;
 
 // Used to determine if EXEC should run
 bool programLoaded = false;
@@ -242,12 +242,12 @@ void drawManualControl()
 
     // Draw Select arm buttons
     drawSquareBtn(165, 225, 220, 265, "Arm", themeBackground, themeBackground, menuBtnColor, CENTER);
-    if (txIdManual == 0xA3)
+    if (txIdManual == ARM1_M)
     {
         drawSquareBtn(146, 260, 200, 315, "1", menuBtnText, menuBtnBorder, menuBtnColor, CENTER);
         drawSquareBtn(200, 260, 254, 315, "2", menuBtnColor, menuBtnBorder, menuBtnText, CENTER);
     }
-    else if (txIdManual == 0xB3)
+    else if (txIdManual == ARM2_M)
     {
         drawSquareBtn(146, 260, 200, 315, "1", menuBtnColor, menuBtnBorder, menuBtnText, CENTER);
         drawSquareBtn(200, 260, 254, 315, "2", menuBtnText, menuBtnBorder, menuBtnColor, CENTER);
@@ -401,14 +401,14 @@ void manualControlButtons()
                 // Select arm 1
                 drawSquareBtn(146, 260, 200, 315, "1", menuBtnText, menuBtnBorder, menuBtnColor, CENTER);
                 drawSquareBtn(200, 260, 254, 315, "2", menuBtnColor, menuBtnBorder, menuBtnText, CENTER);
-                txIdManual = 0x0A3;
+                txIdManual = ARM1_M;
             }
             if ((x >= 200) && (x <= 254))  
             {
                 // Select arm 2
                 drawSquareBtn(146, 260, 200, 315, "1", menuBtnColor, menuBtnBorder, menuBtnText, CENTER);
                 drawSquareBtn(200, 260, 254, 315, "2", menuBtnText, menuBtnBorder, menuBtnColor, CENTER);
-                txIdManual = 0x0B3;
+                txIdManual = ARM2_M;
             }
             if ((x >= 270) && (x <= 360))
             {
@@ -562,19 +562,19 @@ void programRun()
 
     for (uint8_t i = 0; i < runList.size(); i++)
     {
-        if (runList.get(i)->getID() == 0xA3)
+        if (runList.get(i)->getID() == ARM1_M)
         {
-            IDArray[0] = 0xA0;
-            IDArray[1] = 0xA1;
-            IDArray[2] = 0xA2;
-            incID = 0xC1;
+            IDArray[0] = ARM1_CONTROL;
+            IDArray[1] = ARM1_B;
+            IDArray[2] = ARM1_T;
+            incID = ARM1_RX;
         }
-        if (runList.get(i)->getID() == 0xB3)
+        if (runList.get(i)->getID() == ARM2_M)
         {
-            IDArray[0] = 0xB0;
-            IDArray[1] = 0xB1;
-            IDArray[2] = 0xB2;
-            incID = 0xC2;
+            IDArray[0] = ARM2_CONTROL;
+            IDArray[1] = ARM2_B;
+            IDArray[2] = ARM2_T;
+            incID = ARM2_RX;
         }
 
         // Populate CAN messages with angles from current linkedlist
@@ -612,6 +612,9 @@ void programRun()
             bAxis[7] = 0xFF;
         }
 
+        // Send first frame with axis 1-3
+        can1.sendFrame(IDArray[1], bAxis);
+
         // Axis 4
         if (runList.get(i)->getA4() <= 0xFF)
         {
@@ -645,6 +648,9 @@ void programRun()
             tAxis[7] = 0xFF;
         }
 
+        // Send second frame with axis 4-6
+        can1.sendFrame(IDArray[2], tAxis);
+
         // Change to array of IDs
         uint8_t ID = runList.get(i)->getID();
 
@@ -662,386 +668,20 @@ void programRun()
         {
             excMove[7] = 0x01;
         }
-        gripStatus = runList.get(i)->getGrip();
-
-        // Delay needed to prevent missed frames because Mega2560 with MCP2515 is slow
-        //delay(10);
-
-        // Get run time
-        //unsigned long timer = millis();
-
-        // Send first frame with axis 1-3
-        can1.sendFrame(IDArray[1], bAxis);
-        while (isWait)
-        {
-            //if ((millis() - timer > 500))
-            //{
-                //Serial.print(F("Communication Timeout"));
-                //return;
-            //}
-            if (can1.msgCheck(incID, 0x01, 0x01))
-            {
-                isWait = false;
-            }
-        }
-        isWait = true;
-
-        // Delay needed because Mega2560 with MCP2515 is slow
-        delay(10);
-
-        // Reset run timer
-        //timer = millis();
-
-        // Send second frame with axis 4-6
-        can1.sendFrame(IDArray[2], tAxis);
-        while (isWait)
-        {
-            //if ((millis() - timer > 500))
-            //{
-                //Serial.print(F("Communication Timeout"));
-                //return;
-            //}
-            if (can1.msgCheck(incID, 0x02, 0x01))
-            {
-                isWait = false;
-            }
-        }
-        isWait = true;
-
-        // Delay needed because Mega2560 with MCP2515 is slow
-        delay(10);
-
-        // Reset run timer
-        //timer = millis();
 
         // Send third frame with grip and execute command
         can1.sendFrame(IDArray[0], excMove);
+
+        // Wait for confirmation
         while (isWait)
         {
-            //if ((millis() - timer > 500))
-            //{
-                //Serial.print(F("Communication Timeout"));
-                //return;
-            //}
+
             if (can1.msgCheck(incID, 0x03, 0x01))
             {
                 isWait = false;
             }
         }
         isWait = true;
-    }
-}
-
-void programRun2()
-{
-    // Was this to clear leftover messages in buffer?
-    // Does it work? Is it needed?
-    can1.getFrameID();
-
-    // Bool control for while loop
-    bool isWait = true;
-
-    // Make sure a program was loaded to run
-    if (programLoaded == false)
-    {
-        return;
-    }
-
-    // CAN messages for axis movements
-    uint8_t bAxis[8] = { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
-    uint8_t tAxis[8] = { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
-    uint8_t excMove[8] = { 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
-    uint16_t IDArray[3];
-    uint16_t incID;
-    uint16_t incIDOld;
-
-
-    if (runList.get(0)->getID() == 0xA3)
-    {
-        IDArray[0] = 0xA0;
-        IDArray[1] = 0xA1;
-        IDArray[2] = 0xA2;
-        incID = 0xC1;
-    }
-    if (runList.get(0)->getID() == 0xB3)
-    {
-        IDArray[0] = 0xB0;
-        IDArray[1] = 0xB1;
-        IDArray[2] = 0xB2;
-        incID = 0xC2;
-    }
-
-    // Populate CAN messages with angles from current linkedlist
-
-    // Axis 1
-    if (runList.get(0)->getA1() <= 0xFF)
-    {
-        bAxis[3] = runList.get(0)->getA1();
-    }
-    else
-    {
-        bAxis[2] = runList.get(0)->getA1() - 0xFF;
-        bAxis[3] = 0xFF;
-    }
-
-    // Axis 2
-    if (runList.get(0)->getA2() <= 0xFF)
-    {
-        bAxis[5] = runList.get(0)->getA2();
-    }
-    else
-    {
-        bAxis[4] = runList.get(0)->getA2() - 0xFF;
-        bAxis[5] = 0xFF;
-    }
-
-    // Axis 3
-    if (runList.get(0)->getA3() <= 0xFF)
-    {
-        bAxis[7] = runList.get(0)->getA3();
-    }
-    else
-    {
-        bAxis[6] = runList.get(0)->getA3() - 0xFF;
-        bAxis[7] = 0xFF;
-    }
-
-    // Axis 4
-    if (runList.get(0)->getA4() <= 0xFF)
-    {
-        tAxis[3] = runList.get(0)->getA4();
-    }
-    else
-    {
-        tAxis[2] = runList.get(0)->getA4() - 0xFF;
-        tAxis[3] = 0xFF;
-    }
-
-    // Axis 5
-    if (runList.get(0)->getA5() <= 0xFF)
-    {
-        tAxis[5] = runList.get(0)->getA5();
-    }
-    else
-    {
-        tAxis[4] = runList.get(0)->getA5() - 0xFF;
-        tAxis[5] = 0xFF;
-    }
-
-    // Axis 6
-    if (runList.get(0)->getA5() <= 0xFF)
-    {
-        tAxis[7] = runList.get(0)->getA6();
-    }
-    else
-    {
-        tAxis[6] = runList.get(0)->getA6() - 0xFF;
-        tAxis[7] = 0xFF;
-    }
-
-    // Change to array of IDs
-    uint8_t ID = runList.get(0)->getID();
-
-    // Grip on/off or hold based on current and next state
-    // If there was a change in the grip bool
-    excMove[6] = 0x00;
-    excMove[7] = 0x00;
-
-    if (runList.get(0)->getGrip() == 0)
-    {
-        excMove[6] = 0x01;
-
-    }
-    else if (runList.get(0)->getGrip() == 1)
-    {
-        excMove[7] = 0x01;
-    }
-    gripStatus = runList.get(0)->getGrip();
-
-    // Delay needed to prevent missed frames because Mega2560 with MCP2515 is slow
-    //delay(10);
-
-
-    incIDOld = incID;
-
-    for (uint8_t i = 1; i < runList.size(); i++)
-    {
-        // Get run time
-//unsigned long timer = millis();
-
-// Send first frame with axis 1-3
-        can1.sendFrame(IDArray[1], bAxis);
-        while (isWait)
-        {
-            //if ((millis() - timer > 500))
-            //{
-                //Serial.print(F("Communication Timeout"));
-                //return;
-            //}
-            if (can1.msgCheck(incID, 0x01, 0x01))
-            {
-                isWait = false;
-            }
-        }
-        isWait = true;
-
-        // Delay needed because Mega2560 with MCP2515 is slow
-        delay(10);
-
-        // Reset run timer
-        //timer = millis();
-
-        // Send second frame with axis 4-6
-        can1.sendFrame(IDArray[2], tAxis);
-        while (isWait)
-        {
-            //if ((millis() - timer > 500))
-            //{
-                //Serial.print(F("Communication Timeout"));
-                //return;
-            //}
-            if (can1.msgCheck(incID, 0x02, 0x01))
-            {
-                isWait = false;
-            }
-        }
-        isWait = true;
-        can1.sendFrame(IDArray[0], excMove);
-
-
-
-
-
-
-        if (runList.get(i)->getID() == 0xA3)
-        {
-            IDArray[0] = 0xA0;
-            IDArray[1] = 0xA1;
-            IDArray[2] = 0xA2;
-            incID = 0xC1;
-        }
-        if (runList.get(i)->getID() == 0xB3)
-        {
-            IDArray[0] = 0xB0;
-            IDArray[1] = 0xB1;
-            IDArray[2] = 0xB2;
-            incID = 0xC2;
-        }
-
-        // Populate CAN messages with angles from current linkedlist
-
-        // Axis 1
-        if (runList.get(i)->getA1() <= 0xFF)
-        {
-            bAxis[3] = runList.get(i)->getA1();
-        }
-        else
-        {
-            bAxis[2] = runList.get(i)->getA1() - 0xFF;
-            bAxis[3] = 0xFF;
-        }
-
-        // Axis 2
-        if (runList.get(i)->getA2() <= 0xFF)
-        {
-            bAxis[5] = runList.get(i)->getA2();
-        }
-        else
-        {
-            bAxis[4] = runList.get(i)->getA2() - 0xFF;
-            bAxis[5] = 0xFF;
-        }
-
-        // Axis 3
-        if (runList.get(i)->getA3() <= 0xFF)
-        {
-            bAxis[7] = runList.get(i)->getA3();
-        }
-        else
-        {
-            bAxis[6] = runList.get(i)->getA3() - 0xFF;
-            bAxis[7] = 0xFF;
-        }
-
-        // Axis 4
-        if (runList.get(i)->getA4() <= 0xFF)
-        {
-            tAxis[3] = runList.get(i)->getA4();
-        }
-        else
-        {
-            tAxis[2] = runList.get(i)->getA4() - 0xFF;
-            tAxis[3] = 0xFF;
-        }
-
-        // Axis 5
-        if (runList.get(i)->getA5() <= 0xFF)
-        {
-            tAxis[5] = runList.get(i)->getA5();
-        }
-        else
-        {
-            tAxis[4] = runList.get(i)->getA5() - 0xFF;
-            tAxis[5] = 0xFF;
-        }
-
-        // Axis 6
-        if (runList.get(i)->getA5() <= 0xFF)
-        {
-            tAxis[7] = runList.get(i)->getA6();
-        }
-        else
-        {
-            tAxis[6] = runList.get(i)->getA6() - 0xFF;
-            tAxis[7] = 0xFF;
-        }
-
-        // Change to array of IDs
-        uint8_t ID = runList.get(i)->getID();
-
-        // Grip on/off or hold based on current and next state
-        // If there was a change in the grip bool
-        excMove[6] = 0x00;
-        excMove[7] = 0x00;
-
-        if (runList.get(i)->getGrip() == 0)
-        {
-            excMove[6] = 0x01;
-
-        }
-        else if (runList.get(i)->getGrip() == 1)
-        {
-            excMove[7] = 0x01;
-        }
-        gripStatus = runList.get(i)->getGrip();
-
-
-        while (isWait)
-        {
-            //if ((millis() - timer > 500))
-            //{
-                //Serial.print(F("Communication Timeout"));
-                //return;
-            //}
-            if (can1.msgCheck(incIDOld, 0x03, 0x01))
-            {
-                isWait = false;
-            }
-        }
-        isWait = true;
-        incIDOld = incID;
-    }
-    while (isWait)
-    {
-        //if ((millis() - timer > 500))
-        //{
-            //Serial.print(F("Communication Timeout"));
-            //return;
-        //}
-        if (can1.msgCheck(incIDOld, 0x03, 0x01))
-        {
-            isWait = false;
-        }
     }
 }
 
@@ -1241,7 +881,7 @@ void addNode(int insert = -1)
     axisPos.updateAxisPos();
 
     // Update array value with data collected from the axis position update
-    if (txIdManual == 0xA3)
+    if (txIdManual == ARM1_M)
     {
         posArray[0] = axisPos.getA1C1();
         posArray[1] = axisPos.getA2C1();
@@ -1250,7 +890,7 @@ void addNode(int insert = -1)
         posArray[4] = axisPos.getA5C1();
         posArray[5] = axisPos.getA6C1();
     }
-    else if (txIdManual == 0xB3)
+    else if (txIdManual == ARM2_M)
     {
         posArray[0] = axisPos.getA1C2();
         posArray[1] = axisPos.getA2C2();
@@ -1484,9 +1124,9 @@ void homeArm(uint8_t* armIDArray)
     byte data2[8] = { 0x00, 0x00, 0x00, 0xB4, 0x00, 0xB4, 0x00, 0xB4 };
     byte data3[8] = { 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
     can1.sendFrame(armIDArray[0], data1);
-    delay(130);
+    delay(150);
     can1.sendFrame(armIDArray[1], data2);
-    delay(130);
+    delay(150);
     can1.sendFrame(armIDArray[2], data3);
 }
 
@@ -1496,8 +1136,8 @@ void configButtons()
     uint8_t setHomeId[8] = { 0x00, 0x03, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
     uint8_t* setHomeIdPtr = setHomeId;
 
-    uint8_t arm1IDArray[3] = { 0x0A1, 0x0A2, 0x0A0 };
-    uint8_t arm2IDArray[3] = { 0x0B1, 0x0B2, 0x0B0 };
+    uint8_t arm1IDArray[3] = { ARM1_B, ARM1_T, ARM1_CONTROL };
+    uint8_t arm2IDArray[3] = { ARM2_B, ARM2_T, ARM2_CONTROL };
     uint8_t* arm1IDPtr = arm1IDArray;
     uint8_t* arm2IDPtr = arm2IDArray;
     // Touch screen controls

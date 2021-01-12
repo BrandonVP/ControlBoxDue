@@ -22,11 +22,11 @@ void CANBus::sendFrame(uint16_t id, byte* frame)
 {
     // Create message object
     CAN_FRAME myFrame;
-
+    myFrame.extended = false;
     // Outgoing message ID
     myFrame.id = id;
-    Serial.print("ID: ");
-    Serial.println(id);
+    //Serial.print("ID: ");
+    //Serial.println(id);
     // Message length
     myFrame.length = 8;
 
@@ -39,6 +39,7 @@ void CANBus::sendFrame(uint16_t id, byte* frame)
     myFrame.data.byte[5] = frame[5];
     myFrame.data.byte[6] = frame[6];
     myFrame.data.byte[7] = frame[7];
+    /*
     Serial.print("MSG: ");
     Serial.print(frame[0]);
     Serial.print(" ");
@@ -55,7 +56,7 @@ void CANBus::sendFrame(uint16_t id, byte* frame)
     Serial.print(frame[6]);
     Serial.print(" ");
     Serial.println(frame[7]);
-
+    */
     // Send object out
     Can0.sendFrame(myFrame);
     return;
