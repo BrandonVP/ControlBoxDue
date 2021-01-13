@@ -27,7 +27,8 @@ constexpr auto ARM2_B = 0x0B1;
 constexpr auto ARM2_CONTROL = 0x0B0;
 #define CHANNEL2 1
 
-// Prevents physical button doubletap
+// Used to prevent physical button doubletap
 #define BUTTON_DELAY 200
 
+// Declaring a method because the compiler was crying about not finding it...
 void pageControl(int page, bool value);

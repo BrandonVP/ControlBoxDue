@@ -4,9 +4,10 @@
 #include <due_can.h>
 #include "variant.h"
 
+// Default Constructor
 CANBus::CANBus()
 {
-
+    // Currently unused
 }
 
 void CANBus::startCAN()
@@ -22,11 +23,13 @@ void CANBus::sendFrame(uint16_t id, byte* frame)
 {
     // Create message object
     CAN_FRAME myFrame;
+
+    // Disable extended frames
     myFrame.extended = false;
+
     // Outgoing message ID
     myFrame.id = id;
-    //Serial.print("ID: ");
-    //Serial.println(id);
+
     // Message length
     myFrame.length = 8;
 
@@ -39,6 +42,8 @@ void CANBus::sendFrame(uint16_t id, byte* frame)
     myFrame.data.byte[5] = frame[5];
     myFrame.data.byte[6] = frame[6];
     myFrame.data.byte[7] = frame[7];
+
+    // Debugging
     /*
     Serial.print("MSG: ");
     Serial.print(frame[0]);
@@ -57,12 +62,14 @@ void CANBus::sendFrame(uint16_t id, byte* frame)
     Serial.print(" ");
     Serial.println(frame[7]);
     */
+
     // Send object out
     Can0.sendFrame(myFrame);
+
     return;
 }
 
-// Method used for CAN recording
+// Get and return message frame from specified rxID
 uint8_t* CANBus::getFrame(uint16_t IDFilter)
 {
     // Create object to save message
@@ -81,6 +88,7 @@ uint8_t* CANBus::getFrame(uint16_t IDFilter)
     return MSGFrame;
 }
 
+// Resets objects uint8_t array back to zero
 void CANBus::resetMSGFrame()
 {
     for (uint8_t i = 0; i < 8; i++)
@@ -89,13 +97,11 @@ void CANBus::resetMSGFrame()
     }
 }
 
-// Method used for CAN recording
+// Check if value exists in incoming message, used for confirmation
 bool CANBus::msgCheck(uint16_t ID, uint8_t value, int8_t pos)
 {
     // Create object to save message
     CAN_FRAME incoming;
-
-
 
     // If buffer inbox has a message
     if (Can0.available() > 0)
@@ -109,6 +115,7 @@ bool CANBus::msgCheck(uint16_t ID, uint8_t value, int8_t pos)
     return false;
 }
 
+// Get frame ID, used for confirmation
 uint16_t CANBus::getFrameID()
 {
     // Create object to save message
@@ -122,14 +129,14 @@ uint16_t CANBus::getFrameID()
     return incoming.id;
 }
 
-// Reset hasMSG to true
+// return current value and reset hasMSG to true
 bool CANBus::hasMSGr() {
     bool temp = hasMSG;
     hasMSG = true;
     return temp;
 }
 
-// Method used to manually get the ID and byte array
+// Get CAN ID and message
 void CANBus::getMessage(frame& a, int& b)
 {
     CAN_FRAME incoming;

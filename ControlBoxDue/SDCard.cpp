@@ -104,6 +104,7 @@ void SDCard::deleteFile(String filename)
     SD.remove(filename);
 }
 
+// Check if file exists
 bool SDCard::fileExists(String filename)
 {
     myFile = SD.open(filename);
@@ -112,7 +113,7 @@ bool SDCard::fileExists(String filename)
     return value;
 }
 
-// Modified SdFat library code to read field in text file from sd
+// Read in program from SD
 void SDCard::readFile(String filename, LinkedList<Program*> &runList)
 {
     String tempStr;

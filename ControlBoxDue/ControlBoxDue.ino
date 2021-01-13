@@ -648,6 +648,8 @@ void programRun()
             tAxis[7] = 0xFF;
         }
 
+        delay(10);
+
         // Send second frame with axis 4-6
         can1.sendFrame(IDArray[2], tAxis);
 
@@ -668,6 +670,8 @@ void programRun()
         {
             excMove[7] = 0x01;
         }
+
+        delay(10);
 
         // Send third frame with grip and execute command
         can1.sendFrame(IDArray[0], excMove);

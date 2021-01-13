@@ -22,14 +22,14 @@ class CANBus;
 class AxisPos
 {
  private:
-
+	 // Angle values for channel 1
 	 uint16_t a1c1 = 0;
 	 uint16_t a2c1 = 0;
 	 uint16_t a3c1 = 0;
 	 uint16_t a4c1 = 0;
 	 uint16_t a5c1 = 0;
 	 uint16_t a6c1 = 0;
-
+	 // Angle values for channel 2
 	 uint16_t a1c2 = 0;
 	 uint16_t a2c2 = 0;
 	 uint16_t a3c2 = 0;
@@ -37,9 +37,11 @@ class AxisPos
 	 uint16_t a5c2 = 0;
 	 uint16_t a6c2 = 0;
 
+	 // Objects to request CAN messages and write to LCD
 	 CANBus can1;
 	 UTFT LCD;
 
+	 // Used to enable writing angle values to LCD if the controller responded with the requested angles
 	 bool isResponseCh1 = false;
 	 bool isResponseCh2 = false;
 

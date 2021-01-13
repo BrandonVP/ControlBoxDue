@@ -5,7 +5,6 @@
 #include "variant.h"
 #include "AxisPos.h"
 
-
 // Default Constructor
 AxisPos::AxisPos()
 {
@@ -43,7 +42,7 @@ void AxisPos::armSearch(uint16_t * channel)
 		// If correct message is returned 
 		if (temp[0] == LOWER)
 		{
-			// Always = true, hasMSGr resets to true for the CANBus class
+			// Check if reply was recieved
 			isDone = can1.hasMSGr();
 
 			// Determine which channel to write values too
