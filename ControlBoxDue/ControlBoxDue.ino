@@ -871,7 +871,15 @@ void drawProgramEdit(uint8_t scroll = 0)
     drawSquareBtn(420, 50, 470, 90, "X", menuBtnColor, menuBtnBorder, menuBtnText, CENTER);
 
     myGLCD.setFont(SmallFont);
-    drawSquareBtn(420, 210, 470, 250, " Grip", menuBtnColor, menuBtnBorder, menuBtnText, LEFT);
+    switch (gripStatus)
+    {
+    case 0: drawSquareBtn(420, 210, 470, 250, " Open", menuBtnColor, menuBtnBorder, menuBtnText, LEFT);
+        break;
+    case 1: drawSquareBtn(420, 210, 470, 250, " Close", menuBtnColor, menuBtnBorder, menuBtnText, LEFT);
+        break;
+    case 2: drawSquareBtn(420, 210, 470, 250, " Grip", menuBtnColor, menuBtnBorder, menuBtnText, LEFT);
+        break;
+    }
     myGLCD.setFont(BigFont);
 }
 
