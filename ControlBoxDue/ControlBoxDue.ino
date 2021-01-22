@@ -344,7 +344,7 @@ void waitForItRect(int x1, int y1, int x2, int y2, int txId, byte data[])
     {
         can1.sendFrame(txId, data);
         myTouch.read();
-        delay(80);
+        delay(100);
     }
     myGLCD.setColor(menuBtnBorder);
     myGLCD.drawRect(x1, y1, x2, y2);
