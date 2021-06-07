@@ -46,7 +46,6 @@ class AxisPos
 	 bool isResponseCh2 = false;
 
  public:
-	AxisPos();
 	void drawAxisPos(UTFT, bool);
 	void updateAxisPos();
 	void armSearch(uint16_t*);

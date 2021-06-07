@@ -23,7 +23,6 @@ class CANBus
 	 typedef byte frame[8];
 
  public:
-	CANBus();
 	void getMessage(frame&, int&);
 	void startCAN();
 	void sendFrame(uint16_t, byte*);

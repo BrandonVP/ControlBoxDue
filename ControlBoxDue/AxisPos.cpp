@@ -5,15 +5,9 @@
 #include "variant.h"
 #include "AxisPos.h"
 
-// Default Constructor
-AxisPos::AxisPos()
-{
-	// Currently unused
-}
-
 // Request current axis angle from either desired channel
 // Channel contains both TX and RX CAN address
-void AxisPos::armSearch(uint16_t * channel)
+void AxisPos::armSearch(uint16_t* channel)
 {
 	// Used to end while loop when task is complete
 	bool isDone = true;
@@ -40,7 +34,7 @@ void AxisPos::armSearch(uint16_t * channel)
 		uint8_t* temp = can1.getFrame(channel[1]);
 
 		// If correct message is returned 
-		if (temp[0] == LOWER)
+		if (temp[1] == LOWER)
 		{
 			// Check if reply was recieved
 			isDone = can1.hasMSGr();
@@ -90,7 +84,7 @@ void AxisPos::armSearch(uint16_t * channel)
 		while (isDone && (millis() - timer < 20))
 		{
 			uint8_t* temp = can1.getFrame(channel[1]);
-			if (temp[0] == UPPER)
+			if (temp[1] == UPPER)
 			{
 				isDone = can1.hasMSGr();
 				if (channel[1] == ARM1RXID)
@@ -127,14 +121,14 @@ void AxisPos::drawAxisPos(UTFT LCD, bool channel)
 	LCD.setBackColor(0xC618);
 
 	// Draw angles if values were received and this is the correct channel
-	if (isResponseCh1 && !channel)
+	if (isResponseCh1)
 	{
-		LCD.printNumI(a1c1, 205, 48);
-		LCD.printNumI(a2c1, 205, 93);
-		LCD.printNumI(a3c1, 205, 138);
-		LCD.printNumI(a4c1, 205, 183);
-		LCD.printNumI(a5c1, 205, 228);
-		LCD.printNumI(a6c1, 205, 273);
+		LCD.printNumI(a1c1, 205, 48, 3, '0');
+		LCD.printNumI(a2c1, 205, 93, 3, '0');
+		LCD.printNumI(a3c1, 205, 138, 3, '0');
+		LCD.printNumI(a4c1, 205, 183, 3, '0');
+		LCD.printNumI(a5c1, 205, 228, 3, '0');
+		LCD.printNumI(a6c1, 205, 273, 3, '0');
 		isResponseCh1 = false;
 	}
 
@@ -142,14 +136,14 @@ void AxisPos::drawAxisPos(UTFT LCD, bool channel)
 	armSearch(channel2);
 
 	// Draw angles if values were received and this is the correct channel
-	if (isResponseCh2 && channel)
+	if (isResponseCh2)
 	{
-		LCD.printNumI(a1c2, 315, 48);
-		LCD.printNumI(a2c2, 315, 93);
-		LCD.printNumI(a3c2, 315, 138);
-		LCD.printNumI(a4c2, 315, 183);
-		LCD.printNumI(a5c2, 315, 228);
-		LCD.printNumI(a6c2, 315, 273);
+		LCD.printNumI(a1c2, 315, 48, 3, '0');
+		LCD.printNumI(a2c2, 315, 93, 3, '0');
+		LCD.printNumI(a3c2, 315, 138, 3, '0');
+		LCD.printNumI(a4c2, 315, 183, 3, '0');
+		LCD.printNumI(a5c2, 315, 228, 3, '0');
+		LCD.printNumI(a6c2, 315, 273, 3, '0');
 		isResponseCh2 = false;
 	}
 }

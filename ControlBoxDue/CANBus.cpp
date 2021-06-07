@@ -4,12 +4,6 @@
 #include <due_can.h>
 #include "variant.h"
 
-// Default Constructor
-CANBus::CANBus()
-{
-    // Currently unused
-}
-
 void CANBus::startCAN()
 {
     // Initialize CAN1 and set the proper baud rates here
@@ -130,7 +124,8 @@ uint16_t CANBus::getFrameID()
 }
 
 // return current value and reset hasMSG to true
-bool CANBus::hasMSGr() {
+bool CANBus::hasMSGr() 
+{
     bool temp = hasMSG;
     hasMSG = true;
     return temp;
@@ -140,13 +135,13 @@ bool CANBus::hasMSGr() {
 void CANBus::getMessage(frame& a, int& b)
 {
     CAN_FRAME incoming;
-    if (Can0.available() > 0) {
+    if (Can0.available() > 0) 
+    {
         Can0.read(incoming);
         b = incoming.id;
 
         for (int count = 0; count < incoming.length; count++) {
             a[count] = incoming.data.bytes[count];
         }
-
     }
 }
