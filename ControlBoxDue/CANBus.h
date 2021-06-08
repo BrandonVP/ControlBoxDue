@@ -1,5 +1,8 @@
 // CANBus.h
 #include "SDCard.h"
+#include <due_can.h>
+#include "variant.h"
+
 
 #ifndef _CANBus_h
 #define _CANBus_h
@@ -9,27 +12,22 @@
 #else
 	#include "WProgram.h"
 #endif
-class SDCard;
 class Program;
 
 class CANBus
 {
  public:
-	uint8_t MSGFrame[8] = { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
-	bool hasMSG;
-
- private:
-	 SDCard SDPrint;
+	 CAN_FRAME incoming;
+	 CAN_FRAME outgoing;
+	 uint8_t MSGFrame[8] = { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
 	 typedef byte frame[8];
 
  public:
-	void getMessage(frame&, int&);
-	void startCAN();
-	void sendFrame(uint16_t, byte*);
-	bool msgCheck(uint16_t, uint8_t, int8_t);
-	uint8_t* getFrame(uint16_t);
-	uint16_t getFrameID();
-	bool hasMSGr();
-	void resetMSGFrame();
+	 void sendFrame(uint16_t, byte*);
+	 bool msgCheck(uint16_t, uint8_t, int8_t);
+	 uint8_t* getFrame();
+	 void resetMSGFrame();
+	 uint8_t processFrame();
+	 void startCAN();
 };
 #endif

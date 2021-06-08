@@ -33,4 +33,6 @@ constexpr auto ARM2_CONTROL = 0x0B0;
 // Used to prevent physical button doubletap
 #define BUTTON_DELAY 200
 
+#define REFRESH_RATE 400
+
 void pageControl();
