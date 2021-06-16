@@ -7,8 +7,9 @@
 /*=========================================================
     Todo List
 ===========================================================
-Add stop execution button
+
 Assign physical buttons
+
 ===========================================================
     End Todo List
 =========================================================*/
@@ -598,7 +599,7 @@ void manualControlButtons()
 void drawView()
 {
     // Clear LCD to be written 
-    drawSquareBtn(141, 1, 478, 319, "", themeBackground, themeBackground, themeBackground, CENTER);
+    drawSquareBtn(126, 1, 478, 319, "", themeBackground, themeBackground, themeBackground, CENTER);
 
     // Print arm logo
     print_icon(435, 5, robotarm);
@@ -1201,15 +1202,16 @@ void configButtons()
 void drawMenu()
 {
     // Draw Layout
-    drawSquareBtn(1, 1, 478, 319, "", themeBackground, themeBackground, themeBackground, CENTER);
-    drawSquareBtn(1, 1, 140, 319, "", menuBackground, menuBackground, menuBackground, CENTER);
+    drawSquareBtn(1, 1, 480, 320, "", themeBackground, themeBackground, themeBackground, CENTER);
+    drawSquareBtn(1, 1, 125, 320, "", menuBackground, menuBackground, menuBackground, CENTER);
     
     // Draw Menu Buttons
-    drawRoundBtn(10, 10, 130, 65, "1-VIEW", menuBtnColor, menuBtnBorder, menuBtnText, CENTER);
-    drawRoundBtn(10, 70, 130, 125, "2-PROG", menuBtnColor, menuBtnBorder, menuBtnText, CENTER);
-    drawRoundBtn(10, 130, 130, 185, "3-MOVE", menuBtnColor, menuBtnBorder, menuBtnText, CENTER);
-    drawRoundBtn(10, 190, 130, 245, "4-CONF", menuBtnColor, menuBtnBorder, menuBtnText, CENTER);
-    drawRoundBtn(10, 250, 130, 305, "5-EXEC", menuBtnColor, menuBtnBorder, menuBtnText, CENTER);
+    drawRoundBtn(5, 6, 120, 53, F("1-VIEW"), menuBtnColor, menuBtnBorder, menuBtnText, CENTER);
+    drawRoundBtn(5, 58, 120, 105, F("2-PROG"), menuBtnColor, menuBtnBorder, menuBtnText, CENTER);
+    drawRoundBtn(5, 110, 120, 157, F("3-MOVE"), menuBtnColor, menuBtnBorder, menuBtnText, CENTER);
+    drawRoundBtn(5, 162, 120, 209, F("4-CONF"), menuBtnColor, menuBtnBorder, menuBtnText, CENTER);
+    drawRoundBtn(5, 214, 120, 261, F("5-EXEC"), menuBtnColor, menuBtnBorder, menuBtnText, CENTER);
+    drawRoundBtn(5, 266, 120, 313, F("6-STOP"), menuBtnColor, menuBtnBorder, menuBtnText, CENTER);
 }
 
 // the setup function runs once when you press reset or power the board
@@ -1458,37 +1460,43 @@ void menuButtons()
         x = myTouch.getX();
         y = myTouch.getY();
 
-        if ((x >= 10) && (x <= 130))
+        if ((x >= 5) && (x <= 120))
         {
-            if ((y >= 10) && (y <= 65))
+            if ((y >= 6) && (y <= 53))
             {
-                waitForIt(10, 10, 130, 65);
+                waitForIt(5, 6, 120, 53);
                 page = 1;
                 hasDrawn = false;
             }
-            if ((y >= 70) && (y <= 125))
+            if ((y >= 58) && (y <= 105))
             {
-                waitForIt(10, 70, 130, 125);
+                waitForIt(5, 58, 120, 105);
                 page = 2;
                 hasDrawn = false;
             }
-            if ((y >= 130) && (y <= 185))
+            if ((y >= 110) && (y <= 157))
             {
-                waitForIt(10, 130, 130, 185);
+                waitForIt(5, 110, 120, 157);
                 page = 3;
                 hasDrawn = false;
             }
-            if ((y >= 190) && (y <= 245))
+            if ((y >= 162) && (y <= 209))
             {
-                waitForIt(10, 190, 130, 245);
+                waitForIt(5, 162, 120, 209);
                 page = 4;
                 hasDrawn = false;
             }
-            if ((y >= 250) && (y <= 305))
+            if ((y >= 214) && (y <= 261))
             {
-                waitForIt(10, 250, 130, 305);
+                waitForIt(5, 214, 120, 261);
+                oldPage = page;
                 page = 5;
                 hasDrawn = false;
+            }
+            if ((y >= 266) && (y <= 313))
+            {
+                waitForIt(5, 266, 120, 313);
+                programRunning = false;
             }
         }
     }
