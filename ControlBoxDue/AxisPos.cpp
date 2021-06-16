@@ -76,18 +76,18 @@ void AxisPos::drawAxisPos(UTFT LCD)
 	LCD.setBackColor(0xC618);
 
 	// Draw angles 
-	LCD.printNumI(a1c1, 205, 48, 3, '0');
-	LCD.printNumI(a2c1, 205, 93, 3, '0');
-	LCD.printNumI(a3c1, 205, 138, 3, '0');
-	LCD.printNumI(a4c1, 205, 183, 3, '0');
-	LCD.printNumI(a5c1, 205, 228, 3, '0');
-	LCD.printNumI(a6c1, 205, 273, 3, '0');
-	LCD.printNumI(a1c2, 315, 48, 3, '0');
-	LCD.printNumI(a2c2, 315, 93, 3, '0');
-	LCD.printNumI(a3c2, 315, 138, 3, '0');
-	LCD.printNumI(a4c2, 315, 183, 3, '0');
-	LCD.printNumI(a5c2, 315, 228, 3, '0');
-	LCD.printNumI(a6c2, 315, 273, 3, '0');
+	LCD.printNumI(a1c1, 195, 48, 3, '0');
+	LCD.printNumI(a2c1, 195, 93, 3, '0');
+	LCD.printNumI(a3c1, 195, 138, 3, '0');
+	LCD.printNumI(a4c1, 195, 183, 3, '0');
+	LCD.printNumI(a5c1, 195, 228, 3, '0');
+	LCD.printNumI(a6c1, 195, 273, 3, '0');
+	LCD.printNumI(a1c2, 305, 48, 3, '0');
+	LCD.printNumI(a2c2, 305, 93, 3, '0');
+	LCD.printNumI(a3c2, 305, 138, 3, '0');
+	LCD.printNumI(a4c2, 305, 183, 3, '0');
+	LCD.printNumI(a5c2, 305, 228, 3, '0');
+	LCD.printNumI(a6c2, 305, 273, 3, '0');
 }
 
 // Get angle for programming
