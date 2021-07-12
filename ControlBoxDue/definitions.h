@@ -13,26 +13,25 @@
 
 // Arm 1 IDs
 constexpr auto ARM1_RX = 0x0C1;
-constexpr auto ARM1_M = 0x0A3;
-constexpr auto ARM1_T = 0x0A2;
-constexpr auto ARM1_B = 0x0A1;
+constexpr auto ARM1_MANUAL = 0x0A3;
+constexpr auto ARM1_UPPER = 0x0A2;
+constexpr auto ARM1_LOWER = 0x0A1;
 constexpr auto ARM1_CONTROL = 0x0A0;
 #define CHANNEL1 0
 
 // Arm 2 IDs
 constexpr auto ARM2_RX = 0x0C2;
-constexpr auto ARM2_M = 0x0B3;
-constexpr auto ARM2_T = 0x0B2;
-constexpr auto ARM2_B = 0x0B1;
+constexpr auto ARM2_MANUAL = 0x0B3;
+constexpr auto ARM2_UPPER = 0x0B2;
+constexpr auto ARM2_LOWER = 0x0B1;
 constexpr auto ARM2_CONTROL = 0x0B0;
 #define CHANNEL2 1
 
 // Bitmap
-#define BUFFPIXEL 20
+#define PIXEL_BUFFER 20
 
-// Used to prevent physical button doubletap
-#define BUTTON_DELAY 200
-
+#define PHYSICAL_BUTTON_DELAY 200
+#define DEG "deg"
 #define REFRESH_RATE 400
 
 void pageControl();
