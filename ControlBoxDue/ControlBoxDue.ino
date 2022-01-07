@@ -119,6 +119,7 @@ uint8_t programProgress = 0;
 
 // Used to determine which PROG page should be loaded when button is pressed
 bool programOpen = false;
+bool programEdit = false;
 
 // 0 = open, 1 = close, 2 = no change
 int8_t gripStatus = 2;
@@ -128,11 +129,14 @@ int8_t gripStatus = 2;
 uint32_t timer = 0;
 
 // Key input variables
-char keyboardInput[10] = { ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ' };
+char keyboardInput[8] = { ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '};
 uint8_t keypadInput[4] = { 0, 0, 0, 0 };
+uint8_t keyIndex = 0;
 
 String programNames_G[MAX_PROGRAMS] = { "", "", "", "", "", "", "", "", "", "" };
 uint8_t numberOfPrograms = 0;
+uint8_t state = 0;
+uint8_t keyResult = 0;
 /*=========================================================
 	Framework Functions
 ===========================================================*/
@@ -820,41 +824,28 @@ bool drawProgram(int scroll = 0)
 		drawSquareBtn(132, 189, 478, 231, F(""), menuBackground, menuBtnBorder, menuBtnText, CENTER);
 		break;
 	case 8:
-
-		
-	
-		
-	
-		
-	
 		drawSquareBtn(132, 234, 478, 276, F(""), menuBackground, menuBtnBorder, menuBtnText, CENTER);
-		drawProgramScroll(scroll);
 		break;
 	case 9:
-		//drawSquareBtn(130, 245, 245, 280, F("Edit"), menuBtnColor, menuBtnBorder, menuBtnText, CENTER);
 		drawSquareBtn(132, 279, 211, 318, F(""), menuBtnColor, menuBtnBorder, menuBtnText, CENTER);
 		break;
 	case 10:
-		//drawSquareBtn(130, 280, 245, 315, F("New"), menuBtnColor, menuBtnBorder, menuBtnText, CENTER);
 		drawSquareBtn(133, 280, 210, 317, F("/\\"), menuBtnColor, menuBtnBorder, menuBtnText, CENTER);
 		break;
 	case 11:
-		//drawSquareBtn(245, 245, 360, 280, F("Load"), menuBtnColor, menuBtnBorder, menuBtnText, CENTER);
 		drawSquareBtn(260, 279, 351, 318, F(""), menuBtnColor, menuBtnBorder, menuBtnText, CENTER);
 		break;
 	case 12:
-		//drawSquareBtn(245, 280, 360, 315, F("Rename"), menuBtnColor, menuBtnBorder, menuBtnText, CENTER);
 		drawSquareBtn(261, 280, 350, 317, F("Add"), menuBtnColor, menuBtnBorder, menuBtnText, CENTER);
 		break;
 	case 13:
-		//drawSquareBtn(360, 245, 475, 280, F("Delete"), menuBtnColor, menuBtnBorder, menuBtnText, CENTER);
 		drawSquareBtn(400, 279, 478, 318, F(""), menuBtnColor, menuBtnBorder, menuBtnText, CENTER);
 		break;
 	case 14:
-		//drawSquareBtn(360, 280, 475, 315, F(""), menuBtnColor, menuBtnBorder, menuBtnText, CENTER);
 		drawSquareBtn(401, 280, 477, 317, F("\\/"), menuBtnColor, menuBtnBorder, menuBtnText, CENTER);
 		break;
 	case 15:
+		drawProgramScroll(scroll);
 		return true;
 		break;
 	}
@@ -936,7 +927,7 @@ void programButtons()
 				runList.clear();
 				loadProgram();
 				programOpen = true;
-				page = 6;
+				page = 8;
 				hasDrawn = false;
 			}
 			if ((x >= 420) && (x <= 477))
@@ -968,7 +959,7 @@ void programButtons()
 				runList.clear();
 				loadProgram();
 				programOpen = true;
-				page = 6;
+				page = 8;
 				hasDrawn = false;
 			}
 			if ((x >= 420) && (x <= 477))
@@ -1000,7 +991,7 @@ void programButtons()
 				runList.clear();
 				loadProgram();
 				programOpen = true;
-				page = 6;
+				page = 8;
 				hasDrawn = false;
 			}
 			if ((x >= 420) && (x <= 477))
@@ -1032,7 +1023,7 @@ void programButtons()
 				runList.clear();
 				loadProgram();
 				programOpen = true;
-				page = 6;
+				page = 8;
 				hasDrawn = false;
 			}
 			if ((x >= 420) && (x <= 477))
@@ -1078,7 +1069,7 @@ void programButtons()
 				SerialUSB.println(selectedProgram);
 				runList.clear(); // Empty the linked list of any program currently loaded
 				programOpen = true;
-				page = 6;
+				page = 8;
 				hasDrawn = false;
 			}
 		}
@@ -1128,9 +1119,59 @@ void drawEditPage()
 
 	drawSquareBtn(132, 280, 478, 317, F("Cancel"), menuBtnColor, menuBtnBorder, menuBtnText, CENTER);
 }
+
 void editPageButtons()
 {
+	// Touch screen controls
+	if (myTouch.dataAvailable())
+	{
+		myTouch.read();
+		x = myTouch.getX();
+		y = myTouch.getY();
 
+		if ((x >= 280) && (x <= 477))
+		{
+			if ((y >= 55) && (y <= 95))
+			{
+				// Name File
+				waitForItRect(280, 55, 477, 95);
+				hasDrawn = false;
+				page = 9;
+			}
+		}
+
+		if ((x >= 132) && (x <= 478))
+		{
+			if ((y >= 189) && (y <= 231))
+			{
+				// Edit
+				waitForItRect(132, 189, 478, 231);
+				programEdit = true;
+				page = 6;
+				hasDrawn = false;
+			}
+			if ((y >= 234) && (y <= 276))
+			{
+				// Save program
+				waitForItRect(132, 234, 478, 276);
+				programDelete();
+				saveProgram();
+				programOpen = false;
+				page = 2;
+				hasDrawn = false;
+				graphicLoaderState = 0;
+			}
+			if ((y >= 280) && (y <= 317))
+			{
+				// Cancel
+				waitForItRect(132, 280, 478, 317);
+				programOpen = false;
+				page = 2;
+				hasDrawn = false;
+				graphicLoaderState = 0;
+			}
+		}
+	}
 }
 
 // Draws scrollable box that contains all the nodes in a program
@@ -1240,10 +1281,15 @@ void saveProgram()
 {
 	// Delimiter 
 	String space = ", ";
-
+	Serial.print("Saving new File to:");
+	Serial.println(programNames_G[selectedProgram]);
+	Serial.print("Size: ");
+	Serial.println(runList.size());
+	Serial.println(programNames_G[selectedProgram]);
 	// Write out linkedlist data to text file
 	for (uint8_t i = 0; i < runList.size(); i++)
 	{
+		Serial.print(".");
 		sdCard.writeFile(programNames_G[selectedProgram], ",");
 		sdCard.writeFile(programNames_G[selectedProgram], runList.get(i)->getA1());
 		sdCard.writeFile(programNames_G[selectedProgram], space);
@@ -1262,6 +1308,12 @@ void saveProgram()
 		sdCard.writeFile(programNames_G[selectedProgram], runList.get(i)->getGrip());
 		sdCard.writeFileln(programNames_G[selectedProgram]);
 	}
+	if (runList.size() == 0)
+	{
+		Serial.println("empty");
+		sdCard.writeFileln(programNames_G[selectedProgram]);
+	}
+	
 	saveProgramNames();
 }
 
@@ -1994,7 +2046,7 @@ void drawkeyboard()
 }
 
 // User input keyboard
-int keyboardButtons()
+char keyboardButtons()
 {
 	// Touch screen controls
 	if (Touch_getXY())
@@ -2079,14 +2131,14 @@ int keyboardButtons()
 				waitForIt(135, 99, 167, 139);
 				// a
 				DEBUG_KEYBOARD("a");
-				return 0x61;
+				return 'a';
 			}
 			if ((x >= 169) && (x <= 201))
 			{
 				waitForIt(169, 99, 201, 139);
 				// b
 				DEBUG_KEYBOARD("b");
-				return 0x62;
+				return 'b';
 			}
 			if ((x >= 203) && (x <= 235))
 			{
@@ -2304,10 +2356,15 @@ uint8_t keyboardController(uint8_t& index)
 	uint8_t input = keyboardButtons();
 	if (input > 0x29 && input < 0x7B)
 	{
-		keyboardInput[index] = input;
-		for (int i = 0; i < 10; i++)
+		if (index < 8)
 		{
-			SerialUSB.println(keyboardInput[i]);
+			keyboardInput[index] = input;
+		}
+		
+		Serial.println(index);
+		for (int i = 0; i < 8; i++)
+		{
+			Serial.println(keyboardInput[i]);
 		}
 		drawRoundBtn(245, 230, 475, 270, String(keyboardInput), menuBtnColor, menuBtnBorder, menuBtnText, CENTER);
 		++index;
@@ -2387,6 +2444,14 @@ void setup()
 	sdCard.writeFile("progName", "\n");
 	sdCard.writeFile("progName", "b");
 	sdCard.writeFile("progName", "\n");
+	sdCard.writeFileln("test");
+
+	programNames_G[0] = "a";
+	selectedProgram = 0;
+	saveProgram();
+	programNames_G[1] = "b";
+	selectedProgram = 1;
+	saveProgram();
 }
 
 // Page control framework
@@ -2414,8 +2479,13 @@ void pageControl()
 		if (programOpen)
 		{
 			page = 8;
+			if (programEdit)
+			{
+				page = 6;
+			}
 			break;
 		}
+
 		if (errorMessageReturn == 1)
 		{
 			programDelete();
@@ -2505,8 +2575,37 @@ void pageControl()
 		{
 			drawEditPage();
 			hasDrawn = true;
+			keyIndex = 0; // Reset keyboard input index back to 0
 		}
 		editPageButtons();
+		break;
+	case 9:
+		// Draw page
+		if (!hasDrawn)
+		{
+			drawkeyboard();
+			hasDrawn = true;
+		}
+		keyResult = keyboardController(keyIndex);
+		if (keyResult == 0xF1)
+		{
+			Serial.print("Deleteing old file: ");
+			Serial.println(programNames_G[selectedProgram]);
+			sdCard.deleteFile(programNames_G[selectedProgram]);
+			Serial.print("Copy new name over: ");
+			Serial.println(String(keyboardInput));
+			programNames_G[selectedProgram] = String(keyboardInput);
+			Serial.println("Save Program");
+			saveProgram();
+			page = 8;
+			hasDrawn = false;
+		}
+		if (keyResult == 0xF0)
+		{
+			Serial.println("here");
+			page = 6;
+			hasDrawn = false;
+		}
 		break;
 	}
 }

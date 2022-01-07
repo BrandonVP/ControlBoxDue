@@ -23,12 +23,15 @@ bool SDCard::startSD()
 // Write string to SD Card
 void SDCard::writeFile(char* filename, String incoming)
 {
+    Serial.print("here1: ");
+    Serial.println(filename);
     // File created and opened for writing
     myFile = SD.open(filename, FILE_WRITE);
     SerialUSB.println(bool(myFile));
     // Check if file was sucsefully open
     if (myFile)
     {
+        Serial.println("here11");
         myFile.print(incoming);
         myFile.close();
     }
@@ -38,11 +41,13 @@ void SDCard::writeFile(char* filename, String incoming)
 // Write string to SD Card
 void SDCard::writeFile(String filename, String incoming)
 {
+    Serial.println("here2");
     // File created and opened for writing
     myFile = SD.open(filename, FILE_WRITE);
     // Check if file was sucsefully open
     if (myFile)
     {
+        Serial.println("yes");
         myFile.print(incoming);
         myFile.close();
     }
@@ -51,6 +56,7 @@ void SDCard::writeFile(String filename, String incoming)
 
 void SDCard::writeFile(String filename, uint8_t incoming)
 {
+    Serial.println("here3");
     // File created and opened for writing
     myFile = SD.open(filename, FILE_WRITE);
     // Check if file was sucsefully open
@@ -65,6 +71,7 @@ void SDCard::writeFile(String filename, uint8_t incoming)
 // Write integer and base to SD Card
 void SDCard::writeFile(char* filename, int incoming, int base)
 {
+    Serial.println("here4");
     // File created and opened for writing
     myFile = SD.open(filename, FILE_WRITE);
     // Check if file was sucsefully open
@@ -79,12 +86,15 @@ void SDCard::writeFile(char* filename, int incoming, int base)
 // Write return to SD Card file
 void SDCard::writeFileln(String filename)
 {
+    Serial.print("here1: ");
+    Serial.println(filename);
     // File created and opened for writing
     myFile = SD.open(filename, FILE_WRITE);
 
     // Check if file was sucsefully open
     if (myFile)
     {
+        Serial.println("Printing");
         myFile.println(" ");
         myFile.close();
     }
