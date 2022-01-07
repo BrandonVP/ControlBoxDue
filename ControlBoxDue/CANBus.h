@@ -3,7 +3,6 @@
 #include <due_can.h>
 #include "variant.h"
 
-
 #ifndef _CANBus_h
 #define _CANBus_h
 

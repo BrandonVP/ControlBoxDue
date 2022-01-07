@@ -3,6 +3,7 @@
 #include <SD.h>
 #include "SDCard.h"
 #include <string>
+#include "Common.h"
 
 // File object
 File myFile;
@@ -24,7 +25,7 @@ void SDCard::writeFile(char* filename, String incoming)
 {
     // File created and opened for writing
     myFile = SD.open(filename, FILE_WRITE);
-
+    SerialUSB.println(bool(myFile));
     // Check if file was sucsefully open
     if (myFile)
     {
@@ -39,7 +40,6 @@ void SDCard::writeFile(String filename, String incoming)
 {
     // File created and opened for writing
     myFile = SD.open(filename, FILE_WRITE);
-
     // Check if file was sucsefully open
     if (myFile)
     {
@@ -53,7 +53,6 @@ void SDCard::writeFile(String filename, uint8_t incoming)
 {
     // File created and opened for writing
     myFile = SD.open(filename, FILE_WRITE);
-
     // Check if file was sucsefully open
     if (myFile)
     {
@@ -68,7 +67,6 @@ void SDCard::writeFile(char* filename, int incoming, int base)
 {
     // File created and opened for writing
     myFile = SD.open(filename, FILE_WRITE);
-
     // Check if file was sucsefully open
     if (myFile)
     {
@@ -93,6 +91,19 @@ void SDCard::writeFileln(String filename)
     return;
 }
 
+void SDCard::writeProgramName(String filename)
+{
+    // File created and opened for writing
+    myFile = SD.open(filename, FILE_WRITE);
+
+    // Check if file was sucsefully open
+    if (myFile)
+    {
+        myFile.println(" ");
+        myFile.close();
+    }
+    return;
+}
 
 /*=========================================================
     Delete File Methods
@@ -111,6 +122,25 @@ bool SDCard::fileExists(String filename)
     bool value = myFile.available();
     myFile.close();
     return value;
+}
+
+/*=========================================================
+    Read File Methods
+===========================================================*/
+void SDCard::readProgramName(String filename)
+{
+    uint8_t i = 0;
+    //String tempStr;
+    myFile = SD.open(filename);
+    SerialUSB.println(bool(myFile));
+    while (myFile.available()) 
+    {
+        //tempStr = myFile.readStringUntil('\n');
+        programNames_G[i] = myFile.readStringUntil('\n');
+        //SerialUSB.println(tempStr);
+        numberOfPrograms++;
+        i++;
+    }
 }
 
 // Read in program from SD

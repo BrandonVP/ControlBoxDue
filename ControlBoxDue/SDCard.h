@@ -28,6 +28,8 @@ class SDCard
 	void deleteFile(String);
 	void readFile(String, LinkedList<Program*> &);
 	bool fileExists(String filename);
+	void readProgramName(String);
+	void writeProgramName(String);
 };
 
 #endif

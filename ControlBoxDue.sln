@@ -13,12 +13,16 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "SD-1.2.3", "ControlBoxDue\L
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "LinkedList-1.2.3", "ControlBoxDue\Libraries\LinkedList\1.2.3\LinkedList\LinkedList-1.2.3.vcxitems", "{1CAE1FF9-8181-49A0-9729-B3793A2D5B09}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Adafruit_TouchScreen-1.1.1", "ControlBoxDue\Libraries\Adafruit_TouchScreen\1.1.1\Adafruit_TouchScreen\Adafruit_TouchScreen-1.1.1.vcxitems", "{B471B897-EBF5-426E-92F0-7FA434DE366D}"
+EndProject
 Global
 	GlobalSection(SharedMSBuildProjectFiles) = preSolution
 		ControlBoxDue\Libraries\LinkedList\1.2.3\LinkedList\LinkedList-1.2.3.vcxitems*{1cae1ff9-8181-49a0-9729-b3793a2d5b09}*SharedItemsImports = 9
 		ControlBoxDue\Libraries\UTouch\0.0.0\UTouch\UTouch-0.0.0.vcxitems*{5e388052-68b8-45af-8084-020537fd6325}*SharedItemsImports = 9
 		ControlBoxDue\Libraries\UTFT\0.0.0\UTFT\UTFT-0.0.0.vcxitems*{9422f788-8eb4-4fe1-82ec-d7c2e2ce12da}*SharedItemsImports = 9
+		ControlBoxDue\Libraries\Adafruit_TouchScreen\1.1.1\Adafruit_TouchScreen\Adafruit_TouchScreen-1.1.1.vcxitems*{b471b897-ebf5-426e-92f0-7fa434de366d}*SharedItemsImports = 9
 		ControlBoxDue\Libraries\SD\1.2.3\SD\SD-1.2.3.vcxitems*{bf5570f0-3dc6-4f8f-9434-d708a7c3449b}*SharedItemsImports = 9
+		ControlBoxDue\Libraries\Adafruit_TouchScreen\1.1.1\Adafruit_TouchScreen\Adafruit_TouchScreen-1.1.1.vcxitems*{c5f80730-f44f-4478-bdae-6634efc2ca88}*SharedItemsImports = 4
 		ControlBoxDue\Libraries\LinkedList\1.2.3\LinkedList\LinkedList-1.2.3.vcxitems*{c5f80730-f44f-4478-bdae-6634efc2ca88}*SharedItemsImports = 4
 		ControlBoxDue\Libraries\SD\1.2.3\SD\SD-1.2.3.vcxitems*{c5f80730-f44f-4478-bdae-6634efc2ca88}*SharedItemsImports = 4
 		ControlBoxDue\Libraries\UTFT\0.0.0\UTFT\UTFT-0.0.0.vcxitems*{c5f80730-f44f-4478-bdae-6634efc2ca88}*SharedItemsImports = 4

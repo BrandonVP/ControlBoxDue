@@ -35,3 +35,6 @@ constexpr auto ARM2_CONTROL = 0x0B0;
 #define REFRESH_RATE 400
 
 void pageControl();
+
+// Used for converting keypad input to appropriate hex place
+const uint32_t hexTable[8] = { 1, 16, 256, 4096, 65536, 1048576, 16777216, 268435456 };

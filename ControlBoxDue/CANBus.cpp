@@ -1,6 +1,7 @@
 // CANBus manages the CAN bus hardware
 
 #include "CANBus.h"
+#include "CANBusWiFi.h"
 
 void CANBus::startCAN()
 {
@@ -13,6 +14,31 @@ void CANBus::startCAN()
 // CAN Bus send message
 void CANBus::sendFrame(uint16_t id, byte* frame)
 {
+    /*
+    CANBusWifi test;
+    CAN_Message test2;
+    test2.id = id;
+    test2.data[0] = frame[0];
+    test2.data[1] = frame[1];
+    test2.data[2] = frame[2];
+    test2.data[3] = frame[3];
+    test2.data[4] = frame[4];
+    test2.data[5] = frame[5];   
+    test2.data[6] = frame[6];
+    test2.data[7] = frame[7];
+    test.sendFrame(test2);
+    */
+
+
+    Serial3.write(0xFE);
+    Serial3.write(0x09);
+    Serial3.write(id);
+    for (uint8_t i = 0; i < ARRAY_SIZE; i++)
+    {
+        Serial3.write(frame[i]);
+    }
+    Serial3.write(0xFD);
+
     // Disable extended frames
     outgoing.extended = false;
 
