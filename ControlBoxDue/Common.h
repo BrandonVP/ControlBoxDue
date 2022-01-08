@@ -1,5 +1,12 @@
 #pragma once
 
+//#define DEBUG(x)  SerialUSB.print(x);
+//#define DEBUGLN(x)  SerialUSB.println(x);
+#define DEBUG(x)  Serial.print(x);
+#define DEBUGLN(x)  Serial.println(x);
+//#define DEBUG(x)
+//#define DEBUGLN(x)
+
 #ifndef COMMON_H
 #define COMMON_H
 

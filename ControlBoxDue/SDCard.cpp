@@ -20,14 +20,21 @@ bool SDCard::startSD()
 /*=========================================================
     Write File Methods
 ===========================================================*/
+#define DEBUG_WRITEFILE_1
 // Write string to SD Card
 void SDCard::writeFile(char* filename, String incoming)
 {
-    Serial.print("here1: ");
-    Serial.println(filename);
     // File created and opened for writing
     myFile = SD.open(filename, FILE_WRITE);
-    SerialUSB.println(bool(myFile));
+
+#ifdef DEBUG_WRITEFILE_1
+    DEBUGLN("void SDCard::writeFile(char* filename, String incoming)");
+    DEBUG("Opening File: ");
+    DEBUGLN(filename);
+    DEBUG("Did it open? ");
+    DEBUGLN(bool(myFile));
+#endif // DEBUG_WRITEFILE_1
+
     // Check if file was sucsefully open
     if (myFile)
     {
@@ -35,102 +42,158 @@ void SDCard::writeFile(char* filename, String incoming)
         myFile.print(incoming);
         myFile.close();
     }
-    return;
 }
 
+#define DEBUG_WRITEFILE_2
 // Write string to SD Card
 void SDCard::writeFile(String filename, String incoming)
 {
-    Serial.println("here2");
     // File created and opened for writing
     myFile = SD.open(filename, FILE_WRITE);
+
+#ifdef DEBUG_WRITEFILE_2
+    DEBUGLN("void SDCard::writeFile(String filename, String incoming)");
+    DEBUG("Opening File: ");
+    DEBUGLN(filename);
+    DEBUG("Did it open? ");
+    DEBUGLN(bool(myFile));
+#endif // DEBUG_WRITEFILE_2
+
     // Check if file was sucsefully open
     if (myFile)
     {
-        Serial.println("yes");
         myFile.print(incoming);
         myFile.close();
     }
-    return;
 }
 
+#define DEBUG_WRITEFILE_3
+// Write string to SD Card
 void SDCard::writeFile(String filename, uint8_t incoming)
 {
-    Serial.println("here3");
     // File created and opened for writing
     myFile = SD.open(filename, FILE_WRITE);
+
+#ifdef DEBUG_WRITEFILE_3
+    DEBUGLN("void SDCard::writeFile(String filename, String incoming)");
+    DEBUG("Opening File: ");
+    DEBUGLN(filename);
+    DEBUG("Did it open? ");
+    DEBUGLN(bool(myFile));
+#endif // DEBUG_WRITEFILE_3
+
     // Check if file was sucsefully open
     if (myFile)
     {
         myFile.print(incoming);
         myFile.close();
     }
-    return;
 }
 
+#define DEBUG_WRITEFILE_4
 // Write integer and base to SD Card
 void SDCard::writeFile(char* filename, int incoming, int base)
 {
-    Serial.println("here4");
     // File created and opened for writing
     myFile = SD.open(filename, FILE_WRITE);
+
+#ifdef DEBUG_WRITEFILE_4
+    DEBUGLN("void SDCard::writeFile(char* filename, int incoming, int base)");
+    DEBUG("Opening File: ");
+    DEBUGLN(filename);
+    DEBUG("Did it open? ");
+    DEBUGLN(bool(myFile));
+#endif // DEBUG_WRITEFILE_4
+
     // Check if file was sucsefully open
     if (myFile)
     {
         myFile.print(incoming, base);
         myFile.close();
     }
-    return;
 }
 
+#define DEBUG_WRITEFILELN
 // Write return to SD Card file
 void SDCard::writeFileln(String filename)
 {
-    Serial.print("here1: ");
-    Serial.println(filename);
     // File created and opened for writing
     myFile = SD.open(filename, FILE_WRITE);
+
+#ifdef DEBUG_WRITEFILELN
+    DEBUGLN("void SDCard::writeFileln(String filename)");
+    DEBUG("Opening File: ");
+    DEBUGLN(filename);
+    DEBUG("Did it open? ");
+    DEBUGLN(bool(myFile));
+#endif // DEBUG_WRITEFILE_4
 
     // Check if file was sucsefully open
     if (myFile)
     {
-        Serial.println("Printing");
         myFile.println(" ");
         myFile.close();
     }
-    return;
 }
 
+#define DEBUG_PROGRAM_NAMES
+// Saves program file names to a file
 void SDCard::writeProgramName(String filename)
 {
     // File created and opened for writing
     myFile = SD.open(filename, FILE_WRITE);
 
+#ifdef DEBUG_PROGRAM_NAMES
+    DEBUGLN("void SDCard::writeProgramName(String filename)");
+    DEBUG("Opening File: ");
+    DEBUGLN(filename);
+    DEBUG("Did it open? ");
+    DEBUGLN(bool(myFile));
+#endif // DEBUG_PROGRAM_NAMES
+
     // Check if file was sucsefully open
     if (myFile)
     {
         myFile.println(" ");
         myFile.close();
     }
-    return;
 }
 
 /*=========================================================
     Delete File Methods
 ===========================================================*/
+#define DEBUG_DELETE_FILE
 // Delete SD Card file
 void SDCard::deleteFile(String filename)
 {
     //remove any existing file with this name
-    SD.remove(filename);
+    bool temp = SD.remove(filename);
+
+#ifdef DEBUG_DELETE_FILE
+    DEBUGLN("void SDCard::deleteFile(String filename)");
+    DEBUG("Deleting File: ");
+    DEBUGLN(filename);
+    DEBUG("Did it delete? ");
+    DEBUGLN(temp);
+#endif // DEBUG_DELETE_FILE
 }
 
+#define DEBUG_FILEEXISTS
 // Check if file exists
 bool SDCard::fileExists(String filename)
 {
     myFile = SD.open(filename);
     bool value = myFile.available();
     myFile.close();
+
+#ifdef DEBUG_FILE_EXISTS
+    DEBUGLN("void SDCard::deleteFile(String filename)");
+    DEBUG("Deleting File: ");
+    DEBUGLN(filename);
+    DEBUG("Does it exist? ");
+    DEBUGLN(value);
+#endif // DEBUG_FILE_EXISTS
+
     return value;
 }
 
@@ -192,7 +255,6 @@ void SDCard::readFile(String filename, LinkedList<Program*> &runList)
         
             Program* node = new Program(posArray, grip, channel);
             runList.add(node);
-        
     }
     myFile.close();
 }

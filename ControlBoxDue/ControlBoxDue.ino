@@ -26,9 +26,6 @@ Swtich between Due & mega2560
 #include "icons.h"
 #include "Common.h"
 
-//#define DEBUG_KEYBOARD(x)  SerialUSB.println(x);
-//#define DEBUG_KEYBOARD(x)  Serial.println(x);
-#define DEBUG_KEYBOARD(x)
 
 /*=========================================================
 	Settings
