@@ -33,6 +33,7 @@ Swtich between Due & mega2560
 // Select display
 //#define LI9486
 #define LI9488
+#define DEBUG_KEYBOARD
 
 #if defined LI9486
 #include <TouchScreen.h>
@@ -126,7 +127,7 @@ int8_t gripStatus = 2;
 uint32_t timer = 0;
 
 // Key input variables
-char keyboardInput[8] = { ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '};
+char keyboardInput[8] = { ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ' };
 uint8_t keypadInput[4] = { 0, 0, 0, 0 };
 uint8_t keyIndex = 0;
 
@@ -1310,7 +1311,7 @@ void saveProgram()
 		Serial.println("empty");
 		sdCard.writeFileln(programNames_G[selectedProgram]);
 	}
-	
+
 	saveProgramNames();
 }
 
@@ -2357,7 +2358,7 @@ uint8_t keyboardController(uint8_t& index)
 		{
 			keyboardInput[index] = input;
 		}
-		
+
 		Serial.println(index);
 		for (int i = 0; i < 8; i++)
 		{
@@ -2582,16 +2583,45 @@ void pageControl()
 		{
 			drawkeyboard();
 			hasDrawn = true;
+			for (uint8_t i = 0; i < 8; i++)
+			{
+				keyboardInput[i] = ' ';
+			}
 		}
 		keyResult = keyboardController(keyIndex);
 		if (keyResult == 0xF1)
 		{
+			programNames_G[selectedProgram] = "";
+
 			Serial.print("Deleteing old file: ");
 			Serial.println(programNames_G[selectedProgram]);
 			sdCard.deleteFile(programNames_G[selectedProgram]);
 			Serial.print("Copy new name over: ");
 			Serial.println(String(keyboardInput));
-			programNames_G[selectedProgram] = String(keyboardInput);
+			char filterInput[8];
+			sprintf(filterInput, "%c%c%c%c%c%c%c%c", keyboardInput[0], keyboardInput[1], keyboardInput[2], keyboardInput[3], keyboardInput[4], keyboardInput[5], keyboardInput[6], keyboardInput[7] );
+
+			char temp = ' ';
+			//programNames_G[selectedProgram] = (keyboardInput[0] + keyboardInput[1] + keyboardInput[2] + keyboardInput[3] + keyboardInput[4] + keyboardInput[5] + keyboardInput[6] + keyboardInput[7]);
+			for (uint8_t i = 0; i < 8; i++)
+			{
+				if (!keyboardInput[i] == temp)
+				{
+					programNames_G[selectedProgram].concat(keyboardInput[i]);
+				}
+			}
+			/*
+			programNames_G[selectedProgram].concat(keyboardInput[0]);
+			programNames_G[selectedProgram].concat(keyboardInput[1]);
+			programNames_G[selectedProgram].concat(keyboardInput[2]);
+			programNames_G[selectedProgram].concat(keyboardInput[3]);
+			programNames_G[selectedProgram].concat(keyboardInput[4]);
+			programNames_G[selectedProgram].concat(keyboardInput[5]);
+			programNames_G[selectedProgram].concat(keyboardInput[6]);
+			programNames_G[selectedProgram].concat(keyboardInput[7]);
+			*/
+			//programNames_G[selectedProgram] = String(keyboardInput);
+
 			Serial.println("Save Program");
 			saveProgram();
 			page = 8;
@@ -2711,7 +2741,7 @@ void menuButtons()
 			{
 				// VIEW
 				waitForIt(5, 6, 120, 53);
-				page = 1; 
+				page = 1;
 				graphicLoaderState = 0;
 				hasDrawn = false;
 			}

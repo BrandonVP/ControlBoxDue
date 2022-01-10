@@ -178,7 +178,7 @@ void SDCard::deleteFile(String filename)
 #endif // DEBUG_DELETE_FILE
 }
 
-#define DEBUG_FILEEXISTS
+#define DEBUG_FILE_EXISTS
 // Check if file exists
 bool SDCard::fileExists(String filename)
 {
@@ -187,8 +187,8 @@ bool SDCard::fileExists(String filename)
     myFile.close();
 
 #ifdef DEBUG_FILE_EXISTS
-    DEBUGLN("void SDCard::deleteFile(String filename)");
-    DEBUG("Deleting File: ");
+    DEBUGLN("bool SDCard::fileExists(String filename)");
+    DEBUG("Checking File: ");
     DEBUGLN(filename);
     DEBUG("Does it exist? ");
     DEBUGLN(value);
@@ -200,22 +200,31 @@ bool SDCard::fileExists(String filename)
 /*=========================================================
     Read File Methods
 ===========================================================*/
+#define DEBUG_PROGRAM_NAMES
+// Read in the file names
 void SDCard::readProgramName(String filename)
 {
     uint8_t i = 0;
     //String tempStr;
     myFile = SD.open(filename);
-    SerialUSB.println(bool(myFile));
+
+#ifdef DEBUG_PROGRAM_NAMES
+    DEBUGLN("void SDCard::readProgramName(String filename)");
+    DEBUG("Opening File: ");
+    DEBUGLN(filename);
+    DEBUG("Did it open? ");
+    DEBUGLN(bool(myFile));
+#endif // DEBUG_PROGRAM_NAMES
+
     while (myFile.available()) 
     {
-        //tempStr = myFile.readStringUntil('\n');
         programNames_G[i] = myFile.readStringUntil('\n');
-        //SerialUSB.println(tempStr);
         numberOfPrograms++;
         i++;
     }
 }
 
+#define DEBUG_READ_FILE
 // Read in program from SD
 void SDCard::readFile(String filename, LinkedList<Program*> &runList)
 {
@@ -225,6 +234,15 @@ void SDCard::readFile(String filename, LinkedList<Program*> &runList)
     uint8_t grip;
     char c[20];
     myFile = SD.open(filename);
+
+#ifdef DEBUG_READ_FILE
+    DEBUGLN("void SDCard::readFile(String filename, LinkedList<Program*> &runList)");
+    DEBUG("Deleting File: ");
+    DEBUGLN(filename);
+    DEBUG("Did it open? ");
+    DEBUGLN(bool(myFile));
+#endif // DEBUG_READ_FILE
+
     myFile.readStringUntil(',');
     while (myFile.available()) {
         for (int i = 0; i < 8; i++)
