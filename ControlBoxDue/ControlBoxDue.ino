@@ -14,6 +14,7 @@ Swtich between Due & mega2560
 	End Todo List
 =========================================================*/
 
+#include <malloc.h>
 #include "CANBusWiFi.h"
 #include <LinkedList.h>
 #include <SD.h>
@@ -127,14 +128,20 @@ int8_t gripStatus = 2;
 uint32_t timer = 0;
 
 // Key input variables
-char keyboardInput[8] = { ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ' };
+char keyboardInput[9];
+//char keyboardInput[8] = { ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ' };
 uint8_t keypadInput[4] = { 0, 0, 0, 0 };
 uint8_t keyIndex = 0;
 
-String programNames_G[MAX_PROGRAMS] = { "", "", "", "", "", "", "", "", "", "" };
-uint8_t numberOfPrograms = 0;
 uint8_t state = 0;
 uint8_t keyResult = 0;
+
+char fileList[20][9];
+
+uint8_t programCount = 0;
+const String sTemp = "PROGRAMS";
+uint8_t programScroll = 0;
+
 /*=========================================================
 	Framework Functions
 ===========================================================*/
@@ -306,6 +313,55 @@ void print_icon(int x, int y, const unsigned char icon[])
 			i++;
 		}
 	}
+}
+
+extern char _end;
+extern "C" char* sbrk(int i);
+// https://forum.arduino.cc/t/getting-heap-size-stack-size-and-free-ram-from-due/678195/5
+// Display used memory
+void saveRamStates(uint32_t MaxUsedHeapRAM, uint32_t MaxUsedStackRAM, uint32_t MaxUsedStaticRAM, uint32_t MinfreeRAM)
+{
+	char* ramstart = (char*)0x20070000;
+	char* ramend = (char*)0x20088000;
+
+	char* heapend = sbrk(0);
+	register char* stack_ptr asm("sp");
+	struct mallinfo mi = mallinfo();
+	if (MaxUsedStaticRAM < &_end - ramstart)
+	{
+		MaxUsedStaticRAM = &_end - ramstart;
+	}
+	if (MaxUsedHeapRAM < mi.uordblks)
+	{
+		MaxUsedHeapRAM = mi.uordblks;
+	}
+	if (MaxUsedStackRAM < ramend - stack_ptr)
+	{
+		MaxUsedStackRAM = ramend - stack_ptr;
+	}
+	if (MinfreeRAM > stack_ptr - heapend + mi.fordblks || MinfreeRAM == 0)
+	{
+		MinfreeRAM = stack_ptr - heapend + mi.fordblks;
+	}
+
+	drawSquareBtn(131, 55, 479, 319, "", themeBackground, themeBackground, themeBackground, CENTER);
+	drawRoundBtn(135, 80, 310, 130, F("Used RAM"), menuBackground, menuBtnBorder, menuBtnText, CENTER);
+	drawRoundBtn(315, 80, 475, 130, String(MaxUsedStaticRAM), menuBtnColor, menuBtnBorder, menuBtnText, CENTER);
+	drawRoundBtn(135, 135, 310, 185, F("Used HEAP"), menuBackground, menuBtnBorder, menuBtnText, CENTER);
+	drawRoundBtn(315, 135, 475, 185, String(MaxUsedHeapRAM), menuBtnColor, menuBtnBorder, menuBtnText, CENTER);
+	drawRoundBtn(135, 190, 310, 240, F("Used STACK"), menuBackground, menuBtnBorder, menuBtnText, CENTER);
+	drawRoundBtn(315, 190, 475, 240, String(MaxUsedStackRAM), menuBtnColor, menuBtnBorder, menuBtnText, CENTER);
+	drawRoundBtn(135, 245, 310, 295, F("FREE RAM"), menuBackground, menuBtnBorder, menuBtnText, CENTER);
+	drawRoundBtn(315, 245, 475, 295, String(MinfreeRAM), menuBtnColor, menuBtnBorder, menuBtnText, CENTER);
+	}
+
+void memoryUse()
+{
+	uint32_t MaxUsedHeapRAM = 0;
+	uint32_t MaxUsedStackRAM = 0;
+	uint32_t MaxUsedStaticRAM = 0;
+	uint32_t MinfreeRAM = 0;
+	saveRamStates(MaxUsedHeapRAM, MaxUsedStackRAM, MaxUsedStaticRAM, MinfreeRAM);
 }
 
 /***************************************************
@@ -765,24 +821,30 @@ void updateViewPage()
 					Program Arm
 ============================================================*/
 // Draws scrollable box that contains 10 slots for programs
-void drawProgramScroll(int scroll)
+void drawProgramScroll()
 {
-	// selected position = scroll * position
+	File dirList;
+	dirList = SD.open("/PROGRAMS/");
+
+	programCount = sdCard.printDirectory(dirList, fileList);
+
+	// selected position = programScroll * position
 	// if selected draw different color border
 	uint16_t yAxis = 55;
 	uint16_t xAxis = 133;
 	for (int i = 0; i < 5; i++)
 	{
-		if (programNames_G[i + scroll].compareTo("") != 0 && sdCard.fileExists(programNames_G[i + scroll]))
+		//if (fileList[i + programScroll].compareTo("") != 0 && sdCard.fileExists(fileList[i + programScroll]))
+		if (i + programScroll < programCount)
 		{
-			drawSquareBtn(xAxis, yAxis, 284, yAxis + 40, (programNames_G[i + scroll]), menuBtnColor, menuBtnBorder, menuBtnText, LEFT);
+			drawSquareBtn(xAxis, yAxis, 284, yAxis + 40, (fileList[i + programScroll]), menuBtnColor, menuBtnBorder, menuBtnText, LEFT);
 			drawSquareBtn(284, yAxis, 351, yAxis + 40, F("LOAD"), menuBtnColor, menuBtnBorder, menuBtnText, CENTER);
 			drawSquareBtn(351, yAxis, 420, yAxis + 40, F("EDIT"), menuBtnColor, menuBtnBorder, menuBtnText, CENTER);
 			drawSquareBtn(420, yAxis, 477, yAxis + 40, F("DEL"), menuBtnColor, menuBtnBorder, menuBtnText, CENTER);
 		}
 		else
 		{
-			//drawSquareBtn(xAxis, yAxis, 410, yAxis + 40, (aList[i + scroll] + "-Empty"), menuBackground, menuBtnBorder, menuBtnText, LEFT);
+			//drawSquareBtn(xAxis, yAxis, 410, yAxis + 40, (aList[i + programScroll] + "-Empty"), menuBackground, menuBtnBorder, menuBtnText, LEFT);
 			drawSquareBtn(xAxis, yAxis, 478, yAxis + 40, "", menuBackground, menuBtnBorder, menuBtnText, LEFT);
 		}
 
@@ -791,7 +853,7 @@ void drawProgramScroll(int scroll)
 }
 
 // Draws buttons for program function
-bool drawProgram(int scroll = 0)
+bool drawProgram()
 {
 	switch (graphicLoaderState)
 	{
@@ -843,7 +905,7 @@ bool drawProgram(int scroll = 0)
 		drawSquareBtn(401, 280, 477, 317, F("\\/"), menuBtnColor, menuBtnBorder, menuBtnText, CENTER);
 		break;
 	case 15:
-		drawProgramScroll(scroll);
+		drawProgramScroll();
 		return true;
 		break;
 	}
@@ -853,21 +915,32 @@ bool drawProgram(int scroll = 0)
 // Deletes current selected program from 
 void programDelete()
 {
-	sdCard.deleteFile(programNames_G[selectedProgram]);
+	char temp[20] = "PROGRAMS/";
+	strcat(temp, fileList[selectedProgram]);
+	Serial.println("");
+	Serial.print("Deleting file name:");
+	Serial.println(temp);
+	Serial.println("");
+
+	sdCard.deleteFile(temp);
 }
 
 // Load selected program from SD card into linked list
 void loadProgram()
 {
-	sdCard.readFile(programNames_G[selectedProgram], runList);
+	char temp[20] = "PROGRAMS/";
+	strcat(temp, fileList[selectedProgram]);
+	Serial.println("");
+	Serial.print("Loading file:");
+	Serial.println(temp);
+	Serial.println("");
+
+	sdCard.readFile(temp, runList);
 }
 
 // Button functions for program page 
 void programButtons()
 {
-	// Static so that the position is saved while this method is repeatedly called in the loop
-	static int scroll = 0;
-
 	// Touch screen controls
 	if (myTouch.dataAvailable())
 	{
@@ -875,9 +948,9 @@ void programButtons()
 		x = myTouch.getX();
 		y = myTouch.getY();
 
-		if ((y >= 55) && (y <= 95) && numberOfPrograms > 0 + scroll)
+		if ((y >= 55) && (y <= 95) && programCount > 0 + programScroll)
 		{
-			selectedProgram = 0 + scroll;
+			selectedProgram = 0 + programScroll;
 			if ((x >= 284) && (x <= 351))
 			{
 				waitForIt(284, 55, 351, 95);
@@ -907,9 +980,9 @@ void programButtons()
 				hasDrawn = false;
 			}
 		}
-		if ((y >= 100) && (y <= 140) && numberOfPrograms > 1 + scroll)
+		if ((y >= 100) && (y <= 140) && programCount > 1 + programScroll)
 		{
-			selectedProgram = 1 + scroll;
+			selectedProgram = 1 + programScroll;
 			if ((x >= 284) && (x <= 351))
 			{
 				waitForIt(284, 100, 351, 140);
@@ -939,9 +1012,9 @@ void programButtons()
 				hasDrawn = false;
 			}
 		}
-		if ((y >= 145) && (y <= 185) && numberOfPrograms > 2 + scroll)
+		if ((y >= 145) && (y <= 185) && programCount > 2 + programScroll)
 		{
-			selectedProgram = 2 + scroll;
+			selectedProgram = 2 + programScroll;
 			if ((x >= 284) && (x <= 351))
 			{
 				waitForIt(284, 145, 351, 185);
@@ -971,9 +1044,9 @@ void programButtons()
 				hasDrawn = false;
 			}
 		}
-		if ((y >= 190) && (y <= 230) && numberOfPrograms > 3 + scroll)
+		if ((y >= 190) && (y <= 230) && programCount > 3 + programScroll)
 		{
-			selectedProgram = 3 + scroll;
+			selectedProgram = 3 + programScroll;
 			if ((x >= 284) && (x <= 351))
 			{
 				waitForIt(284, 190, 351, 230);
@@ -1003,9 +1076,9 @@ void programButtons()
 				hasDrawn = false;
 			}
 		}
-		if ((y >= 235) && (y <= 275) && numberOfPrograms > 4 + scroll)
+		if ((y >= 235) && (y <= 275) && programCount > 4 + programScroll)
 		{
-			selectedProgram = 4 + scroll;
+			selectedProgram = 4 + programScroll;
 			if ((x >= 284) && (x <= 351))
 			{
 				waitForIt(284, 235, 351, 275);
@@ -1042,20 +1115,20 @@ void programButtons()
 
 				// Scroll up
 				waitForIt(133, 280, 210, 317);
-				if (scroll > 0)
+				if (programScroll > 0)
 				{
-					scroll--;
-					drawProgramScroll(scroll);
+					programScroll--;
+					drawProgramScroll();
 				}
 			}
 			if ((x >= 401) && (x <= 477))
 			{
 				// Scroll down
 				waitForIt(401, 280, 477, 317);
-				if (scroll < 5)
+				if (programScroll < 5)
 				{
-					scroll++;
-					drawProgramScroll(scroll);
+					programScroll++;
+					drawProgramScroll();
 				}
 			}
 			if ((x >= 261) && (x <= 350))
@@ -1064,7 +1137,8 @@ void programButtons()
 				waitForItRect(261, 280, 350, 317);
 				// Add
 				selectedProgram = findProgramNode(); // Find an empty program slot to open
-				SerialUSB.println(selectedProgram);
+				Serial.print("selectedProgram: ");
+				Serial.println(selectedProgram);
 				runList.clear(); // Empty the linked list of any program currently loaded
 				programOpen = true;
 				page = 8;
@@ -1076,17 +1150,18 @@ void programButtons()
 
 uint8_t findProgramNode()
 {
-	String temp = "";
-	for (uint8_t i = 0; i < MAX_PROGRAMS; i++)
+	if (programCount < 20)
 	{
-		if (programNames_G[i].compareTo(temp) == 0)
-		{
-			Serial.println(i);
-			return i;
-		}
+		Serial.print("returning: ");
+		Serial.println(programCount);
+		return programCount++;
 	}
-	return 0xFF;
+	else
+	{
+		return 0xFF;
+	}
 }
+
 
 /*==========================================================
 					Edit Program
@@ -1103,7 +1178,7 @@ void drawEditPage()
 
 	drawSquareBtn(132, 54, 478, 96, F(""), menuBackground, menuBtnBorder, menuBtnText, CENTER);
 	drawSquareBtn(133, 55, 280, 95, F("Filename"), menuBackground, menuBtnBorder, menuBtnText, CENTER);
-	drawSquareBtn(280, 55, 477, 95, programNames_G[selectedProgram], menuBtnColor, menuBtnBorder, menuBtnText, CENTER);
+	drawSquareBtn(280, 55, 477, 95, fileList[selectedProgram], menuBtnColor, menuBtnBorder, menuBtnText, CENTER);
 
 	drawSquareBtn(132, 99, 478, 141, F(""), menuBackground, menuBtnBorder, menuBtnText, CENTER);
 	drawSquareBtn(133, 100, 280, 140, F("Size"), menuBackground, menuBtnBorder, menuBtnText, CENTER);
@@ -1229,10 +1304,8 @@ void drawProgramEdit(uint8_t scroll = 0)
 		break;
 	}
 
-	drawSquareBtn(420, 50, 470, 90, F("X"), menuBtnColor, menuBtnBorder, menuBtnText, CENTER);
-
 	myGLCD.setFont(SmallFont);
-	drawSquareBtn(420, 220, 470, 260, F(" Save"), menuBtnColor, menuBtnBorder, menuBtnText, LEFT);
+	drawSquareBtn(420, 220, 470, 260, F(" Done"), menuBtnColor, menuBtnBorder, menuBtnText, LEFT);
 	myGLCD.setFont(BigFont);
 }
 
@@ -1279,40 +1352,44 @@ void saveProgram()
 {
 	// Delimiter 
 	String space = ", ";
-	Serial.print("Saving new File to:");
-	Serial.println(programNames_G[selectedProgram]);
-	Serial.print("Size: ");
-	Serial.println(runList.size());
-	Serial.println(programNames_G[selectedProgram]);
+	char temp[20] = "PROGRAMS/";
+
+	char buffer[8];
+	sprintf(buffer, "%s", fileList[selectedProgram]);
+
+	strcat(temp, buffer);
+	Serial.println("");
+	Serial.print("Full name:");
+	Serial.println(temp);
+	Serial.println("");
+
 	// Write out linkedlist data to text file
 	for (uint8_t i = 0; i < runList.size(); i++)
 	{
 		Serial.print(".");
-		sdCard.writeFile(programNames_G[selectedProgram], ",");
-		sdCard.writeFile(programNames_G[selectedProgram], runList.get(i)->getA1());
-		sdCard.writeFile(programNames_G[selectedProgram], space);
-		sdCard.writeFile(programNames_G[selectedProgram], runList.get(i)->getA2());
-		sdCard.writeFile(programNames_G[selectedProgram], space);
-		sdCard.writeFile(programNames_G[selectedProgram], runList.get(i)->getA3());
-		sdCard.writeFile(programNames_G[selectedProgram], space);
-		sdCard.writeFile(programNames_G[selectedProgram], runList.get(i)->getA4());
-		sdCard.writeFile(programNames_G[selectedProgram], space);
-		sdCard.writeFile(programNames_G[selectedProgram], runList.get(i)->getA5());
-		sdCard.writeFile(programNames_G[selectedProgram], space);
-		sdCard.writeFile(programNames_G[selectedProgram], runList.get(i)->getA6());
-		sdCard.writeFile(programNames_G[selectedProgram], space);
-		sdCard.writeFile(programNames_G[selectedProgram], runList.get(i)->getID());
-		sdCard.writeFile(programNames_G[selectedProgram], space);
-		sdCard.writeFile(programNames_G[selectedProgram], runList.get(i)->getGrip());
-		sdCard.writeFileln(programNames_G[selectedProgram]);
+		sdCard.writeFile(temp, ",");
+		sdCard.writeFile(temp, runList.get(i)->getA1());
+		sdCard.writeFile(temp, space);
+		sdCard.writeFile(temp, runList.get(i)->getA2());
+		sdCard.writeFile(temp, space);
+		sdCard.writeFile(temp, runList.get(i)->getA3());
+		sdCard.writeFile(temp, space);
+		sdCard.writeFile(temp, runList.get(i)->getA4());
+		sdCard.writeFile(temp, space);
+		sdCard.writeFile(temp, runList.get(i)->getA5());
+		sdCard.writeFile(temp, space);
+		sdCard.writeFile(temp, runList.get(i)->getA6());
+		sdCard.writeFile(temp, space);
+		sdCard.writeFile(temp, runList.get(i)->getID());
+		sdCard.writeFile(temp, space);
+		sdCard.writeFile(temp, runList.get(i)->getGrip());
+		sdCard.writeFileln(temp);
 	}
 	if (runList.size() == 0)
 	{
 		Serial.println("empty");
-		sdCard.writeFileln(programNames_G[selectedProgram]);
+		sdCard.writeFileln(temp);
 	}
-
-	saveProgramNames();
 }
 
 // Button functions for edit program page
@@ -1375,15 +1452,6 @@ void programEditButtons()
 		}
 		if ((x >= 420) && (x <= 470))
 		{
-			if ((y >= 50) && (y <= 90))
-			{
-				// Cancel
-				waitForItRect(420, 50, 470, 90);
-				programOpen = false;
-				page = 2;
-				hasDrawn = false;
-				graphicLoaderState = 0;
-			}
 			if ((y >= 95) && (y <= 155))
 			{
 				waitForIt(420, 95, 470, 155);
@@ -1406,9 +1474,7 @@ void programEditButtons()
 			{
 				// Save program
 				waitForItRect(420, 220, 470, 260);
-				programDelete();
-				saveProgram();
-				programOpen = false;
+				programEdit = false;
 				page = 2;
 				hasDrawn = false;
 				graphicLoaderState = 0;
@@ -1471,20 +1537,6 @@ void programEditButtons()
 	}
 }
 
-void saveProgramNames()
-{
-	String temp = "";
-	sdCard.deleteFile("progName");
-	for (uint8_t i = 0; i < MAX_PROGRAMS; i++)
-	{
-		if (programNames_G[i].compareTo(temp) != 0)
-		{
-			sdCard.writeFile("progName", programNames_G[i]);
-			sdCard.writeFile("progName", "\n");
-		}
-	}
-}
-
 /*==========================================================
 					Configure Arm
 ============================================================*/
@@ -1500,6 +1552,7 @@ void drawConfig()
 	drawRoundBtn(310, 110, 460, 150, F("Set ch2"), menuBtnColor, menuBtnBorder, menuBtnText, CENTER);
 	drawRoundBtn(150, 160, 300, 200, F("Loop On"), menuBtnColor, menuBtnBorder, menuBtnText, CENTER);
 	drawRoundBtn(310, 160, 460, 200, F("Loop Off"), menuBtnColor, menuBtnBorder, menuBtnText, CENTER);
+	drawRoundBtn(150, 210, 300, 250, F("Memory"), menuBtnColor, menuBtnBorder, menuBtnText, CENTER);
 }
 
 // Sends command to return arm to starting position
@@ -1568,6 +1621,19 @@ void configButtons()
 			{
 				waitForIt(310, 160, 460, 200);
 				loopProgram = false;
+			}
+		}
+		if ((y >= 210) && (y <= 250))
+		{
+			if ((x >= 150) && (x <= 300))
+			{
+				waitForIt(150, 210, 300, 250);
+				page = 10;
+				hasDrawn = false;
+			}
+			if ((x >= 310) && (x <= 460))
+			{
+				//waitForIt(310, 160, 460, 200);
 			}
 		}
 	}
@@ -2359,19 +2425,22 @@ uint8_t keyboardController(uint8_t& index)
 			keyboardInput[index] = input;
 		}
 
-		Serial.println(index);
-		for (int i = 0; i < 8; i++)
-		{
-			Serial.println(keyboardInput[i]);
-		}
-		drawRoundBtn(245, 230, 475, 270, String(keyboardInput), menuBtnColor, menuBtnBorder, menuBtnText, CENTER);
+		char buffer[8];
+		sprintf(buffer, "%s", keyboardInput);
+	
+		drawRoundBtn(245, 230, 475, 270, buffer, menuBtnColor, menuBtnBorder, menuBtnText, CENTER);
+
 		++index;
 		return 0xFF;
 	}
 	if (input == 0xF2)
 	{
 		keyboardInput[index - 1] = 0x20;
-		drawRoundBtn(245, 230, 475, 270, String(keyboardInput), menuBtnColor, menuBtnBorder, menuBtnText, CENTER);
+
+		char buffer[8];
+		sprintf(buffer, "%s", keyboardInput);
+
+		drawRoundBtn(245, 230, 475, 270, buffer, menuBtnColor, menuBtnBorder, menuBtnText, CENTER);
 		--index;
 		return 0xFF;
 	}
@@ -2437,19 +2506,40 @@ void setup()
 
 	drawMenu();
 
+	/*
 	sdCard.deleteFile("progName");
 	sdCard.writeFile("progName", "a");
 	sdCard.writeFile("progName", "\n");
 	sdCard.writeFile("progName", "b");
 	sdCard.writeFile("progName", "\n");
 	sdCard.writeFileln("test");
-
-	programNames_G[0] = "a";
+	
+	fileList[0] = "programs/a";
 	selectedProgram = 0;
 	saveProgram();
-	programNames_G[1] = "b";
+	fileList[1] = "programs/b";
 	selectedProgram = 1;
-	saveProgram();
+	*/
+
+	//File dirList;
+	//dirList = SD.open("/PROGRAMS/");
+	
+	sdCard.createDRIVE(sTemp);
+	//sdCard.writeFile("programs/a", "\n");
+	//sdCard.writeFile("programs/b", "\n");
+	//sdCard.printDirectory(dirList, fileList);
+
+	/*
+	Serial.println("");
+	Serial.println("");
+	Serial.println("Printing List");
+	for (uint8_t i = 0; i < 20; i++)
+	{
+		Serial.println(fileList[i]);
+	}
+	*/
+
+	//saveProgram();
 }
 
 // Page control framework
@@ -2581,60 +2671,60 @@ void pageControl()
 		// Draw page
 		if (!hasDrawn)
 		{
+			const char test = ' ';
+			keyboardInput[0] = test;
+			keyboardInput[1] = test;
+			keyboardInput[2] = test;
+			keyboardInput[3] = test;
+			keyboardInput[4] = test;
+			keyboardInput[5] = test;
+			keyboardInput[6] = test;
 			drawkeyboard();
 			hasDrawn = true;
-			for (uint8_t i = 0; i < 8; i++)
-			{
-				keyboardInput[i] = ' ';
-			}
 		}
 		keyResult = keyboardController(keyIndex);
-		if (keyResult == 0xF1)
+		if (keyResult == 0xF1) // Accept
 		{
-			programNames_G[selectedProgram] = "";
+			// Create dir for old filename to delete
+			char temp[20] = "PROGRAMS/";
+			strcat(temp, fileList[selectedProgram]);
 
-			Serial.print("Deleteing old file: ");
-			Serial.println(programNames_G[selectedProgram]);
-			sdCard.deleteFile(programNames_G[selectedProgram]);
-			Serial.print("Copy new name over: ");
-			Serial.println(String(keyboardInput));
-			char filterInput[8];
-			sprintf(filterInput, "%c%c%c%c%c%c%c%c", keyboardInput[0], keyboardInput[1], keyboardInput[2], keyboardInput[3], keyboardInput[4], keyboardInput[5], keyboardInput[6], keyboardInput[7] );
-
-			char temp = ' ';
-			//programNames_G[selectedProgram] = (keyboardInput[0] + keyboardInput[1] + keyboardInput[2] + keyboardInput[3] + keyboardInput[4] + keyboardInput[5] + keyboardInput[6] + keyboardInput[7]);
+			// Copy keyboard input to fileList name
 			for (uint8_t i = 0; i < 8; i++)
 			{
-				if (!keyboardInput[i] == temp)
+				if (keyboardInput[i] != ' ')
 				{
-					programNames_G[selectedProgram].concat(keyboardInput[i]);
+					fileList[selectedProgram][i] = keyboardInput[i];
 				}
 			}
-			/*
-			programNames_G[selectedProgram].concat(keyboardInput[0]);
-			programNames_G[selectedProgram].concat(keyboardInput[1]);
-			programNames_G[selectedProgram].concat(keyboardInput[2]);
-			programNames_G[selectedProgram].concat(keyboardInput[3]);
-			programNames_G[selectedProgram].concat(keyboardInput[4]);
-			programNames_G[selectedProgram].concat(keyboardInput[5]);
-			programNames_G[selectedProgram].concat(keyboardInput[6]);
-			programNames_G[selectedProgram].concat(keyboardInput[7]);
-			*/
-			//programNames_G[selectedProgram] = String(keyboardInput);
 
-			Serial.println("Save Program");
+			// Save the file under the new filename
 			saveProgram();
+
+			// Safe to delete old file name
+			sdCard.deleteFile(temp);
+
+			// Exit
 			page = 8;
 			hasDrawn = false;
 		}
-		if (keyResult == 0xF0)
+		if (keyResult == 0xF0) // Cancel
 		{
-			Serial.println("here");
-			page = 6;
+			// Exit
+			page = 8;
 			hasDrawn = false;
 		}
 		break;
+	case 10:
+		// Draw page
+		if (!hasDrawn)
+		{
+			memoryUse();
+			hasDrawn = true;
+		}
+		break;
 	}
+
 }
 
 // errorMSGReturn
@@ -2749,15 +2839,9 @@ void menuButtons()
 			{
 				// PROG
 				waitForIt(5, 58, 120, 105);
-				numberOfPrograms = 0;
 				page = 2;
 				graphicLoaderState = 0;
 				hasDrawn = false;
-				sdCard.readProgramName("progName");
-				SerialUSB.println(programNames_G[0]);
-				SerialUSB.println(programNames_G[1]);
-				SerialUSB.println(programNames_G[2]);
-				SerialUSB.println(programNames_G[3]);
 			}
 			if ((y >= 110) && (y <= 157))
 			{

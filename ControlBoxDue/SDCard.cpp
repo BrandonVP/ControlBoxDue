@@ -38,7 +38,6 @@ void SDCard::writeFile(char* filename, String incoming)
     // Check if file was sucsefully open
     if (myFile)
     {
-        Serial.println("here11");
         myFile.print(incoming);
         myFile.close();
     }
@@ -162,7 +161,7 @@ void SDCard::writeProgramName(String filename)
 /*=========================================================
     Delete File Methods
 ===========================================================*/
-#define DEBUG_DELETE_FILE
+//#define DEBUG_DELETE_FILE
 // Delete SD Card file
 void SDCard::deleteFile(String filename)
 {
@@ -178,7 +177,7 @@ void SDCard::deleteFile(String filename)
 #endif // DEBUG_DELETE_FILE
 }
 
-#define DEBUG_FILE_EXISTS
+//#define DEBUG_FILE_EXISTS
 // Check if file exists
 bool SDCard::fileExists(String filename)
 {
@@ -200,31 +199,7 @@ bool SDCard::fileExists(String filename)
 /*=========================================================
     Read File Methods
 ===========================================================*/
-#define DEBUG_PROGRAM_NAMES
-// Read in the file names
-void SDCard::readProgramName(String filename)
-{
-    uint8_t i = 0;
-    //String tempStr;
-    myFile = SD.open(filename);
-
-#ifdef DEBUG_PROGRAM_NAMES
-    DEBUGLN("void SDCard::readProgramName(String filename)");
-    DEBUG("Opening File: ");
-    DEBUGLN(filename);
-    DEBUG("Did it open? ");
-    DEBUGLN(bool(myFile));
-#endif // DEBUG_PROGRAM_NAMES
-
-    while (myFile.available()) 
-    {
-        programNames_G[i] = myFile.readStringUntil('\n');
-        numberOfPrograms++;
-        i++;
-    }
-}
-
-#define DEBUG_READ_FILE
+//#define DEBUG_READ_FILE
 // Read in program from SD
 void SDCard::readFile(String filename, LinkedList<Program*> &runList)
 {
@@ -275,4 +250,42 @@ void SDCard::readFile(String filename, LinkedList<Program*> &runList)
             runList.add(node);
     }
     myFile.close();
+}
+
+/*=========================================================
+    Create File Methods
+===========================================================*/
+// Create SD Card folder
+void SDCard::createDRIVE(String foldername)
+{
+    SD.mkdir(foldername);
+}
+
+//#define DEBUG_READ_DIR
+// Reads in files
+uint8_t SDCard::printDirectory(File dir, MyArray& list)
+{
+    uint8_t count = 0;
+    while (true)
+    {
+        File entry = dir.openNextFile();
+#ifdef DEBUG_READ_DIR
+        DEBUGLN("uint8_t SDCard::printDirectory(File dir, MyArray& list, const String dirName)");
+        DEBUG("File found: ");
+        DEBUGLN(entry.name());
+        DEBUG("isEntry: ");
+        DEBUGLN(entry);
+#endif // DEBUG_READ_DIR
+        if (entry && count < 20)
+        {
+            sprintf(list[count], "%s", entry.name());
+            count++;
+        }
+        else
+        {
+            break;
+        }
+        entry.close();
+    }
+    return count;
 }

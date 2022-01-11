@@ -16,7 +16,7 @@
 class SDCard
 {
  protected:
-
+	 typedef char MyArray[20][9];
 
  public:
 	bool startSD();
@@ -28,8 +28,9 @@ class SDCard
 	void deleteFile(String);
 	void readFile(String, LinkedList<Program*> &);
 	bool fileExists(String filename);
-	void readProgramName(String);
 	void writeProgramName(String);
+	void createDRIVE(String);
+	uint8_t printDirectory(File dir, MyArray& list);
 };
 
 #endif

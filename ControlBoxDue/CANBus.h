@@ -1,4 +1,5 @@
 // CANBus.h
+#include <SD.h>
 #include "SDCard.h"
 #include <due_can.h>
 #include "variant.h"
