@@ -20,7 +20,7 @@ bool SDCard::startSD()
 /*=========================================================
     Write File Methods
 ===========================================================*/
-#define DEBUG_WRITEFILE_1
+//#define DEBUG_WRITEFILE_1
 // Write string to SD Card
 void SDCard::writeFile(char* filename, String incoming)
 {
@@ -28,10 +28,10 @@ void SDCard::writeFile(char* filename, String incoming)
     myFile = SD.open(filename, FILE_WRITE);
 
 #ifdef DEBUG_WRITEFILE_1
-    DEBUGLN("void SDCard::writeFile(char* filename, String incoming)");
-    DEBUG("Opening File: ");
+    DEBUGLN(F("void SDCard::writeFile(char* filename, String incoming)"));
+    DEBUG(F("Opening File: "));
     DEBUGLN(filename);
-    DEBUG("Did it open? ");
+    DEBUG(F("Did it open? "));
     DEBUGLN(bool(myFile));
 #endif // DEBUG_WRITEFILE_1
 
@@ -43,7 +43,7 @@ void SDCard::writeFile(char* filename, String incoming)
     }
 }
 
-#define DEBUG_WRITEFILE_2
+//#define DEBUG_WRITEFILE_2
 // Write string to SD Card
 void SDCard::writeFile(String filename, String incoming)
 {
@@ -51,10 +51,10 @@ void SDCard::writeFile(String filename, String incoming)
     myFile = SD.open(filename, FILE_WRITE);
 
 #ifdef DEBUG_WRITEFILE_2
-    DEBUGLN("void SDCard::writeFile(String filename, String incoming)");
-    DEBUG("Opening File: ");
+    DEBUGLN(F("void SDCard::writeFile(String filename, String incoming)"));
+    DEBUG(F("Opening File: "));
     DEBUGLN(filename);
-    DEBUG("Did it open? ");
+    DEBUG(F("Did it open? "));
     DEBUGLN(bool(myFile));
 #endif // DEBUG_WRITEFILE_2
 
@@ -66,7 +66,7 @@ void SDCard::writeFile(String filename, String incoming)
     }
 }
 
-#define DEBUG_WRITEFILE_3
+//#define DEBUG_WRITEFILE_3
 // Write string to SD Card
 void SDCard::writeFile(String filename, uint8_t incoming)
 {
@@ -74,10 +74,10 @@ void SDCard::writeFile(String filename, uint8_t incoming)
     myFile = SD.open(filename, FILE_WRITE);
 
 #ifdef DEBUG_WRITEFILE_3
-    DEBUGLN("void SDCard::writeFile(String filename, String incoming)");
-    DEBUG("Opening File: ");
+    DEBUGLN(F("void SDCard::writeFile(String filename, String incoming)"));
+    DEBUG(F("Opening File: "));
     DEBUGLN(filename);
-    DEBUG("Did it open? ");
+    DEBUG(F("Did it open? "));
     DEBUGLN(bool(myFile));
 #endif // DEBUG_WRITEFILE_3
 
@@ -89,7 +89,7 @@ void SDCard::writeFile(String filename, uint8_t incoming)
     }
 }
 
-#define DEBUG_WRITEFILE_4
+//#define DEBUG_WRITEFILE_4
 // Write integer and base to SD Card
 void SDCard::writeFile(char* filename, int incoming, int base)
 {
@@ -97,10 +97,10 @@ void SDCard::writeFile(char* filename, int incoming, int base)
     myFile = SD.open(filename, FILE_WRITE);
 
 #ifdef DEBUG_WRITEFILE_4
-    DEBUGLN("void SDCard::writeFile(char* filename, int incoming, int base)");
-    DEBUG("Opening File: ");
+    DEBUGLN(F("void SDCard::writeFile(char* filename, int incoming, int base)"));
+    DEBUG(F("Opening File: "));
     DEBUGLN(filename);
-    DEBUG("Did it open? ");
+    DEBUG(F("Did it open? "));
     DEBUGLN(bool(myFile));
 #endif // DEBUG_WRITEFILE_4
 
@@ -112,7 +112,7 @@ void SDCard::writeFile(char* filename, int incoming, int base)
     }
 }
 
-#define DEBUG_WRITEFILELN
+//F(#define DEBUG_WRITEFILELN
 // Write return to SD Card file
 void SDCard::writeFileln(String filename)
 {
@@ -120,10 +120,10 @@ void SDCard::writeFileln(String filename)
     myFile = SD.open(filename, FILE_WRITE);
 
 #ifdef DEBUG_WRITEFILELN
-    DEBUGLN("void SDCard::writeFileln(String filename)");
-    DEBUG("Opening File: ");
+    DEBUGLN(F("void SDCard::writeFileln(String filename)"));
+    DEBUG(F("Opening File: "));
     DEBUGLN(filename);
-    DEBUG("Did it open? ");
+    DEBUG(F("Did it open? "));
     DEBUGLN(bool(myFile));
 #endif // DEBUG_WRITEFILE_4
 
@@ -135,7 +135,7 @@ void SDCard::writeFileln(String filename)
     }
 }
 
-#define DEBUG_PROGRAM_NAMES
+//#define DEBUG_PROGRAM_NAMES
 // Saves program file names to a file
 void SDCard::writeProgramName(String filename)
 {
@@ -143,10 +143,10 @@ void SDCard::writeProgramName(String filename)
     myFile = SD.open(filename, FILE_WRITE);
 
 #ifdef DEBUG_PROGRAM_NAMES
-    DEBUGLN("void SDCard::writeProgramName(String filename)");
-    DEBUG("Opening File: ");
+    DEBUGLN(F("void SDCard::writeProgramName(String filename)"));
+    DEBUG(F("Opening File: "));
     DEBUGLN(filename);
-    DEBUG("Did it open? ");
+    DEBUG(F("Did it open? "));
     DEBUGLN(bool(myFile));
 #endif // DEBUG_PROGRAM_NAMES
 
@@ -169,10 +169,10 @@ void SDCard::deleteFile(String filename)
     bool temp = SD.remove(filename);
 
 #ifdef DEBUG_DELETE_FILE
-    DEBUGLN("void SDCard::deleteFile(String filename)");
-    DEBUG("Deleting File: ");
+    DEBUGLN(F("void SDCard::deleteFile(String filename)"));
+    DEBUG(F("Deleting File: "));
     DEBUGLN(filename);
-    DEBUG("Did it delete? ");
+    DEBUG(F("Did it delete? "));
     DEBUGLN(temp);
 #endif // DEBUG_DELETE_FILE
 }
@@ -186,10 +186,10 @@ bool SDCard::fileExists(String filename)
     myFile.close();
 
 #ifdef DEBUG_FILE_EXISTS
-    DEBUGLN("bool SDCard::fileExists(String filename)");
-    DEBUG("Checking File: ");
+    DEBUGLN(F("bool SDCard::fileExists(String filename)"));
+    DEBUG(F("Checking File: "));
     DEBUGLN(filename);
-    DEBUG("Does it exist? ");
+    DEBUG(F("Does it exist? "));
     DEBUGLN(value);
 #endif // DEBUG_FILE_EXISTS
 
@@ -211,10 +211,10 @@ void SDCard::readFile(String filename, LinkedList<Program*> &runList)
     myFile = SD.open(filename);
 
 #ifdef DEBUG_READ_FILE
-    DEBUGLN("void SDCard::readFile(String filename, LinkedList<Program*> &runList)");
-    DEBUG("Deleting File: ");
+    DEBUGLN(F("void SDCard::readFile(String filename, LinkedList<Program*> &runList)"));
+    DEBUG(F("Deleting File: "));
     DEBUGLN(filename);
-    DEBUG("Did it open? ");
+    DEBUG(F("Did it open? "));
     DEBUGLN(bool(myFile));
 #endif // DEBUG_READ_FILE
 
@@ -238,6 +238,8 @@ void SDCard::readFile(String filename, LinkedList<Program*> &runList)
            }
            
         }
+
+#ifdef DEBUG_READ_FILE
         for (uint8_t i = 0; i < 6; i++)
         {
             Serial.println(posArray[i]);
@@ -245,7 +247,7 @@ void SDCard::readFile(String filename, LinkedList<Program*> &runList)
             Serial.println(channel);
             Serial.println(grip);
             Serial.println("");
-        
+#endif // DEBUG_READ_FILE
             Program* node = new Program(posArray, grip, channel);
             runList.add(node);
     }
@@ -270,10 +272,10 @@ uint8_t SDCard::printDirectory(File dir, MyArray& list)
     {
         File entry = dir.openNextFile();
 #ifdef DEBUG_READ_DIR
-        DEBUGLN("uint8_t SDCard::printDirectory(File dir, MyArray& list, const String dirName)");
-        DEBUG("File found: ");
-        DEBUGLN(entry.name());
-        DEBUG("isEntry: ");
+        DEBUGLN(F("uint8_t SDCard::printDirectory(File dir, MyArray& list, const String dirName)");
+        DEBUG(F("File found: "));
+        DEBUGLN(entry.name()));
+        DEBUG(F("isEntry: "));
         DEBUGLN(entry);
 #endif // DEBUG_READ_DIR
         if (entry && count < 20)

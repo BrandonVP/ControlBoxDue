@@ -16,7 +16,7 @@
 class SDCard
 {
  protected:
-	 typedef char MyArray[20][9];
+	 typedef char MyArray[16][8];
 
  public:
 	bool startSD();
