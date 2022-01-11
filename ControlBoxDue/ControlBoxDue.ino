@@ -92,6 +92,7 @@ AxisPos axisPos;
 // Linked list of nodes for a program
 LinkedList<Program*> runList = LinkedList<Program*>();
 
+//TODO: Clean these up
 // Keeps track of current page
 uint8_t controlPage = 1;
 uint8_t page = 1;
@@ -113,8 +114,7 @@ bool loopProgram = true;
 bool programRunning = false;
 bool Arm1Ready = false;
 bool Arm2Ready = false;
-// THIS WILL LIMIT THE SIZE OF A PROGRAM TO 255 MOVEMENTS
-uint8_t programProgress = 0;
+uint8_t programProgress = 0; // THIS WILL LIMIT THE SIZE OF A PROGRAM TO 255 MOVEMENTS
 
 // Used to determine which PROG page should be loaded when button is pressed
 bool programOpen = false;
@@ -123,23 +123,24 @@ bool programEdit = false;
 // 0 = open, 1 = close, 2 = no change
 int8_t gripStatus = 2;
 
-
-// Timer for current angle updates
+// Timer used for touch button press
 uint32_t timer = 0;
 
 // Key input variables
 char keyboardInput[9];
-//char keyboardInput[8] = { ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ' };
 uint8_t keypadInput[4] = { 0, 0, 0, 0 };
 uint8_t keyIndex = 0;
-
-uint8_t state = 0;
 uint8_t keyResult = 0;
+
+// Generic free use state variable
+uint8_t state = 0;
 
 char fileList[16][8];
 
 uint8_t programCount = 0;
 const String sTemp = "PROGRAMS";
+
+// Variable to track current scroll position
 uint8_t programScroll = 0;
 uint16_t scroll = 0;
 
@@ -515,82 +516,83 @@ bool Touch_getXY(void)
 	return false;
 #endif
 }
+
+
 /*=========================================================
 	Manual control Functions
 ===========================================================*/
 // Draw the manual control page
-void drawManualControl()
+bool drawManualControl()
 {
+	uint8_t j;
+	uint16_t i;
 	switch (graphicLoaderState)
 	{
 	case 0:
+		// Clear LCD to be written 
+		drawSquareBtn(126, 1, 479, 319, "", themeBackground, themeBackground, themeBackground, CENTER);
 		break;
 	case 1:
+		// Print arm logo
+		print_icon(435, 5, robotarm);
 		break;
 	case 2:
+		// Print page title
+		drawSquareBtn(180, 10, 400, 45, F("Manual Control"), themeBackground, themeBackground, menuBtnColor, CENTER);
 		break;
 	case 3:
+		// Manual control axis labels
+		j = 1;
+		for (i = 131; i < (480 - 45); i = i + 58) {
+			myGLCD.setColor(menuBtnColor);
+			myGLCD.setBackColor(themeBackground);
+			myGLCD.printNumI(j, i + 20, 60);
+			j++;
+		}
 		break;
 	case 4:
+		// Draw the upper row of movement buttons
+		for (i = 131; i < (480 - 54); i = i + 58) {
+			drawSquareBtn(i, 80, i + 54, 140, F("/\\"), menuBtnColor, menuBtnBorder, menuBtnText, CENTER);
+		}
 		break;
 	case 5:
+		// Draw the bottom row of movement buttons
+		for (i = 131; i < (480 - 54); i = i + 58) {
+			drawSquareBtn(i, 140, i + 54, 200, F("\\/"), menuBtnColor, menuBtnBorder, menuBtnText, CENTER);
+		}
 		break;
 	case 6:
+		// Draw Select arm buttons
+		drawSquareBtn(165, 225, 220, 265, F("Arm"), themeBackground, themeBackground, menuBtnColor, CENTER);
 		break;
 	case 7:
+		if (txIdManual == ARM1_MANUAL)
+		{
+			drawSquareBtn(146, 260, 200, 315, F("1"), menuBtnText, menuBtnBorder, menuBtnColor, CENTER);
+			drawSquareBtn(200, 260, 254, 315, F("2"), menuBtnColor, menuBtnBorder, menuBtnText, CENTER);
+		}
+		else if (txIdManual == ARM2_MANUAL)
+		{
+			drawSquareBtn(146, 260, 200, 315, F("1"), menuBtnColor, menuBtnBorder, menuBtnText, CENTER);
+			drawSquareBtn(200, 260, 254, 315, F("2"), menuBtnText, menuBtnBorder, menuBtnColor, CENTER);
+		}
 		break;
 	case 8:
+		// Draw grip buttons
+		drawSquareBtn(270, 225, 450, 265, F("Gripper"), themeBackground, themeBackground, menuBtnColor, CENTER);
 		break;
 	case 9:
+		drawSquareBtn(270, 260, 360, 315, F("Open"), menuBtnColor, menuBtnBorder, menuBtnText, CENTER);
 		break;
 	case 10:
+		drawSquareBtn(360, 260, 450, 315, F("Close"), menuBtnColor, menuBtnBorder, menuBtnText, CENTER);
+		break;
+	case 11:
+		return true;
 		break;
 	}
-	// Clear LCD to be written 
-	drawSquareBtn(126, 1, 479, 319, "", themeBackground, themeBackground, themeBackground, CENTER);
-
-	// Print arm logo
-	print_icon(435, 5, robotarm);
-
-	// Print page title
-	drawSquareBtn(180, 10, 400, 45, F("Manual Control"), themeBackground, themeBackground, menuBtnColor, CENTER);
-
-	// Manual control axis labels
-	int j = 1;
-	for (int i = 146; i < (480 - 45); i = i + 54) {
-		myGLCD.setColor(menuBtnColor);
-		myGLCD.setBackColor(themeBackground);
-		myGLCD.printNumI(j, i + 20, 60);
-		j++;
-	}
-
-	// Draw the upper row of movement buttons
-	for (int i = 146; i < (480 - 54); i = i + 54) {
-		drawSquareBtn(i, 80, i + 54, 140, F("/\\"), menuBtnColor, menuBtnBorder, menuBtnText, CENTER);
-	}
-
-	// Draw the bottom row of movement buttons
-	for (int i = 146; i < (480 - 54); i = i + 54) {
-		drawSquareBtn(i, 140, i + 54, 200, F("\\/"), menuBtnColor, menuBtnBorder, menuBtnText, CENTER);
-	}
-
-	// Draw Select arm buttons
-	drawSquareBtn(165, 225, 220, 265, F("Arm"), themeBackground, themeBackground, menuBtnColor, CENTER);
-	if (txIdManual == ARM1_MANUAL)
-	{
-		drawSquareBtn(146, 260, 200, 315, F("1"), menuBtnText, menuBtnBorder, menuBtnColor, CENTER);
-		drawSquareBtn(200, 260, 254, 315, F("2"), menuBtnColor, menuBtnBorder, menuBtnText, CENTER);
-	}
-	else if (txIdManual == ARM2_MANUAL)
-	{
-		drawSquareBtn(146, 260, 200, 315, F("1"), menuBtnColor, menuBtnBorder, menuBtnText, CENTER);
-		drawSquareBtn(200, 260, 254, 315, F("2"), menuBtnText, menuBtnBorder, menuBtnColor, CENTER);
-	}
-
-	// Draw grip buttons
-	drawSquareBtn(270, 225, 450, 265, F("Gripper"), themeBackground, themeBackground, menuBtnColor, CENTER);
-	drawSquareBtn(270, 260, 360, 315, F("Open"), menuBtnColor, menuBtnBorder, menuBtnText, CENTER);
-	drawSquareBtn(360, 260, 450, 315, F("Close"), menuBtnColor, menuBtnBorder, menuBtnText, CENTER);
+return false;
 }
 
 // Draw page button function
@@ -639,90 +641,90 @@ void manualControlButtons()
 		if ((y >= 80) && (y <= 140))
 		{
 			// A1 Up
-			if ((x >= 146) && (x <= 200))
+			if ((x >= 131) && (x <= 185))
 			{
 				data[1] = 1 * multiply;
-				waitForItRect(146, 80, 200, 140, txIdManual, data);
+				waitForItRect(131, 80, 185, 140, txIdManual, data);
 				data[1] = 0;
 			}
 			// A2 Up
-			if ((x >= 200) && (x <= 254))
+			if ((x >= 189) && (x <= 243))
 			{
 				data[2] = 1 * multiply;
-				waitForItRect(200, 80, 254, 140, txIdManual, data);
+				waitForItRect(189, 80, 243, 140, txIdManual, data);
 				data[2] = 0;
 			}
 			// A3 Up
-			if ((x >= 254) && (x <= 308))
+			if ((x >= 247) && (x <= 301))
 			{
 				data[3] = 1 * multiply;
-				waitForItRect(254, 80, 308, 140, txIdManual, data);
+				waitForItRect(247, 80, 301, 140, txIdManual, data);
 				data[3] = 0;
 			}
 			// A4 Up
-			if ((x >= 308) && (x <= 362))
+			if ((x >= 305) && (x <= 359))
 			{
 				data[4] = 1 * multiply;
-				waitForItRect(308, 80, 362, 140, txIdManual, data);
+				waitForItRect(305, 80, 359, 140, txIdManual, data);
 				data[4] = 0;
 			}
 			// A5 Up
-			if ((x >= 362) && (x <= 416))
+			if ((x >= 363) && (x <= 417))
 			{
 				data[5] = 1 * multiply;
-				waitForItRect(362, 80, 416, 140, txIdManual, data);
+				waitForItRect(363, 80, 417, 140, txIdManual, data);
 				data[5] = 0;
 			}
 			// A6 Up
-			if ((x >= 416) && (x <= 470))
+			if ((x >= 421) && (x <= 475))
 			{
 				data[6] = 1 * multiply;
-				waitForItRect(416, 80, 470, 140, txIdManual, data);
+				waitForItRect(421, 80, 475, 140, txIdManual, data);
 				data[6] = 0;
 			}
 		}
 		if ((y >= 140) && (y <= 200))
 		{
 			// A1 Down
-			if ((x >= 156) && (x <= 200))
+			if ((x >= 131) && (x <= 185))
 			{
 				data[1] = (1 * multiply) + reverse;
-				waitForItRect(146, 140, 200, 200, txIdManual, data);
+				waitForItRect(131, 140, 185, 200, txIdManual, data);
 				data[1] = 0;
 			}
 			// A2 Down
-			if ((x >= 200) && (x <= 254))
+			if ((x >= 189) && (x <= 243))
 			{
 				data[2] = (1 * multiply) + reverse;
-				waitForItRect(200, 140, 254, 200, txIdManual, data);
+				waitForItRect(189, 140, 243, 200, txIdManual, data);
 				data[2] = 0;
 			}
 			// A3 Down
-			if ((x >= 254) && (x <= 308))
+			if ((x >= 247) && (x <= 301))
 			{
 				data[3] = (1 * multiply) + reverse;
-				waitForItRect(254, 140, 308, 200, txIdManual, data);
+				waitForItRect(247, 140, 301, 200, txIdManual, data);
 				data[3] = 0;
 			}
 			// A4 Down
-			if ((x >= 308) && (x <= 362))
+			if ((x >= 305) && (x <= 359))
 			{
 				data[4] = (1 * multiply) + reverse;
-				waitForItRect(308, 140, 362, 200, txIdManual, data);
+				waitForItRect(305, 140, 359, 200, txIdManual, data);
 				data[4] = 0;
 			}
 			// A5 Down
-			if ((x >= 362) && (x <= 416))
+			if ((x >= 363) && (x <= 417))
 			{
 				data[5] = (1 * multiply) + reverse;
-				waitForItRect(362, 140, 416, 200, txIdManual, data);
+				waitForItRect(363, 140, 417, 200, txIdManual, data);
 				data[5] = 0;
 			}
 			// A6 Down
-			if ((x >= 416) && (x <= 470))
+			if ((x >= 421) && (x <= 475))
 			{
 				data[6] = (1 * multiply) + reverse;
-				waitForItRect(416, 140, 470, 200, txIdManual, data);
+				waitForItRect(421, 140, 475, 200, txIdManual, data);
 				data[6] = 0;
 			}
 		}
@@ -918,11 +920,6 @@ void programDelete()
 {
 	char temp[20] = "PROGRAMS/";
 	strcat(temp, fileList[selectedProgram]);
-	Serial.println("");
-	Serial.print(F("Deleting file name:"));
-	Serial.println(temp);
-	Serial.println("");
-
 	sdCard.deleteFile(temp);
 }
 
@@ -931,11 +928,6 @@ void loadProgram()
 {
 	char temp[20] = "PROGRAMS/";
 	strcat(temp, fileList[selectedProgram]);
-	Serial.println("");
-	Serial.print("Loading file:");
-	Serial.println(temp);
-	Serial.println("");
-
 	sdCard.readFile(temp, runList);
 }
 
@@ -1138,8 +1130,6 @@ void programButtons()
 				waitForItRect(261, 280, 350, 317);
 				// Add
 				selectedProgram = findProgramNode(); // Find an empty program slot to open
-				Serial.print("selectedProgram: ");
-				Serial.println(selectedProgram);
 				runList.clear(); // Empty the linked list of any program currently loaded
 				programOpen = true;
 				page = 8;
@@ -1153,8 +1143,6 @@ uint8_t findProgramNode()
 {
 	if (programCount < 20)
 	{
-		Serial.print("returning: ");
-		Serial.println(programCount);
 		return programCount++;
 	}
 	else
@@ -1278,7 +1266,7 @@ void drawProgramEditScroll()
 		String b = " ";
 		String label = position + a + String(runList.get(i + scroll)->getA1()) + b + String(runList.get(i + scroll)->getA2())
 			+ b + String(runList.get(i + scroll)->getA3()) + b + String(runList.get(i + scroll)->getA4()) + b + String(runList.get(i + scroll)->getA5())
-			+ b + String(runList.get(i + scroll)->getA6()) + a + "GRIP:" + gripString + a + String(runList.get(i + scroll)->getID(), HEX);
+			+ b + String(runList.get(i + scroll)->getA6()) + a + "G:" + gripString + a + "A:" + String(runList.get(i + scroll)->getID(), HEX) + a + "T:";
 
 		(i + scroll < nodeSize) ? drawSquareBtn(130, row, 425, row + 37, label, menuBackground, menuBtnBorder, menuBtnText, LEFT) : drawSquareBtn(130, row, 425, row + 37, "", menuBackground, menuBtnBorder, menuBtnText, LEFT);
 
@@ -1383,14 +1371,14 @@ void saveProgram()
 
 	strcat(temp, buffer);
 	Serial.println("");
-	Serial.print("Full name:");
+	Serial.print(F("Full name:"));
 	Serial.println(temp);
 	Serial.println("");
 
 	// Write out linkedlist data to text file
 	for (uint8_t i = 0; i < runList.size(); i++)
 	{
-		Serial.print(".");
+		Serial.print(F("."));
 		sdCard.writeFile(temp, ",");
 		sdCard.writeFile(temp, runList.get(i)->getA1());
 		sdCard.writeFile(temp, space);
@@ -1411,7 +1399,7 @@ void saveProgram()
 	}
 	if (runList.size() == 0)
 	{
-		Serial.println("empty");
+		Serial.println(F("empty"));
 		sdCard.writeFileln(temp);
 	}
 }
@@ -1478,22 +1466,38 @@ void programEditButtons()
 			if ((y >= 5) && (y <= 115))
 			{
 				waitForIt(430, 5, 475, 115);
-				if (scroll > 0)
+				if (scroll > 3)
 				{
 					scroll--;
 					scroll--;
+					scroll--;
+					drawProgramEditScroll();
+				}
+				else
+				{
+					scroll = 0;
 					drawProgramEditScroll();
 				}
 			}
 			if ((y >= 115) && (y <= 225))
 			{
 				waitForIt(430, 115, 475, 225);
-				if (scroll < 255)
+				if (scroll < runList.size())
 				{
-					scroll++;
-					scroll++;
-					drawProgramEditScroll();
+					if (scroll < 252)
+					{
+						scroll++;
+						scroll++;
+						scroll++;
+						drawProgramEditScroll();
+					}
+					else
+					{
+						scroll = 255;
+						drawProgramEditScroll();
+					}
 				}
+				
 			}
 		}
 		if ((y >= 230) && (y <= 270))
@@ -1505,7 +1509,7 @@ void programEditButtons()
 				if (runList.size() < 255)
 				{
 					addNode();
-					(scroll > 5) ? scroll++ : scroll = scroll;
+					(runList.size() > 6) ? scroll++ : scroll = scroll;
 					drawProgramEditScroll();
 				}
 			}
@@ -2120,7 +2124,6 @@ uint8_t keypadControllerDec(uint8_t& index, uint16_t& total)
 void drawkeyboard()
 {
 	drawSquareBtn(131, 55, 479, 319, "", themeBackground, themeBackground, themeBackground, CENTER);
-	//SerialUSB.println("");
 	uint16_t posY = 56;
 	uint8_t numPad = 0x00;
 
@@ -2473,8 +2476,6 @@ uint8_t keyboardController(uint8_t& index)
 	{
 		if (index < 8)
 		{
-			Serial.print("index: ");
-			Serial.println(index);
 			keyboardInput[index] = input;
 		}
 
@@ -2559,40 +2560,7 @@ void setup()
 
 	drawMenu();
 
-	/*
-	sdCard.deleteFile("progName");
-	sdCard.writeFile("progName", "a");
-	sdCard.writeFile("progName", "\n");
-	sdCard.writeFile("progName", "b");
-	sdCard.writeFile("progName", "\n");
-	sdCard.writeFileln("test");
-	
-	fileList[0] = "programs/a";
-	selectedProgram = 0;
-	saveProgram();
-	fileList[1] = "programs/b";
-	selectedProgram = 1;
-	*/
-
-	//File dirList;
-	//dirList = SD.open("/PROGRAMS/");
-	
 	sdCard.createDRIVE(sTemp);
-	//sdCard.writeFile("programs/a", "\n");
-	//sdCard.writeFile("programs/b", "\n");
-	//sdCard.printDirectory(dirList, fileList);
-
-	/*
-	Serial.println("");
-	Serial.println("");
-	Serial.println("Printing List");
-	for (uint8_t i = 0; i < 20; i++)
-	{
-		Serial.println(fileList[i]);
-	}
-	*/
-
-	//saveProgram();
 }
 
 // Page control framework
@@ -2626,13 +2594,11 @@ void pageControl()
 			}
 			break;
 		}
-
 		if (errorMessageReturn == 1)
 		{
 			programDelete();
 			errorMessageReturn = 2;
 		}
-
 		// Draw page
 		if (!hasDrawn)
 		{
@@ -2652,7 +2618,12 @@ void pageControl()
 		// Draw page
 		if (!hasDrawn)
 		{
-			drawManualControl();
+			bool isDone = drawManualControl();
+			graphicLoaderState++;
+			if (!isDone)
+			{
+				break;
+			}
 			hasDrawn = true;
 		}
 		// Call buttons if any
@@ -2962,7 +2933,7 @@ void TrafficManager()
 	case 3: // C1 Confirmation
 		Arm1Ready = true;
 		Arm2Ready = true;
-		Serial.println("Arm1Ready");
+		Serial.println(F("Arm1Ready"));
 		break;
 
 	case 4: // C2 Lower
@@ -2984,7 +2955,7 @@ void TrafficManager()
 	case 6: // C2 Confirmation
 		Arm1Ready = true;
 		Arm2Ready = true;
-		Serial.println("Arm2Ready");
+		Serial.println(F("Arm2Ready"));
 		break;
 	}
 }
@@ -3002,7 +2973,6 @@ void executeProgram()
 	{
 		programRunning = false;
 	}
-	Serial.println("here");
 	if (Arm1Ready == true && Arm2Ready == true)
 	{
 		// CAN messages for axis movements
@@ -3118,8 +3088,6 @@ void executeProgram()
 
 		Arm1Ready = false;
 		Arm2Ready = false;
-		//Serial.print("linkedListSize: ");
-		//Serial.println(programProgress);
 		programProgress++;
 	}
 

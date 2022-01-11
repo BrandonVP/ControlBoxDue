@@ -14,22 +14,6 @@ void CANBus::startCAN()
 // CAN Bus send message
 void CANBus::sendFrame(uint16_t id, byte* frame)
 {
-    /*
-    CANBusWifi test;
-    CAN_Message test2;
-    test2.id = id;
-    test2.data[0] = frame[0];
-    test2.data[1] = frame[1];
-    test2.data[2] = frame[2];
-    test2.data[3] = frame[3];
-    test2.data[4] = frame[4];
-    test2.data[5] = frame[5];   
-    test2.data[6] = frame[6];
-    test2.data[7] = frame[7];
-    test.sendFrame(test2);
-    */
-
-
     Serial3.write(0xFE);
     Serial3.write(0x09);
     Serial3.write(id);
@@ -101,7 +85,7 @@ uint8_t CANBus::processFrame()
     if (Can0.available() > 0)
     {
         Can0.read(incoming);
-        Serial.print("ID: ");
+        Serial.print(F("ID: "));
         Serial.println(incoming.id, HEX);
         for (uint8_t i = 0; i < 8; i++)
         {
@@ -109,13 +93,13 @@ uint8_t CANBus::processFrame()
         }
         if (incoming.id == 0xC1)
         {
-            Serial.print("Value: ");
+            Serial.print(F("Value: "));
             Serial.println((incoming.data.byte[1]));
             return incoming.data.byte[1];
         }
         if (incoming.id == 0xC2)
         {
-            Serial.print("Value: ");
+            Serial.print(F("Value: "));
             Serial.println((incoming.data.byte[1] + 3));
             return incoming.data.byte[1] + 3;
         }
