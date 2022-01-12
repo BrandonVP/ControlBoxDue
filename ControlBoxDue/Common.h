@@ -10,10 +10,11 @@
 #ifndef COMMON_H
 #define COMMON_H
 
-#define MAX_PROGRAMS 10
+// How many programs can be saved to SD card
+#define MAX_PROGRAMS 16
+
 extern String programNames_G[MAX_PROGRAMS];
 extern uint8_t numberOfPrograms;
-extern char fileList[16][8];
-
+extern char fileList[MAX_PROGRAMS][8];
 
 #endif

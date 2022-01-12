@@ -135,10 +135,10 @@ uint8_t keyResult = 0;
 // Generic free use state variable
 uint8_t state = 0;
 
-char fileList[16][8];
+char fileList[MAX_PROGRAMS][8];
 
 uint8_t programCount = 0;
-const String sTemp = "PROGRAMS";
+
 
 // Variable to track current scroll position
 uint8_t programScroll = 0;
@@ -147,7 +147,7 @@ uint16_t scroll = 0;
 /*=========================================================
 	Framework Functions
 ===========================================================*/
-//
+// Found this code somewhere online to draw BMP files
 void bmpDraw(char* filename, int x, int y) {
 	File     bmpFile;
 	int      bmpWidth, bmpHeight;   // W+H in pixels
@@ -276,7 +276,6 @@ void bmpDraw(char* filename, int x, int y) {
 	if (!goodBmp) Serial.println(F("BMP format not recognized."));
 
 }
-
 // These read 16- and 32-bit types from the SD card file.
 // BMP data is stored little-endian, Arduino is little-endian too.
 // May need to reverse subscript order if porting elsewhere.
@@ -294,14 +293,15 @@ uint32_t read32(File f) {
 	((uint8_t*)&result)[3] = f.read(); // MSB
 	return result;
 }
+// End BMP Draw
 
-// Custom bitmap
-void print_icon(int x, int y, const unsigned char icon[])
+// I converted a google robot arm image to a bitmap using Sib Icon Studio
+// Then wrote this function to print the bits (located in icons.h)
+void print_icon(uint16_t x, uint16_t y, const unsigned char icon[])
 {
 	myGLCD.setColor(menuBtnColor);
 	myGLCD.setBackColor(themeBackground);
-	int i = 0, row, column, bit, temp;
-	int constant = 1;
+	int16_t i = 0, row, column, bit, temp;
 	for (row = 0; row < 40; row++)
 	{
 		for (column = 0; column < 5; column++)
@@ -309,7 +309,7 @@ void print_icon(int x, int y, const unsigned char icon[])
 			temp = icon[i];
 			for (bit = 7; bit >= 0; bit--)
 			{
-				if (temp & constant) { myGLCD.drawPixel(x + (column * 8) + (8 - bit), y + row); }
+				if (temp & 1) { myGLCD.drawPixel(x + (column * 8) + (8 - bit), y + row); }
 				temp >>= 1;
 			}
 			i++;
@@ -317,10 +317,10 @@ void print_icon(int x, int y, const unsigned char icon[])
 	}
 }
 
+// Function to fine memory use
+// https://forum.arduino.cc/t/getting-heap-size-stack-size-and-free-ram-from-due/678195/5
 extern char _end;
 extern "C" char* sbrk(int i);
-// https://forum.arduino.cc/t/getting-heap-size-stack-size-and-free-ram-from-due/678195/5
-// Display used memory
 void saveRamStates(uint32_t MaxUsedHeapRAM, uint32_t MaxUsedStackRAM, uint32_t MaxUsedStaticRAM, uint32_t MinfreeRAM)
 {
 	char* ramstart = (char*)0x20070000;
@@ -356,7 +356,6 @@ void saveRamStates(uint32_t MaxUsedHeapRAM, uint32_t MaxUsedStackRAM, uint32_t M
 	drawRoundBtn(135, 245, 310, 295, F("FREE RAM"), menuBackground, menuBtnBorder, menuBtnText, CENTER);
 	drawRoundBtn(315, 245, 475, 295, String(MinfreeRAM), menuBtnColor, menuBtnBorder, menuBtnText, CENTER);
 	}
-
 void memoryUse()
 {
 	uint32_t MaxUsedHeapRAM = 0;
@@ -442,7 +441,7 @@ void waitForIt(int x1, int y1, int x2, int y2)
 {
 	myGLCD.setColor(themeBackground);
 	myGLCD.drawRoundRect(x1, y1, x2, y2);
-	unsigned long timer = millis();
+	uint32_t timer = millis();
 	while (Touch_getXY() || millis() - timer < 20)
 	{
 		if (Touch_getXY())
@@ -524,6 +523,7 @@ bool Touch_getXY(void)
 // Draw the manual control page
 bool drawManualControl()
 {
+	// Variables for loop iterations within the switch statement
 	uint8_t j;
 	uint16_t i;
 	switch (graphicLoaderState)
@@ -598,12 +598,13 @@ return false;
 // Draw page button function
 void manualControlButtons()
 {
-	// Mutiply is a future funtion to allow movement of multiple angles at a time instead of just 1
-	int multiply = 1;
+	// Mutiply is for a future funtion to allow movement of multiple degrees per button press instead of 1
+	uint8_t multiply = 1;
 
 	// Enables revese
 	uint8_t reverse = 0x10;
 
+	// CAN Bus message data
 	byte data[8] = { 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
 
 	// Physical buttons
@@ -632,12 +633,8 @@ void manualControlButtons()
 	*/
 
 	// LCD touch funtions
-	if (myTouch.dataAvailable())
+	if (Touch_getXY())
 	{
-		myTouch.read();
-		x = myTouch.getX();
-		y = myTouch.getY();
-
 		if ((y >= 80) && (y <= 140))
 		{
 			// A1 Up
@@ -767,45 +764,89 @@ void manualControlButtons()
 					View page
 ===========================================================*/
 // Draw the view page
-void drawView()
+bool drawView()
 {
-	// Clear LCD to be written 
-	drawSquareBtn(126, 1, 479, 319, "", themeBackground, themeBackground, themeBackground, CENTER);
-
-	// Print arm logo
-	print_icon(435, 5, robotarm);
-
-	// Draw row lables
-	for (int start = 35, stop = 75, row = 1; start <= 260; start = start + 45, stop = stop + 45, row++)
-	{
-		String rowLable = "A" + String(row);
-		drawRoundBtn(160, start, 180, stop, rowLable, themeBackground, themeBackground, menuBtnColor, CENTER);
-	}
+	// Variable for loop in switch statement
+	uint16_t start, stop, row;
 
 	// Boxes for current arm angles
-	const uint16_t xStart = 190;
-	const uint16_t xStop = 295;
-	const uint8_t yStart = 35;
-	const uint8_t yStop = 75;
-	// Arm 1
-	drawRoundBtn(xStart + 110, 5, xStop + 110, 40, F("Arm2"), themeBackground, themeBackground, menuBtnColor, CENTER);
-	drawRoundBtn(xStart + 110, yStart + 0, xStop + 110, yStop + 0, DEG, menuBackground, menuBackground, menuBtnColor, RIGHT);
-	drawRoundBtn(xStart + 110, yStart + 45, xStop + 110, yStop + 45, DEG, menuBackground, menuBackground, menuBtnColor, RIGHT);
-	drawRoundBtn(xStart + 110, yStart + 90, xStop + 110, yStop + 90, DEG, menuBackground, menuBackground, menuBtnColor, RIGHT);
-	drawRoundBtn(xStart + 110, yStart + 135, xStop + 110, yStop + 135, DEG, menuBackground, menuBackground, menuBtnColor, RIGHT);
-	drawRoundBtn(xStart + 110, yStart + 180, xStop + 110, yStop + 180, DEG, menuBackground, menuBackground, menuBtnColor, RIGHT);
-	drawRoundBtn(xStart + 110, yStart + 225, xStop + 110, yStop + 225, DEG, menuBackground, menuBackground, menuBtnColor, RIGHT);
-	// Arm 2
-	drawRoundBtn(xStart, 5, xStop, 40, F("Arm1"), themeBackground, themeBackground, menuBtnColor, CENTER);
-	drawRoundBtn(xStart, yStart + 0, xStop, yStop + 0, DEG, menuBackground, menuBackground, menuBtnColor, RIGHT);
-	drawRoundBtn(xStart, yStart + 45, xStop, yStop + 45, DEG, menuBackground, menuBackground, menuBtnColor, RIGHT);
-	drawRoundBtn(xStart, yStart + 90, xStop, yStop + 90, DEG, menuBackground, menuBackground, menuBtnColor, RIGHT);
-	drawRoundBtn(xStart, yStart + 135, xStop, yStop + 135, DEG, menuBackground, menuBackground, menuBtnColor, RIGHT);
-	drawRoundBtn(xStart, yStart + 180, xStop, yStop + 180, DEG, menuBackground, menuBackground, menuBtnColor, RIGHT);
-	drawRoundBtn(xStart, yStart + 225, xStop, yStop + 225, DEG, menuBackground, menuBackground, menuBtnColor, RIGHT);
+	const PROGMEM uint16_t xStart = 190;
+	const PROGMEM uint16_t xStop = 295;
+	const PROGMEM uint8_t yStart = 35;
+	const PROGMEM uint8_t yStop = 75;
+
+	switch (graphicLoaderState)
+	{
+	case 0:
+		// Clear LCD to be written 
+		drawSquareBtn(126, 1, 479, 319, "", themeBackground, themeBackground, themeBackground, CENTER);
+		break;
+	case 1:
+		// Print arm logo
+		print_icon(435, 5, robotarm);
+		break;
+	case 2:
+		// Draw row lables
+		for (start = 35, stop = 75, row = 1; start <= 260; start = start + 45, stop = stop + 45, row++)
+		{
+			String rowLable = "A" + String(row);
+			drawRoundBtn(160, start, 180, stop, rowLable, themeBackground, themeBackground, menuBtnColor, CENTER);
+		}
+		break;
+	case 3:
+		// Arm 1
+		drawRoundBtn(xStart + 110, 5, xStop + 110, 40, F("Arm2"), themeBackground, themeBackground, menuBtnColor, CENTER);
+		break;
+	case 4:
+		drawRoundBtn(xStart + 110, yStart + 0, xStop + 110, yStop + 0, DEG, menuBackground, menuBackground, menuBtnColor, RIGHT);
+		break;
+	case 5:
+		drawRoundBtn(xStart + 110, yStart + 45, xStop + 110, yStop + 45, DEG, menuBackground, menuBackground, menuBtnColor, RIGHT);
+		break;
+	case 6:
+		drawRoundBtn(xStart + 110, yStart + 90, xStop + 110, yStop + 90, DEG, menuBackground, menuBackground, menuBtnColor, RIGHT);
+		break;
+	case 7:
+		drawRoundBtn(xStart + 110, yStart + 135, xStop + 110, yStop + 135, DEG, menuBackground, menuBackground, menuBtnColor, RIGHT);
+		break;
+	case 8:
+		drawRoundBtn(xStart + 110, yStart + 180, xStop + 110, yStop + 180, DEG, menuBackground, menuBackground, menuBtnColor, RIGHT);
+		break;
+	case 9:
+		drawRoundBtn(xStart + 110, yStart + 225, xStop + 110, yStop + 225, DEG, menuBackground, menuBackground, menuBtnColor, RIGHT);
+		break;
+	case 10:
+		// Arm 2
+		drawRoundBtn(xStart, 5, xStop, 40, F("Arm1"), themeBackground, themeBackground, menuBtnColor, CENTER);
+		break;
+	case 11:
+		drawRoundBtn(xStart, yStart + 0, xStop, yStop + 0, DEG, menuBackground, menuBackground, menuBtnColor, RIGHT);
+		break;
+	case 12:
+		drawRoundBtn(xStart, yStart + 45, xStop, yStop + 45, DEG, menuBackground, menuBackground, menuBtnColor, RIGHT);
+		break;
+	case 13:
+		drawRoundBtn(xStart, yStart + 90, xStop, yStop + 90, DEG, menuBackground, menuBackground, menuBtnColor, RIGHT);
+		break;
+	case 14:
+		drawRoundBtn(xStart, yStart + 135, xStop, yStop + 135, DEG, menuBackground, menuBackground, menuBtnColor, RIGHT);
+		break;
+	case 15:
+		drawRoundBtn(xStart, yStart + 180, xStop, yStop + 180, DEG, menuBackground, menuBackground, menuBtnColor, RIGHT);
+		break;
+	case 16:
+		drawRoundBtn(xStart, yStart + 225, xStop, yStop + 225, DEG, menuBackground, menuBackground, menuBtnColor, RIGHT);
+		break;
+	case 17:
+		return true;
+		break;
+	}
+	graphicLoaderState++;
+	return false;
 }
 
 // Replaced by arm broadcasting positions instead of requesting
+/*
 void updateViewPage()
 {
 	if (millis() - timer > REFRESH_RATE)
@@ -818,7 +859,7 @@ void updateViewPage()
 		timer = millis();
 	}
 }
-
+*/
 
 /*==========================================================
 					Program Arm
@@ -834,7 +875,7 @@ void drawProgramScroll()
 	// selected position = programScroll * position
 	// if selected draw different color border
 	uint16_t yAxis = 55;
-	uint16_t xAxis = 133;
+	const PROGMEM uint16_t xAxis = 133;
 	for (int i = 0; i < 5; i++)
 	{
 		//if (fileList[i + programScroll].compareTo("") != 0 && sdCard.fileExists(fileList[i + programScroll]))
@@ -912,35 +953,32 @@ bool drawProgram()
 		return true;
 		break;
 	}
+	graphicLoaderState++;
 	return false;
 }
 
 // Deletes current selected program from 
 void programDelete()
 {
-	char temp[20] = "PROGRAMS/";
-	strcat(temp, fileList[selectedProgram]);
-	sdCard.deleteFile(temp);
+	char programDirectory[20] = "PROGRAMS/";
+	strcat(programDirectory, fileList[selectedProgram]);
+	sdCard.deleteFile(programDirectory);
 }
 
 // Load selected program from SD card into linked list
 void loadProgram()
 {
-	char temp[20] = "PROGRAMS/";
-	strcat(temp, fileList[selectedProgram]);
-	sdCard.readFile(temp, runList);
+	char programDirectory[20] = "PROGRAMS/";
+	strcat(programDirectory, fileList[selectedProgram]);
+	sdCard.readFile(programDirectory, runList);
 }
 
 // Button functions for program page 
 void programButtons()
 {
 	// Touch screen controls
-	if (myTouch.dataAvailable())
+	if (Touch_getXY())
 	{
-		myTouch.read();
-		x = myTouch.getX();
-		y = myTouch.getY();
-
 		if ((y >= 55) && (y <= 95) && programCount > 0 + programScroll)
 		{
 			selectedProgram = 0 + programScroll;
@@ -959,6 +997,7 @@ void programButtons()
 				runList.clear();
 				loadProgram();
 				programOpen = true;
+				graphicLoaderState = 0;
 				page = 8;
 				hasDrawn = false;
 			}
@@ -991,6 +1030,7 @@ void programButtons()
 				runList.clear();
 				loadProgram();
 				programOpen = true;
+				graphicLoaderState = 0;
 				page = 8;
 				hasDrawn = false;
 			}
@@ -1023,6 +1063,7 @@ void programButtons()
 				runList.clear();
 				loadProgram();
 				programOpen = true;
+				graphicLoaderState = 0;
 				page = 8;
 				hasDrawn = false;
 			}
@@ -1055,6 +1096,7 @@ void programButtons()
 				runList.clear();
 				loadProgram();
 				programOpen = true;
+				graphicLoaderState = 0;
 				page = 8;
 				hasDrawn = false;
 			}
@@ -1087,6 +1129,7 @@ void programButtons()
 				runList.clear();
 				loadProgram();
 				programOpen = true;
+				graphicLoaderState = 0;
 				page = 8;
 				hasDrawn = false;
 			}
@@ -1139,9 +1182,10 @@ void programButtons()
 	}
 }
 
+// TODO: Might be a bug if programCount is incremented but user cancels the program creation. Nothing observed when trying but need to investigate
 uint8_t findProgramNode()
 {
-	if (programCount < 20)
+	if (programCount < MAX_PROGRAMS)
 	{
 		return programCount++;
 	}
@@ -1155,42 +1199,63 @@ uint8_t findProgramNode()
 /*==========================================================
 					Edit Program
 ============================================================*/
-void drawEditPage()
+bool drawEditPage()
 {
-	// Clear LCD to be written
-	drawSquareBtn(126, 1, 479, 319, "", themeBackground, themeBackground, themeBackground, CENTER);
-
-	print_icon(435, 5, robotarm);
-
-	drawSquareBtn(180, 10, 400, 45, F("Edit Program"), themeBackground, themeBackground, menuBtnColor, CENTER);
-
-
-	drawSquareBtn(132, 54, 478, 96, F(""), menuBackground, menuBtnBorder, menuBtnText, CENTER);
-	drawSquareBtn(133, 55, 280, 95, F("Filename"), menuBackground, menuBtnBorder, menuBtnText, CENTER);
-	drawSquareBtn(280, 55, 477, 95, fileList[selectedProgram], menuBtnColor, menuBtnBorder, menuBtnText, CENTER);
-
-	drawSquareBtn(132, 99, 478, 141, F(""), menuBackground, menuBtnBorder, menuBtnText, CENTER);
-	drawSquareBtn(133, 100, 280, 140, F("Size"), menuBackground, menuBtnBorder, menuBtnText, CENTER);
-	drawSquareBtn(280, 100, 477, 140, String(runList.size()) + "/255", menuBackground, menuBtnBorder, menuBtnText, CENTER);
-
-	drawSquareBtn(132, 144, 478, 186, F(""), menuBackground, menuBtnBorder, menuBtnText, CENTER);
-
-	drawSquareBtn(132, 189, 478, 231, F("Edit Steps"), menuBtnColor, menuBtnBorder, menuBtnText, CENTER);
-
-	drawSquareBtn(132, 234, 478, 276, F("Save & Exit"), menuBtnColor, menuBtnBorder, menuBtnText, CENTER);
-
-	drawSquareBtn(132, 280, 478, 317, F("Cancel"), menuBtnColor, menuBtnBorder, menuBtnText, CENTER);
+	switch (graphicLoaderState)
+	{
+	case 0:
+		// Clear LCD to be written
+		drawSquareBtn(126, 1, 479, 319, "", themeBackground, themeBackground, themeBackground, CENTER);
+		break;
+	case 1:
+		print_icon(435, 5, robotarm);
+		break;
+	case 2:
+		drawSquareBtn(180, 10, 400, 45, F("Edit Program"), themeBackground, themeBackground, menuBtnColor, CENTER);
+		break;
+	case 3:
+		drawSquareBtn(132, 54, 478, 96, F(""), menuBackground, menuBtnBorder, menuBtnText, CENTER);
+		break;
+	case 4:
+		drawSquareBtn(133, 55, 280, 95, F("Filename"), menuBackground, menuBtnBorder, menuBtnText, CENTER);
+		break;
+	case 5:
+		drawSquareBtn(280, 55, 477, 95, fileList[selectedProgram], menuBtnColor, menuBtnBorder, menuBtnText, CENTER);
+		break;
+	case 6:
+		drawSquareBtn(132, 99, 478, 141, F(""), menuBackground, menuBtnBorder, menuBtnText, CENTER);
+		break;
+	case 7:
+		drawSquareBtn(133, 100, 280, 140, F("Size"), menuBackground, menuBtnBorder, menuBtnText, CENTER);
+		break;
+	case 8:
+		drawSquareBtn(280, 100, 477, 140, String(runList.size()) + "/255", menuBackground, menuBtnBorder, menuBtnText, CENTER);
+		break;
+	case 9:
+		drawSquareBtn(132, 144, 478, 186, F(""), menuBackground, menuBtnBorder, menuBtnText, CENTER);
+		break;
+	case 10:
+		drawSquareBtn(132, 189, 478, 231, F("Edit Steps"), menuBtnColor, menuBtnBorder, menuBtnText, CENTER);
+		break;
+	case 11:
+		drawSquareBtn(132, 234, 478, 276, F("Save & Exit"), menuBtnColor, menuBtnBorder, menuBtnText, CENTER);
+		break;
+	case 12:
+		drawSquareBtn(132, 280, 478, 317, F("Cancel"), menuBtnColor, menuBtnBorder, menuBtnText, CENTER);
+		break;
+	case 13:
+		return true;
+		break;
+	}
+	graphicLoaderState++;
+	return false;
 }
 
 void editPageButtons()
 {
 	// Touch screen controls
-	if (myTouch.dataAvailable())
+	if (Touch_getXY())
 	{
-		myTouch.read();
-		x = myTouch.getX();
-		y = myTouch.getY();
-
 		if ((x >= 280) && (x <= 477))
 		{
 			if ((y >= 55) && (y <= 95))
@@ -1201,7 +1266,6 @@ void editPageButtons()
 				page = 9;
 			}
 		}
-
 		if ((x >= 132) && (x <= 478))
 		{
 			if ((y >= 189) && (y <= 231))
@@ -1242,7 +1306,6 @@ void drawProgramEditScroll()
 	myGLCD.setFont(SmallFont);
 	uint8_t nodeSize = runList.size();
 	
-
 	// Each node should be listed with all information, might need small text
 	uint16_t row = 5;
 	for (uint8_t i = 0; i < 6; i++)
@@ -1262,11 +1325,11 @@ void drawProgramEditScroll()
 		}
 
 		String position = String(i + scroll + 1);
-		String a = " | ";
+		String a = "|";
 		String b = " ";
 		String label = position + a + String(runList.get(i + scroll)->getA1()) + b + String(runList.get(i + scroll)->getA2())
 			+ b + String(runList.get(i + scroll)->getA3()) + b + String(runList.get(i + scroll)->getA4()) + b + String(runList.get(i + scroll)->getA5())
-			+ b + String(runList.get(i + scroll)->getA6()) + a + "G:" + gripString + a + "A:" + String(runList.get(i + scroll)->getID(), HEX) + a + "T:";
+			+ b + String(runList.get(i + scroll)->getA6()) + a + gripString + a + String(runList.get(i + scroll)->getID(), HEX);
 
 		(i + scroll < nodeSize) ? drawSquareBtn(130, row, 425, row + 37, label, menuBackground, menuBtnBorder, menuBtnText, LEFT) : drawSquareBtn(130, row, 425, row + 37, "", menuBackground, menuBtnBorder, menuBtnText, LEFT);
 
@@ -1282,26 +1345,17 @@ void drawProgramEdit(uint8_t scroll = 0)
 	// Clear LCD to be written
 	drawSquareBtn(126, 1, 479, 319, "", themeBackground, themeBackground, themeBackground, CENTER);
 
-	// Print arm logo
-	//print_icon(435, 5, robotarm);
-
-	// Print page title
-	//drawSquareBtn(180, 10, 400, 45, F("Edit"), themeBackground, themeBackground, menuBtnColor, CENTER);
-
 	// Scroll buttons
 	myGLCD.setColor(menuBtnColor);
 	myGLCD.setBackColor(themeBackground);
-	drawSquareBtn(430, 5, 475, 115, F("/\\"), menuBtnColor, menuBtnBorder, menuBtnText, CENTER);
-	drawSquareBtn(430, 115, 475, 225, F("\\/"), menuBtnColor, menuBtnBorder, menuBtnText, CENTER);
+	drawSquareBtn(430, 5, 475, 116, F("/\\"), menuBtnColor, menuBtnBorder, menuBtnText, CENTER);
+	drawSquareBtn(430, 116, 475, 227, F("\\/"), menuBtnColor, menuBtnBorder, menuBtnText, CENTER);
 
-
-
+	// Draw program edit buttons
 	drawSquareBtn(130, 230, 215, 270, F("Add"), menuBtnColor, menuBtnBorder, menuBtnText, CENTER);
 	drawSquareBtn(215, 230, 300, 270, F("Ins"), menuBtnColor, menuBtnBorder, menuBtnText, CENTER);
 	drawSquareBtn(300, 230, 385, 270, F("Del"), menuBtnColor, menuBtnBorder, menuBtnText, CENTER);
 	drawSquareBtn(385, 230, 475, 270, F("Done"), menuBtnColor, menuBtnBorder, menuBtnText, CENTER);
-
-	// Draw program edit buttons
 	drawSquareBtn(215, 275, 300, 315, F("Wait"), menuBtnColor, menuBtnBorder, menuBtnText, CENTER);
 	drawSquareBtn(300, 275, 385, 315, F("Sen"), menuBtnColor, menuBtnBorder, menuBtnText, CENTER);
 	drawSquareBtn(385, 275, 475, 315, F(""), menuBtnColor, menuBtnBorder, menuBtnText, CENTER);
@@ -1315,10 +1369,6 @@ void drawProgramEdit(uint8_t scroll = 0)
 		break;
 
 	}
-
-	//myGLCD.setFont(SmallFont);
-	//drawSquareBtn(420, 220, 470, 260, F(" Done"), menuBtnColor, menuBtnBorder, menuBtnText, LEFT);
-	//myGLCD.setFont(BigFont);
 }
 
 // Adds current position to program linked list 
@@ -1364,43 +1414,37 @@ void saveProgram()
 {
 	// Delimiter 
 	String space = ", ";
-	char temp[20] = "PROGRAMS/";
+	char programDirectory[20] = "PROGRAMS/";
 
 	char buffer[8];
 	sprintf(buffer, "%s", fileList[selectedProgram]);
-
-	strcat(temp, buffer);
-	Serial.println("");
-	Serial.print(F("Full name:"));
-	Serial.println(temp);
-	Serial.println("");
+	strcat(programDirectory, buffer);
 
 	// Write out linkedlist data to text file
 	for (uint8_t i = 0; i < runList.size(); i++)
 	{
 		Serial.print(F("."));
-		sdCard.writeFile(temp, ",");
-		sdCard.writeFile(temp, runList.get(i)->getA1());
-		sdCard.writeFile(temp, space);
-		sdCard.writeFile(temp, runList.get(i)->getA2());
-		sdCard.writeFile(temp, space);
-		sdCard.writeFile(temp, runList.get(i)->getA3());
-		sdCard.writeFile(temp, space);
-		sdCard.writeFile(temp, runList.get(i)->getA4());
-		sdCard.writeFile(temp, space);
-		sdCard.writeFile(temp, runList.get(i)->getA5());
-		sdCard.writeFile(temp, space);
-		sdCard.writeFile(temp, runList.get(i)->getA6());
-		sdCard.writeFile(temp, space);
-		sdCard.writeFile(temp, runList.get(i)->getID());
-		sdCard.writeFile(temp, space);
-		sdCard.writeFile(temp, runList.get(i)->getGrip());
-		sdCard.writeFileln(temp);
+		sdCard.writeFile(programDirectory, ",");
+		sdCard.writeFile(programDirectory, runList.get(i)->getA1());
+		sdCard.writeFile(programDirectory, space);
+		sdCard.writeFile(programDirectory, runList.get(i)->getA2());
+		sdCard.writeFile(programDirectory, space);
+		sdCard.writeFile(programDirectory, runList.get(i)->getA3());
+		sdCard.writeFile(programDirectory, space);
+		sdCard.writeFile(programDirectory, runList.get(i)->getA4());
+		sdCard.writeFile(programDirectory, space);
+		sdCard.writeFile(programDirectory, runList.get(i)->getA5());
+		sdCard.writeFile(programDirectory, space);
+		sdCard.writeFile(programDirectory, runList.get(i)->getA6());
+		sdCard.writeFile(programDirectory, space);
+		sdCard.writeFile(programDirectory, runList.get(i)->getID());
+		sdCard.writeFile(programDirectory, space);
+		sdCard.writeFile(programDirectory, runList.get(i)->getGrip());
+		sdCard.writeFileln(programDirectory);
 	}
 	if (runList.size() == 0)
 	{
-		Serial.println(F("empty"));
-		sdCard.writeFileln(temp);
+		sdCard.writeFileln(programDirectory);
 	}
 }
 
@@ -1410,12 +1454,8 @@ void programEditButtons()
 	static uint8_t selectedNode = 0;
 
 	// Touch screen controls
-	if (myTouch.dataAvailable())
+	if (Touch_getXY())
 	{
-		myTouch.read();
-		x = myTouch.getX();
-		y = myTouch.getY();
-
 		if ((x >= 130) && (x <= 425))
 		{
 			if ((y >= 5) && (y <= 42))
@@ -1463,9 +1503,9 @@ void programEditButtons()
 		}
 		if ((x >= 430) && (x <= 475))
 		{
-			if ((y >= 5) && (y <= 115))
+			if ((y >= 5) && (y <= 116))
 			{
-				waitForIt(430, 5, 475, 115);
+				waitForIt(430, 5, 475, 116);
 				if (scroll > 3)
 				{
 					scroll--;
@@ -1479,9 +1519,9 @@ void programEditButtons()
 					drawProgramEditScroll();
 				}
 			}
-			if ((y >= 115) && (y <= 225))
+			if ((y >= 116) && (y <= 227))
 			{
-				waitForIt(430, 115, 475, 225);
+				waitForIt(430, 116, 475, 227);
 				if (scroll < runList.size())
 				{
 					if (scroll < 252)
@@ -1596,18 +1636,46 @@ void programEditButtons()
 					Configure Arm
 ============================================================*/
 // Draws the config page
-void drawConfig()
+bool drawConfig()
 {
-	drawSquareBtn(126, 1, 479, 319, "", themeBackground, themeBackground, themeBackground, CENTER);
-	print_icon(435, 5, robotarm);
-	drawSquareBtn(180, 10, 400, 45, F("Configuration"), themeBackground, themeBackground, menuBtnColor, CENTER);
-	drawRoundBtn(150, 60, 300, 100, F("Home Ch1"), menuBtnColor, menuBtnBorder, menuBtnText, CENTER);
-	drawRoundBtn(310, 60, 460, 100, F("Set Ch1"), menuBtnColor, menuBtnBorder, menuBtnText, CENTER);
-	drawRoundBtn(150, 110, 300, 150, F("Home Ch2"), menuBtnColor, menuBtnBorder, menuBtnText, CENTER);
-	drawRoundBtn(310, 110, 460, 150, F("Set ch2"), menuBtnColor, menuBtnBorder, menuBtnText, CENTER);
-	drawRoundBtn(150, 160, 300, 200, F("Loop On"), menuBtnColor, menuBtnBorder, menuBtnText, CENTER);
-	drawRoundBtn(310, 160, 460, 200, F("Loop Off"), menuBtnColor, menuBtnBorder, menuBtnText, CENTER);
-	drawRoundBtn(150, 210, 300, 250, F("Memory"), menuBtnColor, menuBtnBorder, menuBtnText, CENTER);
+	switch (graphicLoaderState)
+	{
+	case 0:
+		drawSquareBtn(126, 1, 479, 319, "", themeBackground, themeBackground, themeBackground, CENTER);
+		break;
+	case 1:
+		print_icon(435, 5, robotarm);
+		break;
+	case 2:
+		drawSquareBtn(180, 10, 400, 45, F("Configuration"), themeBackground, themeBackground, menuBtnColor, CENTER);
+		break;
+	case 3:
+		drawRoundBtn(150, 60, 300, 100, F("Home Ch1"), menuBtnColor, menuBtnBorder, menuBtnText, CENTER);
+		break;
+	case 4:
+		drawRoundBtn(310, 60, 460, 100, F("Set Ch1"), menuBtnColor, menuBtnBorder, menuBtnText, CENTER);
+		break;
+	case 5:
+		drawRoundBtn(150, 110, 300, 150, F("Home Ch2"), menuBtnColor, menuBtnBorder, menuBtnText, CENTER);
+		break;
+	case 6:
+		drawRoundBtn(310, 110, 460, 150, F("Set ch2"), menuBtnColor, menuBtnBorder, menuBtnText, CENTER);
+		break;
+	case 7:
+		drawRoundBtn(150, 160, 300, 200, F("Loop On"), menuBtnColor, menuBtnBorder, menuBtnText, CENTER);
+		break;
+	case 8:
+		drawRoundBtn(310, 160, 460, 200, F("Loop Off"), menuBtnColor, menuBtnBorder, menuBtnText, CENTER);
+		break;
+	case 9:
+		drawRoundBtn(150, 210, 300, 250, F("Memory"), menuBtnColor, menuBtnBorder, menuBtnText, CENTER);
+		break;
+	case 10:
+		return true;
+		break;
+	}
+	graphicLoaderState++;
+	return false;
 }
 
 // Sends command to return arm to starting position
@@ -1685,10 +1753,6 @@ void configButtons()
 				waitForIt(150, 210, 300, 250);
 				page = 10;
 				hasDrawn = false;
-			}
-			if ((x >= 310) && (x <= 460))
-			{
-				//waitForIt(310, 160, 460, 200);
 			}
 		}
 	}
@@ -2127,7 +2191,7 @@ void drawkeyboard()
 	uint16_t posY = 56;
 	uint8_t numPad = 0x00;
 
-	const char keyboardInput[36] = { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
+	const PROGMEM char keyboardInput[36] = { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
 									 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j',
 									 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't',
 									 'u', 'v', 'w', 'x', 'y', 'z' };
@@ -2525,7 +2589,6 @@ void drawMenu()
 void setup()
 {
 	Serial.begin(115200);
-
 	Serial3.begin(115200);
 
 	can1.startCAN();
@@ -2560,7 +2623,8 @@ void setup()
 
 	drawMenu();
 
-	sdCard.createDRIVE(sTemp);
+	// Create program folder is it does not exist
+	sdCard.createDRIVE(pDir);
 }
 
 // Page control framework
@@ -2576,7 +2640,10 @@ void pageControl()
 		// Draw page
 		if (!hasDrawn)
 		{
-			drawView();
+			if (!drawView())
+			{
+				break;
+			}
 			axisPos.drawAxisPos(myGLCD);
 			axisPos.drawAxisPos(myGLCD);
 			hasDrawn = true;
@@ -2604,12 +2671,9 @@ void pageControl()
 		{
 			if (!drawProgram())
 			{
-				graphicLoaderState++;
+				break;
 			}
-			else
-			{
-				hasDrawn = true;
-			}
+			hasDrawn = true;
 		}
 		// Call buttons if any
 		programButtons();
@@ -2633,7 +2697,10 @@ void pageControl()
 		// Draw page
 		if (!hasDrawn)
 		{
-			drawConfig();
+			if (!drawConfig())
+			{
+				break;
+			}
 			hasDrawn = true;
 		}
 		// Call buttons if any
@@ -2686,7 +2753,10 @@ void pageControl()
 	case 8:
 		if (!hasDrawn)
 		{
-			drawEditPage();
+			if (!drawEditPage())
+			{
+				break;
+			}
 			hasDrawn = true;
 			keyIndex = 0; // Reset keyboard input index back to 0
 		}
@@ -2765,19 +2835,15 @@ bool drawErrorMSG(String title, String eMessage1, String eMessage2)
 	drawSquareBtn(145, 100, 415, 130, title, themeBackground, menuBtnColor, menuBtnBorder, LEFT);
 	drawSquareBtn(146, 131, 414, 155, eMessage1, menuBackground, menuBackground, menuBtnText, CENTER);
 	drawSquareBtn(146, 155, 414, 180, eMessage2, menuBackground, menuBackground, menuBtnText, CENTER);
-	drawRoundBtn(365, 100, 415, 130, "X", menuBtnColor, menuBtnColor, menuBtnText, CENTER);
-	drawRoundBtn(155, 180, 275, 215, "Confirm", menuBtnColor, menuBtnColor, menuBtnText, CENTER);
-	drawRoundBtn(285, 180, 405, 215, "Cancel", menuBtnColor, menuBtnColor, menuBtnText, CENTER);
+	drawRoundBtn(365, 100, 415, 130, F("X"), menuBtnColor, menuBtnColor, menuBtnText, CENTER);
+	drawRoundBtn(155, 180, 275, 215, F("Confirm"), menuBtnColor, menuBtnColor, menuBtnText, CENTER);
+	drawRoundBtn(285, 180, 405, 215, F("Cancel"), menuBtnColor, menuBtnColor, menuBtnText, CENTER);
 }
 
 void errorMSGButtons()
 {
-	if (myTouch.dataAvailable())
+	if (Touch_getXY())
 	{
-		myTouch.read();
-		x = myTouch.getX();
-		y = myTouch.getY();
-
 		if ((x >= 365) && (x <= 415))
 		{
 			if ((y >= 100) && (y <= 130))
@@ -2807,12 +2873,8 @@ void errorMSGButtons()
 uint8_t errorMSGBtn(uint8_t page)
 {
 	// Touch screen controls
-	if (myTouch.dataAvailable())
+	if (Touch_getXY())
 	{
-		myTouch.read();
-		x = myTouch.getX();
-		y = myTouch.getY();
-
 		if ((x >= 400) && (x <= 450))
 		{
 			if ((y >= 140) && (y <= 170))
