@@ -2802,12 +2802,14 @@ void pageControl()
 			sdCard.deleteFile(temp);
 
 			// Exit
+			graphicLoaderState = 0;
 			page = 8;
 			hasDrawn = false;
 		}
 		if (keyResult == 0xF0) // Cancel
 		{
 			// Exit
+			graphicLoaderState = 0;
 			page = 8;
 			hasDrawn = false;
 		}

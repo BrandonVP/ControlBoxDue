@@ -11,7 +11,6 @@
 #else
 	#include "WProgram.h"
 #endif
-//class CANBus;
 
 class SDCard
 {
