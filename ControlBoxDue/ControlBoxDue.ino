@@ -14,11 +14,13 @@ Swtich between Due & mega2560
 	End Todo List
 =========================================================*/
 
-#include <malloc.h>
-#include "CANBusWiFi.h"
+#include <DS3231.h>
 #include <LinkedList.h>
+#include <malloc.h>
 #include <SD.h>
 #include <SPI.h>
+
+#include "CANBusWiFi.h"
 #include "AxisPos.h"
 #include "CANBus.h"
 #include "SDCard.h"
@@ -71,6 +73,8 @@ UTouch  myTouch(2, 6, 3, 4, 5);
 extern uint8_t SmallFont[];
 extern uint8_t BigFont[];
 #endif // 
+
+DS3231 rtc(SDA, SCL);
 
 // Select debug Due
 //#define DEBUG(x)  SerialUSB.print(x);
@@ -139,10 +143,19 @@ char fileList[MAX_PROGRAMS][8];
 
 uint8_t programCount = 0;
 
+uint32_t updateClock = 0;
 
 // Variable to track current scroll position
 uint8_t programScroll = 0;
 uint16_t scroll = 0;
+
+/*
+Uncomment to update the clock then comment out and upload to
+the device a second time to prevent updating time to last time
+device was on at every startup.
+*/
+//#define UPDATE_CLOCK
+
 
 /*=========================================================
 	Framework Functions
@@ -779,7 +792,7 @@ bool drawView()
 	{
 	case 0:
 		// Clear LCD to be written 
-		drawSquareBtn(126, 1, 479, 319, "", themeBackground, themeBackground, themeBackground, CENTER);
+		drawSquareBtn(X_PAGE_START, 1, 479, 319, "", themeBackground, themeBackground, themeBackground, CENTER);
 		break;
 	case 1:
 		// Print arm logo
@@ -905,7 +918,7 @@ bool drawProgram()
 		break;
 	case 1:
 		// Clear LCD to be written
-		drawSquareBtn(126, 1, 479, 319, "", themeBackground, themeBackground, themeBackground, CENTER);
+		drawSquareBtn(X_PAGE_START, 1, 479, 319, "", themeBackground, themeBackground, themeBackground, CENTER);
 		break;
 	case 2:
 		// Print arm logo
@@ -989,6 +1002,7 @@ void programButtons()
 				runList.clear();
 				loadProgram();
 				programLoaded = true;
+				drawExecuteButton();
 			}
 			if ((x >= 351) && (x <= 420))
 			{
@@ -1000,6 +1014,7 @@ void programButtons()
 				graphicLoaderState = 0;
 				page = 8;
 				hasDrawn = false;
+				drawExecuteButton();
 			}
 			if ((x >= 420) && (x <= 477))
 			{
@@ -1022,6 +1037,7 @@ void programButtons()
 				runList.clear();
 				loadProgram();
 				programLoaded = true;
+				drawExecuteButton();
 			}
 			if ((x >= 351) && (x <= 420))
 			{
@@ -1033,6 +1049,7 @@ void programButtons()
 				graphicLoaderState = 0;
 				page = 8;
 				hasDrawn = false;
+				drawExecuteButton();
 			}
 			if ((x >= 420) && (x <= 477))
 			{
@@ -1055,6 +1072,7 @@ void programButtons()
 				runList.clear();
 				loadProgram();
 				programLoaded = true;
+				drawExecuteButton();
 			}
 			if ((x >= 351) && (x <= 420))
 			{
@@ -1066,6 +1084,7 @@ void programButtons()
 				graphicLoaderState = 0;
 				page = 8;
 				hasDrawn = false;
+				drawExecuteButton();
 			}
 			if ((x >= 420) && (x <= 477))
 			{
@@ -1088,6 +1107,7 @@ void programButtons()
 				runList.clear();
 				loadProgram();
 				programLoaded = true;
+				drawExecuteButton();
 			}
 			if ((x >= 351) && (x <= 420))
 			{
@@ -1099,6 +1119,7 @@ void programButtons()
 				graphicLoaderState = 0;
 				page = 8;
 				hasDrawn = false;
+				drawExecuteButton();
 			}
 			if ((x >= 420) && (x <= 477))
 			{
@@ -1121,6 +1142,7 @@ void programButtons()
 				runList.clear();
 				loadProgram();
 				programLoaded = true;
+				drawExecuteButton();
 			}
 			if ((x >= 351) && (x <= 420))
 			{
@@ -1132,6 +1154,7 @@ void programButtons()
 				graphicLoaderState = 0;
 				page = 8;
 				hasDrawn = false;
+				drawExecuteButton();
 			}
 			if ((x >= 420) && (x <= 477))
 			{
@@ -1195,6 +1218,12 @@ uint8_t findProgramNode()
 	}
 }
 
+// Incase it needs to be moved/edited in the future
+void drawExecuteButton()
+{
+	drawRoundBtn(4, 260, 122, 310, F("5-EXEC"), menuBtnColor, menuBtnBorder, menuBtnText, CENTER);
+}
+
 
 /*==========================================================
 					Edit Program
@@ -1205,7 +1234,7 @@ bool drawEditPage()
 	{
 	case 0:
 		// Clear LCD to be written
-		drawSquareBtn(126, 1, 479, 319, "", themeBackground, themeBackground, themeBackground, CENTER);
+		drawSquareBtn(X_PAGE_START, 1, 479, 319, "", themeBackground, themeBackground, themeBackground, CENTER);
 		break;
 	case 1:
 		print_icon(435, 5, robotarm);
@@ -1283,9 +1312,11 @@ void editPageButtons()
 				programDelete();
 				saveProgram();
 				programOpen = false;
+				programLoaded = true;
 				page = 2;
 				hasDrawn = false;
 				graphicLoaderState = 0;
+				drawExecuteButton();
 			}
 			if ((y >= 280) && (y <= 317))
 			{
@@ -1343,7 +1374,7 @@ void drawProgramEditScroll()
 void drawProgramEdit(uint8_t scroll = 0)
 {
 	// Clear LCD to be written
-	drawSquareBtn(126, 1, 479, 319, "", themeBackground, themeBackground, themeBackground, CENTER);
+	drawSquareBtn(X_PAGE_START, 1, 479, 319, "", themeBackground, themeBackground, themeBackground, CENTER);
 
 	// Scroll buttons
 	myGLCD.setColor(menuBtnColor);
@@ -1581,6 +1612,7 @@ void programEditButtons()
 				page = 2;
 				hasDrawn = false;
 				graphicLoaderState = 0;
+				programLoaded = true;
 			}
 		}
 		if ((y >= 275) && (y <= 315))
@@ -1641,7 +1673,7 @@ bool drawConfig()
 	switch (graphicLoaderState)
 	{
 	case 0:
-		drawSquareBtn(126, 1, 479, 319, "", themeBackground, themeBackground, themeBackground, CENTER);
+		drawSquareBtn(X_PAGE_START, 1, 479, 319, "", themeBackground, themeBackground, themeBackground, CENTER);
 		break;
 	case 1:
 		print_icon(435, 5, robotarm);
@@ -1774,7 +1806,7 @@ void resetKeypad()
 // User input keypad
 void drawKeypad()
 {
-	drawSquareBtn(131, 55, 479, 319, "", themeBackground, themeBackground, themeBackground, CENTER);
+	drawSquareBtn(X_PAGE_START, 55, 479, 319, "", themeBackground, themeBackground, themeBackground, CENTER);
 	uint16_t posY = 80;
 	uint8_t numPad = 0x00;
 
@@ -1993,7 +2025,7 @@ uint8_t keypadController(uint8_t& index, uint16_t& total)
 // User input keypad
 void drawKeypadDec()
 {
-	drawSquareBtn(131, 55, 479, 319, "", themeBackground, themeBackground, themeBackground, CENTER);
+	drawSquareBtn(X_PAGE_START, 55, 479, 319, "", themeBackground, themeBackground, themeBackground, CENTER);
 	uint16_t posY = 125;
 	uint8_t numPad = 0x00;
 
@@ -2187,7 +2219,7 @@ uint8_t keypadControllerDec(uint8_t& index, uint16_t& total)
 // User input keypad
 void drawkeyboard()
 {
-	drawSquareBtn(131, 55, 479, 319, "", themeBackground, themeBackground, themeBackground, CENTER);
+	drawSquareBtn(X_PAGE_START, 55, 479, 319, "", themeBackground, themeBackground, themeBackground, CENTER);
 	uint16_t posY = 56;
 	uint8_t numPad = 0x00;
 
@@ -2574,15 +2606,16 @@ void drawMenu()
 {
 	// Draw Layout
 	drawSquareBtn(1, 1, 480, 320, "", themeBackground, themeBackground, themeBackground, CENTER);
-	drawSquareBtn(0, 1, 125, 320, "", menuBackground, menuBackground, menuBackground, CENTER);
+	drawSquareBtn(0, 1, X_PAGE_START - 1, 320, "", menuBackground, menuBackground, menuBackground, CENTER);
 
 	// Draw Menu Buttons
-	drawRoundBtn(5, 6, 120, 53, F("1-VIEW"), menuBtnColor, menuBtnBorder, menuBtnText, CENTER);
-	drawRoundBtn(5, 58, 120, 105, F("2-PROG"), menuBtnColor, menuBtnBorder, menuBtnText, CENTER);
-	drawRoundBtn(5, 110, 120, 157, F("3-MOVE"), menuBtnColor, menuBtnBorder, menuBtnText, CENTER);
-	drawRoundBtn(5, 162, 120, 209, F("4-CONF"), menuBtnColor, menuBtnBorder, menuBtnText, CENTER);
-	drawRoundBtn(5, 214, 120, 261, F("5-EXEC"), menuBtnColor, menuBtnBorder, menuBtnText, CENTER);
-	drawRoundBtn(5, 266, 120, 313, F("6-STOP"), menuBtnColor, menuBtnBorder, menuBtnText, CENTER);
+	drawRoundBtn(4, 40, 122, 90, F("1-VIEW"), menuBtnColor, menuBtnBorder, menuBtnText, CENTER);
+	drawRoundBtn(4, 95, 122, 145, F("2-PROG"), menuBtnColor, menuBtnBorder, menuBtnText, CENTER);
+	drawRoundBtn(4, 150, 122, 200, F("3-MOVE"), menuBtnColor, menuBtnBorder, menuBtnText, CENTER);
+	drawRoundBtn(4, 205, 122, 255, F("4-CONF"), menuBtnColor, menuBtnBorder, menuBtnText, CENTER);
+
+	drawRoundBtn(4, 260, 122, 310, F("5-EXEC"), menuBackground, menuBtnBorder, menuBtnText, CENTER);
+	//drawRoundBtn(5, 265, 120, 315, F("6-STOP"), menuBtnColor, menuBtnBorder, menuBtnText, CENTER);
 }
 
 // the setup function runs once when you press reset or power the board
@@ -2606,6 +2639,14 @@ void setup()
 	myTouch.setPrecision(PREC_MEDIUM);
 #endif
 
+	// Initialize the rtc object
+	rtc.begin();
+#if defined UPDATE_CLOCK
+	rtc.setDOW(FRIDAY);
+	rtc.setTime(__TIME__);
+	rtc.setDate(__DATE__);
+#endif
+
 	myGLCD.setFont(BigFont);
 
 	myGLCD.setColor(VGA_WHITE);
@@ -2619,7 +2660,7 @@ void setup()
 	myGLCD.print("Loading...", 190, 290);
 
 	// Give 6DOF arms time to start up
-	delay(6000);
+	delay(5000);
 
 	drawMenu();
 
@@ -2710,16 +2751,7 @@ void pageControl()
 		// Draw page
 		if (!hasDrawn)
 		{
-			hasDrawn = true;
-			if (programLoaded == true)
-			{
-				programRunning = true;
-				programProgress = 0;
-				Arm1Ready = true;
-				Arm2Ready = true;
-			}
-			// ---ERROR MESSAGE---
-			page = oldPage;
+
 		}
 		// Call buttons if any
 		break;
@@ -2916,53 +2948,59 @@ void menuButtons()
 	// Touch screen controls
 	if (Touch_getXY())
 	{
-		if ((x >= 5) && (x <= 120))
+		if ((x >= 4) && (x <= 122))
 		{
-			if ((y >= 6) && (y <= 53))
+			if ((y >= 40) && (y <= 90))
 			{
 				// VIEW
-				waitForIt(5, 6, 120, 53);
+				waitForIt(4, 40, 122, 90);
 				page = 1;
 				graphicLoaderState = 0;
 				hasDrawn = false;
 			}
-			if ((y >= 58) && (y <= 105))
+			if ((y >= 95) && (y <= 145))
 			{
 				// PROG
-				waitForIt(5, 58, 120, 105);
+				waitForIt(4, 95, 122, 145);
 				page = 2;
 				graphicLoaderState = 0;
 				hasDrawn = false;
 			}
-			if ((y >= 110) && (y <= 157))
+			if ((y >= 150) && (y <= 200))
 			{
 				// MOVE
-				waitForIt(5, 110, 120, 157);
+				waitForIt(4, 150, 122, 200);
 				page = 3;
 				graphicLoaderState = 0;
 				hasDrawn = false;
 			}
-			if ((y >= 162) && (y <= 209))
+			if ((y >= 205) && (y <= 255))
 			{
 				// CONF
-				waitForIt(5, 162, 120, 209);
+				waitForIt(4, 205, 122, 255);
 				page = 4;
 				graphicLoaderState = 0;
 				hasDrawn = false;
 			}
-			if ((y >= 214) && (y <= 261))
+			if ((y >= 260) && (y <= 310))
 			{
-				// EXEC
-				waitForIt(5, 214, 120, 261);
-				oldPage = page;
-				page = 5;
-				hasDrawn = false;
-			}
-			if ((y >= 266) && (y <= 313))
-			{
-				// STOP
-				waitForIt(5, 266, 120, 313);
-				programRunning = false;
+				if (programLoaded && programRunning)
+				{
+					waitForIt(4, 260, 122, 310);
+					programRunning = false;
+					drawRoundBtn(4, 260, 122, 310, F("5-EXEC"), menuBtnColor, menuBtnBorder, menuBtnText, CENTER);
+					return;
+				}
+
+				if (programLoaded && !programRunning)
+				{
+					waitForIt(4, 260, 122, 310);
+					programRunning = true;
+					programProgress = 0;
+					Arm1Ready = true;
+					Arm2Ready = true;
+					drawRoundBtn(4, 260, 122, 310, F("6-STOP"), menuBtnColor, menuBtnBorder, menuBtnText, CENTER);
+				}
 			}
 		}
 	}
@@ -3036,6 +3074,7 @@ void executeProgram()
 	if (programProgress == runList.size())
 	{
 		programRunning = false;
+		drawExecuteButton();
 	}
 	if (Arm1Ready == true && Arm2Ready == true)
 	{
@@ -3163,11 +3202,24 @@ void executeProgram()
 	}
 }
 
+// Displays time on menu
+void updateTime()
+{
+	if (millis() - updateClock > 1000)
+	{
+		char time[40];
+		drawRoundBtn(1, 10, 125, 30, rtc.getTimeStr(), menuBackground, menuBackground, menuBtnText, CENTER);
+		rtc.getTimeStr();
+		updateClock = millis();
+	}
+}
+
 void backgroundProcess()
 {
 	TrafficManager();
 	//updateViewPage();
 	executeProgram();
+	updateTime();
 }
 
 // Calls pageControl with a value of 1 to set view page as the home page

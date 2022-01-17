@@ -34,6 +34,8 @@ constexpr auto ARM2_CONTROL = 0x0B0;
 #define DEG "deg"
 #define REFRESH_RATE 400
 
+#define X_PAGE_START 127
+
 void pageControl();
 
 // Used for converting keypad input to appropriate hex place
