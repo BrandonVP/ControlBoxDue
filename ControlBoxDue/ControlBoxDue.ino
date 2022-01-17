@@ -74,8 +74,6 @@ extern uint8_t SmallFont[];
 extern uint8_t BigFont[];
 #endif // 
 
-DS3231 rtc(SDA, SCL);
-
 // Select debug Due
 //#define DEBUG(x)  SerialUSB.print(x);
 #define DEBUG(x)  Serial.print(x);
@@ -83,6 +81,9 @@ DS3231 rtc(SDA, SCL);
 
 // For touch controls
 int x, y;
+
+// Object to control RTC hardware
+DS3231 rtc(SDA, SCL);
 
 // Object to control CAN Bus hardware
 CANBus can1;
@@ -100,35 +101,39 @@ LinkedList<Program*> runList = LinkedList<Program*>();
 // Keeps track of current page
 uint8_t controlPage = 1;
 uint8_t page = 1;
-uint8_t nextPage = 1;
+//uint8_t nextPage = 1;
 uint8_t oldPage = 1;
 bool hasDrawn = false;
 uint8_t graphicLoaderState = 0;
 uint8_t errorMessageReturn = 2;
+uint8_t state = 0;
 
-// Current selected program
-uint8_t selectedProgram = 0;
+// Variable to track current scroll position
+uint8_t programScroll = 0;
+uint16_t scroll = 0;
+
 
 // CAN message ID and frame, value can be changed in manualControlButtons
 uint16_t txIdManual = ARM1_MANUAL;
 
 // Execute variables
 bool programLoaded = false;
-bool loopProgram = true;
 bool programRunning = false;
+bool loopProgram = true;
 bool Arm1Ready = false;
 bool Arm2Ready = false;
-uint8_t programProgress = 0; // THIS WILL LIMIT THE SIZE OF A PROGRAM TO 255 MOVEMENTS
-
-// Used to determine which PROG page should be loaded when button is pressed
 bool programOpen = false;
 bool programEdit = false;
+uint8_t programProgress = 0; // THIS WILL LIMIT THE SIZE OF A PROGRAM TO 255 MOVEMENTS
+uint8_t selectedProgram = 0;
 
 // 0 = open, 1 = close, 2 = no change
 int8_t gripStatus = 2;
 
 // Timer used for touch button press
 uint32_t timer = 0;
+// Timer used for RTC
+uint32_t updateClock = 0;
 
 // Key input variables
 char keyboardInput[9];
@@ -136,18 +141,8 @@ uint8_t keypadInput[4] = { 0, 0, 0, 0 };
 uint8_t keyIndex = 0;
 uint8_t keyResult = 0;
 
-// Generic free use state variable
-uint8_t state = 0;
-
 char fileList[MAX_PROGRAMS][8];
-
 uint8_t programCount = 0;
-
-uint32_t updateClock = 0;
-
-// Variable to track current scroll position
-uint8_t programScroll = 0;
-uint16_t scroll = 0;
 
 /*
 Uncomment to update the clock then comment out and upload to
@@ -543,7 +538,7 @@ bool drawManualControl()
 	{
 	case 0:
 		// Clear LCD to be written 
-		drawSquareBtn(126, 1, 479, 319, "", themeBackground, themeBackground, themeBackground, CENTER);
+		drawSquareBtn(X_PAGE_START, 1, 479, 319, "", themeBackground, themeBackground, themeBackground, CENTER);
 		break;
 	case 1:
 		// Print arm logo
@@ -1691,7 +1686,7 @@ bool drawConfig()
 		drawRoundBtn(150, 110, 300, 150, F("Home Ch2"), menuBtnColor, menuBtnBorder, menuBtnText, CENTER);
 		break;
 	case 6:
-		drawRoundBtn(310, 110, 460, 150, F("Set ch2"), menuBtnColor, menuBtnBorder, menuBtnText, CENTER);
+		drawRoundBtn(310, 110, 460, 150, F("Set Ch2"), menuBtnColor, menuBtnBorder, menuBtnText, CENTER);
 		break;
 	case 7:
 		drawRoundBtn(150, 160, 300, 200, F("Loop On"), menuBtnColor, menuBtnBorder, menuBtnText, CENTER);
