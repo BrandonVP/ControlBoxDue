@@ -1698,6 +1698,7 @@ bool drawConfig()
 		drawRoundBtn(150, 210, 300, 250, F("Memory"), menuBtnColor, menuBtnBorder, menuBtnText, CENTER);
 		break;
 	case 10:
+		drawSquareBtn(150, 300, 479, 319, version, themeBackground, themeBackground, menuBtnColor, CENTER);
 		return true;
 		break;
 	}
