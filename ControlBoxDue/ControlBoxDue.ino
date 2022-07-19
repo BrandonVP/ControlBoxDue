@@ -15,6 +15,7 @@ Swtich between Due & mega2560
 =========================================================*/
 
 #include <DS3231.h>
+//#include <RTCDue.h>
 #include <LinkedList.h>
 #include <malloc.h>
 #include <SD.h>
@@ -74,11 +75,6 @@ extern uint8_t SmallFont[];
 extern uint8_t BigFont[];
 #endif // 
 
-// Select debug Due
-//#define DEBUG(x)  SerialUSB.print(x);
-#define DEBUG(x)  Serial.print(x);
-//#define DEBUG(x)
-
 // For touch controls
 int x, y;
 
@@ -111,7 +107,6 @@ uint8_t state = 0;
 // Variable to track current scroll position
 uint8_t programScroll = 0;
 uint16_t scroll = 0;
-
 
 // CAN message ID and frame, value can be changed in manualControlButtons
 uint16_t txIdManual = ARM1_MANUAL;
@@ -151,6 +146,13 @@ device was on at every startup.
 */
 //#define UPDATE_CLOCK
 
+// https://forum.arduino.cc/t/due-software-reset/332764/5
+//Defines so the device can do a self reset
+#define SYSRESETREQ    (1<<2)
+#define VECTKEY        (0x05fa0000UL)
+#define VECTKEY_MASK   (0x0000ffffUL)
+#define AIRCR          (*(uint32_t*)0xe000ed0cUL) // fixed arch-defined address
+#define REQUEST_EXTERNAL_RESET (AIRCR=(AIRCR&VECTKEY_MASK)|VECTKEY|SYSRESETREQ)
 
 /*=========================================================
 	Framework Functions
@@ -1698,7 +1700,13 @@ bool drawConfig()
 		drawRoundBtn(150, 210, 300, 250, F("Memory"), menuBtnColor, menuBtnBorder, menuBtnText, CENTER);
 		break;
 	case 10:
-		drawSquareBtn(150, 300, 479, 319, version, themeBackground, themeBackground, menuBtnColor, CENTER);
+		drawRoundBtn(310, 210, 460, 250, F("Reset"), menuBtnColor, menuBtnBorder, menuBtnText, CENTER);
+		break;
+	case 11:
+		drawRoundBtn(150, 260, 300, 300, F("About"), menuBtnColor, menuBtnBorder, menuBtnText, CENTER);
+		break;
+	case 12:
+		drawSquareBtn(150, 301, 479, 319, version, themeBackground, themeBackground, menuBtnColor, CENTER);
 		return true;
 		break;
 	}
@@ -1781,6 +1789,24 @@ void configButtons()
 				waitForIt(150, 210, 300, 250);
 				page = 10;
 				hasDrawn = false;
+			}
+			if ((x >= 310) && (x <= 460))
+			{
+				waitForIt(310, 210, 460, 250);
+				// Reset
+				REQUEST_EXTERNAL_RESET;
+			}
+		}
+		if ((y >= 260) && (y <= 300))
+		{
+			if ((x >= 150) && (x <= 300))
+			{
+				waitForIt(150, 260, 300, 300);
+				// About 
+				drawSquareBtn(131, 55, 479, 319, "", themeBackground, themeBackground, themeBackground, CENTER);
+				drawSquareBtn(135, 120, 479, 140, F("Software Development"), themeBackground, themeBackground, menuBtnColor, CENTER);
+				drawSquareBtn(135, 145, 479, 165, F("Brandon Van Pelt"), themeBackground, themeBackground, menuBtnColor, CENTER);
+				drawSquareBtn(135, 170, 479, 190, F("github.com/BrandonVP"), themeBackground, themeBackground, menuBtnColor, CENTER);
 			}
 		}
 	}
@@ -2609,7 +2635,6 @@ void drawMenu()
 	drawRoundBtn(4, 95, 122, 145, F("2-PROG"), menuBtnColor, menuBtnBorder, menuBtnText, CENTER);
 	drawRoundBtn(4, 150, 122, 200, F("3-MOVE"), menuBtnColor, menuBtnBorder, menuBtnText, CENTER);
 	drawRoundBtn(4, 205, 122, 255, F("4-CONF"), menuBtnColor, menuBtnBorder, menuBtnText, CENTER);
-
 	drawRoundBtn(4, 260, 122, 310, F("5-EXEC"), menuBackground, menuBtnBorder, menuBtnText, CENTER);
 	//drawRoundBtn(5, 265, 120, 315, F("6-STOP"), menuBtnColor, menuBtnBorder, menuBtnText, CENTER);
 }
@@ -2870,6 +2895,7 @@ bool drawErrorMSG(String title, String eMessage1, String eMessage2)
 	drawRoundBtn(285, 180, 405, 215, F("Cancel"), menuBtnColor, menuBtnColor, menuBtnText, CENTER);
 }
 
+// Buttons for the error message function
 void errorMSGButtons()
 {
 	if (Touch_getXY())
@@ -3058,7 +3084,7 @@ void TrafficManager()
 	}
 }
 
-//
+// Runs the program currently loaded
 void executeProgram()
 {
 	// Return unless enabled
@@ -3210,10 +3236,10 @@ void updateTime()
 	}
 }
 
+// Called from main loop. Can also be called from any blocking code.
 void backgroundProcess()
 {
 	TrafficManager();
-	//updateViewPage();
 	executeProgram();
 	updateTime();
 }

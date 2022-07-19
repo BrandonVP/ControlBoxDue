@@ -41,4 +41,4 @@ void pageControl();
 // Used for converting keypad input to appropriate hex place
 const PROGMEM uint32_t hexTable[8] = { 1, 16, 256, 4096, 65536, 1048576, 16777216, 268435456 };
 const PROGMEM String pDir = "PROGRAMS";
-const PROGMEM String version = "Version - 1.0.0";
+const PROGMEM String version = "Version - 1.1.0";
