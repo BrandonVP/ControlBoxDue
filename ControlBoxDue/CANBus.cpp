@@ -2,6 +2,7 @@
 
 #include "CANBus.h"
 #include "CANBusWiFi.h"
+#include "definitions.h"
 
 void CANBus::startCAN()
 {
@@ -85,23 +86,19 @@ uint8_t CANBus::processFrame()
     if (Can0.available() > 0)
     {
         Can0.read(incoming);
-        Serial.print(F("ID: "));
-        Serial.println(incoming.id, HEX);
+        SerialUSB.print(F("ID: "));
+        SerialUSB.println(incoming.id, HEX);
         for (uint8_t i = 0; i < 8; i++)
         {
             MSGFrame[i] = incoming.data.byte[i];
         }
-        if (incoming.id == 0xC1)
+        if (incoming.id == POSITION_ID_1)
         {
-            Serial.print(F("Value: "));
-            Serial.println((incoming.data.byte[1]));
-            return incoming.data.byte[1];
+            return 1;
         }
-        if (incoming.id == 0xC2)
+        if (incoming.id == POSITION_ID_2)
         {
-            Serial.print(F("Value: "));
-            Serial.println((incoming.data.byte[1] + 3));
-            return incoming.data.byte[1] + 3;
+            return 2;
         }
     }
     return 0;

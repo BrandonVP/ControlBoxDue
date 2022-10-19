@@ -6,7 +6,7 @@
 			All non-arduino files created by visual micro and all visual studio project or solution files can be freely deleted and are not required to compile a sketch (do not delete your own code!).
 			Note: debugger breakpoints are stored in '.sln' or '.asln' files, knowledge of last uploaded breakpoints is stored in the upload.vmps.xml file. Both files are required to continue a previous debug session without needing to compile and upload again
 	
-	Hardware: Arduino Due (Native USB Port), Platform=sam, Package=arduino
+	Hardware: Arduino Due (Native USB Port)                                                                                           (arduino_due_x), Platform=sam, Package=arduino
 */
 
 #if defined(_VMICRO_INTELLISENSE)
@@ -16,12 +16,14 @@
 #define _VMDEBUG 1
 #define F_CPU 84000000L
 #define ARDUINO 108013
-#define ARDUINO_SAM_DUE
-#define ARDUINO_ARCH_SAM
-#define __SAM3X8E__
+#define ARDUINO_SAM_DUE 1
+#define ARDUINO_ARCH_SAM 1
+#define __SAM3X8E__ 1
 #define USB_VID 0x2341
 #define USB_PID 0x003e
-#define USBCON
+#define USBCON 1
+#define USB_MANUFACTURER "\"Arduino
+#define USB_PRODUCT "\"Arduino
 #define __cplusplus 201103L
 #ifdef __CLEARCORE__
 #define __ARMCC_VERSION 6010050
@@ -59,7 +61,7 @@ extern "C" void __cxa_pure_virtual() {;}
 	#include "sam3xa.h"
 #endif
 
-#include "arduino.h"
+#include <arduino.h>
 #include <pins_arduino.h> 
 #include <variant.h> 
 #include <variant.cpp> 
@@ -74,8 +76,8 @@ Can only be executed in Privileged modes.
 */
 __attribute__((always_inline)) static __INLINE void __enable_irq(void)
 {
-	__ASM volatile ("cpsie i");
-}//
+	//__ASM volatile ("cpsie i");
+}
 
 
 /** \brief  Disable IRQ Interrupts

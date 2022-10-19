@@ -3039,7 +3039,7 @@ void TrafficManager()
 		break;
 
 	case 1: // C1 lower
-		axisPos.updateAxisPos(can1, ARM1_RX);
+		axisPos.updateAxisPos(can1, POSITION_ID_1);
 		if (page == 1)
 		{
 			axisPos.drawAxisPos(myGLCD);
@@ -3047,7 +3047,7 @@ void TrafficManager()
 		break;
 
 	case 2: //  C1 Upper
-		axisPos.updateAxisPos(can1, ARM1_RX);
+		axisPos.updateAxisPos(can1, POSITION_ID_2);
 		if (page == 1)
 		{
 			axisPos.drawAxisPos(myGLCD);

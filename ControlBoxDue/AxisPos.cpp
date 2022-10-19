@@ -23,45 +23,53 @@ void AxisPos::sendRequest(CANBus can1)
 //
 void AxisPos::updateAxisPos(CANBus can1, uint8_t channel)
 {
+	SerialUSB.println("updateAxisPos");
+
 	// Request CAN frame addressed to paremeter ID
-	uint8_t* temp = can1.getFrame();
+	uint8_t* data = can1.getFrame();
 
-	// If correct message is returned 
-	if (temp[1] == LOWER)
+	// Need these temp values to calculate "CRC"
+	uint8_t crc, grip;
+	uint16_t a1, a2, a3, a4, a5, a6;
+
+	//|                          data                              |
+	//|  0  |  1   |   2   |   3   |   4   |   5   |   6   |   7   |
+	//| 0-7 | 8-15 | 16-23 | 24-31 | 32-39 | 40-47 | 48-55 | 56-63 |
+
+	//|  crc  |  grip |   a6   |   a5   |   a4   |   a3   |   a2   |   a1   |
+	//|  0-4  |  5-9  |  10-18 |  19-27 |  28-36 |  37-45 |  46-54 |  55-63 |
+	a1 = ((data[6] & 0x01) << 8)   | data[7];
+	a2 = (((data[5] & 0x03)) << 7) | (data[6] >> 1);
+	a3 = (((data[4] & 0x07)) << 6) | (data[5] >> 2);
+	a4 = (((data[3] & 0x0F)) << 5) | (data[4] >> 3);
+	a5 = (((data[2] & 0x1F)) << 4) | (data[3] >> 4);
+	a6 = (((data[1] & 0x3F)) << 3) | (data[2] >> 5);
+	grip = ((data[0] & 0x7) << 2)  | (data[1] >> 6);
+	crc = ((data[0]) >> 3);
+
+	// A very simple "CRC"
+	//if (crc == (a1 % 2) + (a2 % 2) + (a3 % 2) + (a4 % 2) + (a5 % 2) + (a6 % 2) + (grip % 2) + 1)
+	if (true)
 	{
-
 		// Determine which channel to write values too
-		if (channel == ARM1RXID)
+		if (channel == POSITION_ID_1)
 		{
-			// Two bytes per axis to reach max of 360 degrees
-			a1c1 = (temp[2] * 255) + temp[3];
-			a2c1 = (temp[4] * 255) + temp[5];
-			a3c1 = (temp[6] * 255) + temp[7];
-			//Serial.println("Arm 1 Lower");
+			a1c1 = a1;
+			a2c1 = a2;
+			a3c1 = a3;
+			a4c1 = a4;
+			a5c1 = a5;
+			a6c1 = a6;
 		}
-		else if (channel == ARM2RXID)
+		else //if (channel == POSITION_ID_2)
 		{
-			a1c2 = (temp[2] * 255) + temp[3];
-			a2c2 = (temp[4] * 255) + temp[5];
-			a3c2 = (temp[6] * 255) + temp[7];
-			//Serial.println("Arm 2 Lower");
-		}
-	}
-	if (temp[1] == UPPER)
-	{
-		if (channel == ARM1RXID)
-		{
-			a4c1 = (temp[2] * 255) + temp[3];
-			a5c1 = (temp[4] * 255) + temp[5];
-			a6c1 = (temp[6] * 255) + temp[7];
-			//Serial.println("Arm 1 Upper");
-		}
-		else if (channel == ARM2RXID)
-		{
-			a4c2 = (temp[2] * 255) + temp[3];
-			a5c2 = (temp[4] * 255) + temp[5];
-			a6c2 = (temp[6] * 255) + temp[7];
-			//Serial.println("Arm 2 Upper");
+			SerialUSB.println("in");
+			a1c2 = a1;
+			a2c2 = a2;
+			a3c2 = a3;
+			a4c2 = a4;
+			a5c2 = a5;
+			a6c2 = a6;
 		}
 	}
 }

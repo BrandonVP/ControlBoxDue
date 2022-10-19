@@ -4,9 +4,13 @@
 #ifndef _AxisPos_h
 #define _AxisPos_h
 
+#define POSITION_ID_1 0x1A0
+#define POSITION_ID_2 0x2A0
+
 #define LOWER 0x01
 #define ARM1ID 0xA0
 #define ARM1RXID 0xC1
+
 #define UPPER 0x02
 #define ARM2ID 0xB0
 #define ARM2RXID 0xC2

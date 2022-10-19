@@ -11,6 +11,9 @@
 #define CENTER 2
 #define RIGHT 3
 
+#define POSITION_ID_1 0x1A0
+#define POSITION_ID_2 0x2A0
+
 // Arm 1 IDs
 constexpr auto ARM1_RX = 0x0C1;
 constexpr auto ARM1_MANUAL = 0x0A3;
