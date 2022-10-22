@@ -45,7 +45,7 @@
 #define PIXEL_BUFFER 20 // What pixel?
 
 #define PHYSICAL_BUTTON_DELAY 200 //Needs better description
-#define DEG "deg" // Just why?
+#define DEG "deg" // Why?
 #define REFRESH_RATE 400 // Refresh what?!
 
 #define X_PAGE_START 127 // page start for what?

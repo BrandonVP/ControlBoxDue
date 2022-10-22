@@ -16,5 +16,5 @@
 extern String programNames_G[MAX_PROGRAMS];
 extern uint8_t numberOfPrograms;
 extern char fileList[MAX_PROGRAMS][8];
-
+extern uint8_t generateBitCRC(uint8_t a1, uint8_t a2, uint8_t a3, uint8_t a4, uint8_t a5, uint8_t a6, uint8_t grip);
 #endif

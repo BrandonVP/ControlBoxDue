@@ -1,20 +1,11 @@
 // AxisPos.h
 #include "CANBus.h"
 #include <UTFT.h>
+#include "definitions.h"
+#include "Common.h"
+
 #ifndef _AxisPos_h
 #define _AxisPos_h
-
-#define ARM1_POSITION 0x1A0
-#define ARM2_POSITION 0x2A0
-
-#define LOWER 0x01
-#define ARM1ID 0xA0
-#define ARM1RXID 0xC1
-
-#define UPPER 0x02
-#define ARM2ID 0xB0
-#define ARM2RXID 0xC2
-#define MSGDELAY 0x0A
 
 #if defined(ARDUINO) && ARDUINO >= 100
 #include "arduino.h"
@@ -44,7 +35,6 @@ private:
 public:
 	void drawAxisPos(UTFT);
 	void updateAxisPos(CANBus, uint8_t);
-	void sendRequest(CANBus);
 	int getA1C1();
 	int getA2C1();
 	int getA3C1();

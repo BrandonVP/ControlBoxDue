@@ -2,23 +2,7 @@
 // 
 // 
 #include <due_can.h>
-#include "variant.h"
 #include "AxisPos.h"
-
-//
-void AxisPos::sendRequest(CANBus can1)
-{
-	uint16_t channel1[2] = { ARM1ID, ARM1RXID };
-	uint16_t channel2[2] = { ARM2ID, ARM2RXID };
-	uint8_t requestAngles[8] = { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
-
-	requestAngles[1] = LOWER;
-	can1.sendFrame(ARM1ID, requestAngles);
-	can1.sendFrame(ARM2ID, requestAngles);
-	requestAngles[1] = UPPER;
-	can1.sendFrame(ARM1ID, requestAngles);
-	can1.sendFrame(ARM2ID, requestAngles);
-}
 
 //
 void AxisPos::updateAxisPos(CANBus can1, uint8_t channel)
@@ -47,9 +31,9 @@ void AxisPos::updateAxisPos(CANBus can1, uint8_t channel)
 	grip = ((data[0] & 0x7) << 2)  | (data[1] >> 6);
 	crc = ((data[0]) >> 3);
 
+
 	// A very simple "CRC"
-	//if (crc == (a1 % 2) + (a2 % 2) + (a3 % 2) + (a4 % 2) + (a5 % 2) + (a6 % 2) + (grip % 2) + 1)
-	if (true)
+	if (crc == generateBitCRC(a1, a2, a3, a4, a5, a6, grip))
 	{
 		// Determine which channel to write values too
 		if (channel == ARM1_POSITION)
@@ -61,9 +45,8 @@ void AxisPos::updateAxisPos(CANBus can1, uint8_t channel)
 			a5c1 = a5;
 			a6c1 = a6;
 		}
-		else //if (channel == POSITION_ID_2)
+		else //if (channel == ARM2_POSITION)
 		{
-			SerialUSB.println("in");
 			a1c2 = a1;
 			a2c2 = a2;
 			a3c2 = a3;

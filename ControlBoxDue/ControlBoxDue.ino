@@ -15,7 +15,6 @@ Swtich between Due & mega2560
 =========================================================*/
 
 #include <DS3231.h>
-//#include <RTCDue.h>
 #include <LinkedList.h>
 #include <malloc.h>
 #include <SD.h>
@@ -854,22 +853,6 @@ bool drawView()
 	graphicLoaderState++;
 	return false;
 }
-
-// Replaced by arm broadcasting positions instead of requesting
-/*
-void updateViewPage()
-{
-	if (millis() - timer > REFRESH_RATE)
-	{
-		axisPos.sendRequest(can1);
-		if (page == 1)
-		{
-			axisPos.drawAxisPos(myGLCD);
-		}
-		timer = millis();
-	}
-}
-*/
 
 /*==========================================================
 					Program Arm
@@ -2948,9 +2931,9 @@ uint8_t errorMSGBtn(uint8_t page)
 }
 
 // 
-void generateBitCRC(uint8_t* data)
+uint8_t generateBitCRC(uint8_t a1, uint8_t a2, uint8_t a3, uint8_t a4, uint8_t a5, uint8_t a6, uint8_t grip)
 {
-	//return (a1 % 2) + (a2 % 2) + (a3 % 2) + (a4 % 2) + (a5 % 2) + (a6 % 2) + (grip % 2) + 1;
+	return (a1 % 2) + (a2 % 2) + (a3 % 2) + (a4 % 2) + (a5 % 2) + (a6 % 2) + (grip % 2) + 1;
 }
 
 //
@@ -2958,7 +2941,6 @@ uint8_t generateByteCRC(uint8_t* data)
 {
 	return ((data[0] % 2) + (data[1] % 2) + (data[2] % 2) + (data[3] % 2) + (data[4] % 2) + (data[5] % 2) + (data[6] % 2) + (data[7] % 2) + 1);
 }
-
 
 // Buttons for the main menu
 void menuButtons()
@@ -3079,7 +3061,7 @@ void TrafficManager()
 		break;
 
 	case 4: // C2 Lower
-		axisPos.updateAxisPos(can1, ARM2_RX);
+		axisPos.updateAxisPos(can1, ARM1_POSITION);
 		if (page == 1)
 		{
 			axisPos.drawAxisPos(myGLCD);
@@ -3087,7 +3069,7 @@ void TrafficManager()
 		break;
 
 	case 5: // C2 Upper
-		axisPos.updateAxisPos(can1, ARM2_RX);
+		axisPos.updateAxisPos(can1, ARM2_POSITION);
 		if (page == 1)
 		{
 			axisPos.drawAxisPos(myGLCD);
