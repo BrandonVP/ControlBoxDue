@@ -11,33 +11,44 @@
 #define CENTER 2
 #define RIGHT 3
 
-#define POSITION_ID_1 0x1A0
-#define POSITION_ID_2 0x2A0
+// CAN Bus Message
+#define CRC_BYTE                0x00
+#define COMMAND_BYTE            0x01
+
+#define SEND_AXIS_POSITIONS     0x01
+#define RESET_AXIS_POSITION     0x02
+#define SET_LOWER_AXIS_POSITION 0x03
+#define SET_UPPER_AXIS_POSITION 0x04
+#define MOVE_GRIP               0x0A
+#define SET_WAIT_TIMER          0x0B
+#define EXECUTE_PROGRAM         0x0C
+
 
 // Arm 1 IDs
-constexpr auto ARM1_RX = 0x0C1;
-constexpr auto ARM1_MANUAL = 0x0A3;
-constexpr auto ARM1_UPPER = 0x0A2;
-constexpr auto ARM1_LOWER = 0x0A1;
-constexpr auto ARM1_CONTROL = 0x0A0;
+#define ARM1_RX 0x1C3 // Direct communicate with controller
+#define ARM1_POSITION   0x1A0 // Current axis position broadcast ID
+#define ARM1_PROGRAM    0x1A1 // Programmed movements ID
+#define ARM1_MANUAL     0x1A2 // Manual movements ID
+#define ARM1_CONTROL    0x1A3 // Control commands
 #define CHANNEL1 0
 
-// Arm 2 IDs
-constexpr auto ARM2_RX = 0x0C2;
-constexpr auto ARM2_MANUAL = 0x0B3;
-constexpr auto ARM2_UPPER = 0x0B2;
-constexpr auto ARM2_LOWER = 0x0B1;
-constexpr auto ARM2_CONTROL = 0x0B0;
+// Arm 1 IDs
+#define ARM2_RX 0x1C3 // Direct communicate with controller
+#define ARM2_POSITION   0x2A0 // Current axis position broadcast ID
+#define ARM2_PROGRAM    0x2A1 // Programmed movements ID
+#define ARM2_MANUAL     0x2A2 // Manual movements ID
+#define ARM2_CONTROL    0x2A3 // Control commands
 #define CHANNEL2 1
 
+
 // Bitmap
-#define PIXEL_BUFFER 20
+#define PIXEL_BUFFER 20 // What pixel?
 
-#define PHYSICAL_BUTTON_DELAY 200
-#define DEG "deg"
-#define REFRESH_RATE 400
+#define PHYSICAL_BUTTON_DELAY 200 //Needs better description
+#define DEG "deg" // Just why?
+#define REFRESH_RATE 400 // Refresh what?!
 
-#define X_PAGE_START 127
+#define X_PAGE_START 127 // page start for what?
 
 void pageControl();
 

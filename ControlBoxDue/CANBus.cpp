@@ -92,11 +92,11 @@ uint8_t CANBus::processFrame()
         {
             MSGFrame[i] = incoming.data.byte[i];
         }
-        if (incoming.id == POSITION_ID_1)
+        if (incoming.id == ARM1_POSITION)
         {
             return 1;
         }
-        if (incoming.id == POSITION_ID_2)
+        if (incoming.id == ARM2_POSITION)
         {
             return 2;
         }

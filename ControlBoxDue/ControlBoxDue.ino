@@ -1715,14 +1715,24 @@ bool drawConfig()
 }
 
 // Sends command to return arm to starting position
-void homeArm(uint8_t* armIDArray)
+void homeArm(uint16_t arm_control)
 {
-	byte lowerAxis[8] = { 0x00, 0x00, 0x00, 0xB4, 0x00, 0xB4, 0x00, 0x5A };
-	byte upperAxis[8] = { 0x00, 0x00, 0x00, 0xB4, 0x00, 0xB4, 0x00, 0xB4 };
-	byte executeMove[8] = { 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
-	can1.sendFrame(armIDArray[0], lowerAxis);
-	can1.sendFrame(armIDArray[1], upperAxis);
-	can1.sendFrame(armIDArray[2], executeMove);
+	uint8_t crc = 0;
+
+	byte lowerAxis[8] = { 0x00,SET_LOWER_AXIS_POSITION, 0x00, 0xB4, 0x00, 0xB4, 0x00, 0x5A };
+	crc = generateByteCRC(lowerAxis);
+	lowerAxis[0] = crc;
+	can1.sendFrame(arm_control, lowerAxis);
+
+	byte upperAxis[8] = { 0x00, SET_UPPER_AXIS_POSITION, 0x00, 0xB4, 0x00, 0xB4, 0x00, 0xB4 };
+	crc = generateByteCRC(upperAxis);
+	upperAxis[0] = crc;
+	can1.sendFrame(arm_control, upperAxis);
+
+	byte executeMove[8] = { 0x00, EXECUTE_PROGRAM, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
+	crc = generateByteCRC(executeMove);
+	executeMove[0] = crc;
+	can1.sendFrame(arm_control, executeMove);
 }
 
 // Button functions for config page
@@ -1730,11 +1740,6 @@ void configButtons()
 {
 	uint8_t setHomeID[8] = { 0x00, 0x03, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
 	uint8_t* setHomeIDPtr = setHomeID;
-
-	uint8_t arm1IDArray[3] = { ARM1_LOWER, ARM1_UPPER, ARM1_CONTROL };
-	uint8_t arm2IDArray[3] = { ARM2_LOWER, ARM2_UPPER, ARM2_CONTROL };
-	uint8_t* arm1IDPtr = arm1IDArray;
-	uint8_t* arm2IDPtr = arm2IDArray;
 
 	// Touch screen controls
 	if (myTouch.dataAvailable())
@@ -1748,12 +1753,12 @@ void configButtons()
 			if ((x >= 150) && (x <= 300))
 			{
 				waitForIt(150, 60, 300, 100);
-				homeArm(arm1IDPtr);
+				homeArm(ARM1_CONTROL);
 			}
 			if ((x >= 310) && (x <= 460))
 			{
 				waitForIt(310, 60, 460, 100);
-				can1.sendFrame(arm1IDArray[2], setHomeIDPtr);
+				can1.sendFrame(ARM1_CONTROL, setHomeIDPtr);
 			}
 		}
 		if ((y >= 110) && (y <= 150))
@@ -1761,12 +1766,12 @@ void configButtons()
 			if ((x >= 150) && (x <= 300))
 			{
 				waitForIt(150, 110, 300, 150);
-				homeArm(arm2IDPtr);
+				homeArm(ARM2_CONTROL);
 			}
 			if ((x >= 310) && (x <= 460))
 			{
 				waitForIt(310, 110, 460, 150);
-				can1.sendFrame(arm2IDArray[2], setHomeIDPtr);
+				can1.sendFrame(ARM2_CONTROL, setHomeIDPtr);
 			}
 		}
 		if ((y >= 160) && (y <= 200))
@@ -2942,6 +2947,19 @@ uint8_t errorMSGBtn(uint8_t page)
 	}
 }
 
+// 
+void generateBitCRC(uint8_t* data)
+{
+	//return (a1 % 2) + (a2 % 2) + (a3 % 2) + (a4 % 2) + (a5 % 2) + (a6 % 2) + (grip % 2) + 1;
+}
+
+//
+uint8_t generateByteCRC(uint8_t* data)
+{
+	return ((data[0] % 2) + (data[1] % 2) + (data[2] % 2) + (data[3] % 2) + (data[4] % 2) + (data[5] % 2) + (data[6] % 2) + (data[7] % 2) + 1);
+}
+
+
 // Buttons for the main menu
 void menuButtons()
 {
@@ -3039,7 +3057,7 @@ void TrafficManager()
 		break;
 
 	case 1: // C1 lower
-		axisPos.updateAxisPos(can1, POSITION_ID_1);
+		axisPos.updateAxisPos(can1, ARM1_POSITION);
 		if (page == 1)
 		{
 			axisPos.drawAxisPos(myGLCD);
@@ -3047,7 +3065,7 @@ void TrafficManager()
 		break;
 
 	case 2: //  C1 Upper
-		axisPos.updateAxisPos(can1, POSITION_ID_2);
+		axisPos.updateAxisPos(can1, ARM2_POSITION);
 		if (page == 1)
 		{
 			axisPos.drawAxisPos(myGLCD);
@@ -3107,18 +3125,19 @@ void executeProgram()
 		uint16_t IDArray[3];
 		uint16_t incomingID;
 
+		// TODO: FIXME
 		if (runList.get(programProgress)->getID() == ARM1_MANUAL)
 		{
 			IDArray[0] = ARM1_CONTROL;
-			IDArray[1] = ARM1_LOWER;
-			IDArray[2] = ARM1_UPPER;
+			IDArray[1] = 1;
+			IDArray[2] = 1;
 			incomingID = ARM1_RX;
 		}
 		if (runList.get(programProgress)->getID() == ARM2_MANUAL)
 		{
 			IDArray[0] = ARM2_CONTROL;
-			IDArray[1] = ARM2_LOWER;
-			IDArray[2] = ARM2_UPPER;
+			IDArray[1] = 2;
+			IDArray[2] = 2;
 			incomingID = ARM2_RX;
 		}
 

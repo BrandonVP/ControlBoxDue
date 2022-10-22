@@ -52,7 +52,7 @@ void AxisPos::updateAxisPos(CANBus can1, uint8_t channel)
 	if (true)
 	{
 		// Determine which channel to write values too
-		if (channel == POSITION_ID_1)
+		if (channel == ARM1_POSITION)
 		{
 			a1c1 = a1;
 			a2c1 = a2;
