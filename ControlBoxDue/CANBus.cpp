@@ -15,6 +15,7 @@ void CANBus::startCAN()
 // CAN Bus send message
 void CANBus::sendFrame(uint16_t id, byte* frame)
 {
+    // TODO: What is this? Attempt to use WiFi?
     Serial3.write(0xFE);
     Serial3.write(0x09);
     Serial3.write(id);
@@ -80,26 +81,35 @@ bool CANBus::msgCheck(uint16_t ID, uint8_t value, int8_t pos)
 }
 
 //
-uint8_t CANBus::processFrame()
+void CANBus::processFrame()
 {
     // If buffer inbox has a message
     if (Can0.available() > 0)
     {
         Can0.read(incoming);
-        SerialUSB.print(F("ID: "));
-        SerialUSB.println(incoming.id, HEX);
-        for (uint8_t i = 0; i < 8; i++)
+
+        switch (incoming.id)
         {
-            MSGFrame[i] = incoming.data.byte[i];
-        }
-        if (incoming.id == ARM1_POSITION)
-        {
-            return 1;
-        }
-        if (incoming.id == ARM2_POSITION)
-        {
-            return 2;
+        case ARM1_POSITION: // Arm 1 axis positions
+            axisPos.updateAxisPos(incoming);
+            if (page == 1)
+            {
+                axisPos.drawAxisPos(myGLCD);
+            }
+            break;
+        case ARM2_POSITION: //  Arm 2 axis positions
+            axisPos.updateAxisPos(incoming);
+            if (page == 1)
+            {
+                axisPos.drawAxisPos(myGLCD);
+            }
+            break;
+        case CONTROL1_RX: // C1 Confirmation
+            Arm1Ready = true;
+            break;
+        case CONTROL2_RX: // C2 Confirmation
+            Arm2Ready = true;
+            break;
         }
     }
-    return 0;
 }

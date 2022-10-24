@@ -13,6 +13,10 @@
 // How many programs can be saved to SD card
 #define MAX_PROGRAMS 16
 
+extern UTFT myGLCD;
+extern bool Arm1Ready;
+extern bool Arm2Ready;
+extern uint8_t page;
 extern String programNames_G[MAX_PROGRAMS];
 extern uint8_t numberOfPrograms;
 extern char fileList[MAX_PROGRAMS][8];

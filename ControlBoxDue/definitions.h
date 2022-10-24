@@ -25,15 +25,15 @@
 
 
 // Arm 1 IDs
-#define ARM1_RX 0x1C3 // Direct communicate with controller
+#define CONTROL1_RX 0x1C3 // Direct communicate to controller
 #define ARM1_POSITION   0x1A0 // Current axis position broadcast ID
 #define ARM1_PROGRAM    0x1A1 // Programmed movements ID
 #define ARM1_MANUAL     0x1A2 // Manual movements ID
 #define ARM1_CONTROL    0x1A3 // Control commands
 #define CHANNEL1 0
 
-// Arm 1 IDs
-#define ARM2_RX 0x1C3 // Direct communicate with controller
+// Arm 2 IDs
+#define CONTROL2_RX 0x2C3 // Direct communicate to controller
 #define ARM2_POSITION   0x2A0 // Current axis position broadcast ID
 #define ARM2_PROGRAM    0x2A1 // Programmed movements ID
 #define ARM2_MANUAL     0x2A2 // Manual movements ID

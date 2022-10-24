@@ -10,6 +10,14 @@
 Assign physical buttons
 Switch between LI9486 & LI9488
 Swtich between Due & mega2560
+
+1. CAN Bus message callback
+2. Put message in buffer
+3. Loop to empty buffer
+4. process message
+5. Do something
+- Use Debug for diagnostic messages
+- memcpy instead of loop
 ===========================================================
 	End Todo List
 =========================================================*/
@@ -3028,62 +3036,6 @@ void menuButtons()
 	}
 }
 
-// Watch for incoming CAN traffic
-void TrafficManager()
-{
-	uint8_t sw_fn = can1.processFrame();
-	switch (sw_fn)
-	{
-	case 0: // No traffic
-
-		break;
-
-	case 1: // C1 lower
-		axisPos.updateAxisPos(can1, ARM1_POSITION);
-		if (page == 1)
-		{
-			axisPos.drawAxisPos(myGLCD);
-		}
-		break;
-
-	case 2: //  C1 Upper
-		axisPos.updateAxisPos(can1, ARM2_POSITION);
-		if (page == 1)
-		{
-			axisPos.drawAxisPos(myGLCD);
-		}
-		break;
-
-	case 3: // C1 Confirmation
-		Arm1Ready = true;
-		Arm2Ready = true;
-		Serial.println(F("Arm1Ready"));
-		break;
-
-	case 4: // C2 Lower
-		axisPos.updateAxisPos(can1, ARM1_POSITION);
-		if (page == 1)
-		{
-			axisPos.drawAxisPos(myGLCD);
-		}
-		break;
-
-	case 5: // C2 Upper
-		axisPos.updateAxisPos(can1, ARM2_POSITION);
-		if (page == 1)
-		{
-			axisPos.drawAxisPos(myGLCD);
-		}
-		break;
-
-	case 6: // C2 Confirmation
-		Arm1Ready = true;
-		Arm2Ready = true;
-		Serial.println(F("Arm2Ready"));
-		break;
-	}
-}
-
 // Runs the program currently loaded
 void executeProgram()
 {
@@ -3113,14 +3065,14 @@ void executeProgram()
 			IDArray[0] = ARM1_CONTROL;
 			IDArray[1] = 1;
 			IDArray[2] = 1;
-			incomingID = ARM1_RX;
+			incomingID = CONTROL1_RX;
 		}
 		if (runList.get(programProgress)->getID() == ARM2_MANUAL)
 		{
 			IDArray[0] = ARM2_CONTROL;
 			IDArray[1] = 2;
 			IDArray[2] = 2;
-			incomingID = ARM2_RX;
+			incomingID = CONTROL2_RX;
 		}
 
 		// Populate CAN messages with angles from current linkedlist
@@ -3240,9 +3192,9 @@ void updateTime()
 // Called from main loop. Can also be called from any blocking code.
 void backgroundProcess()
 {
-	TrafficManager();
 	executeProgram();
 	updateTime();
+	can1.processFrame();
 }
 
 // Calls pageControl with a value of 1 to set view page as the home page

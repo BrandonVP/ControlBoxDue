@@ -34,7 +34,7 @@ private:
 	uint16_t a6c2 = 0;
 public:
 	void drawAxisPos(UTFT);
-	void updateAxisPos(CANBus, uint8_t);
+	void updateAxisPos(CAN_FRAME);
 	int getA1C1();
 	int getA2C1();
 	int getA3C1();

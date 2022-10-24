@@ -3,6 +3,7 @@
 #include "SDCard.h"
 #include <due_can.h>
 #include "variant.h"
+#include "Common.h"
 
 #ifndef _CANBus_h
 #define _CANBus_h
@@ -27,7 +28,7 @@ class CANBus
 	 bool msgCheck(uint16_t, uint8_t, int8_t);
 	 uint8_t* getFrame();
 	 void resetMSGFrame();
-	 uint8_t processFrame();
+	 void processFrame();
 	 void startCAN();
 };
 #endif
