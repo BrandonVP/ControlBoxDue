@@ -25,24 +25,17 @@ Swtich between Due & mega2560
 #include <DS3231.h>
 #include <LinkedList.h>
 #include <malloc.h>
-#include <SD.h>
 #include <SPI.h>
 
 #include "CANBusWiFi.h"
-#include "AxisPos.h"
-#include "CANBus.h"
-#include "SDCard.h"
 #include "Program.h"
-#include "definitions.h"
 #include "icons.h"
 #include "Common.h"
-
 
 /*=========================================================
 	Settings
 ===========================================================*/
 // Select display
-//#define LI9486
 #define LI9488
 #define DEBUG_KEYBOARD
 
@@ -70,7 +63,6 @@ const int TS_LEFT = 907, TS_RT = 136, TS_TOP = 942, TS_BOT = 139;
 TouchScreen ts = TouchScreen(XP, YP, XM, YM, 300);
 TSPoint tp;
 #elif defined LI9488
-#include <UTFT.h>
 #include <memorysaver.h>
 #include <UTouchCD.h>
 #include <UTouch.h>
@@ -3194,7 +3186,7 @@ void backgroundProcess()
 {
 	executeProgram();
 	updateTime();
-	can1.processFrame();
+	can1.processFrame(axisPos, myGLCD);
 }
 
 // Calls pageControl with a value of 1 to set view page as the home page

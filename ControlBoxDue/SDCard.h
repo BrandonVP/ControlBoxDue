@@ -5,13 +5,6 @@
 #ifndef _SDCard_h
 #define _SDCard_h
 #define SD_CARD_CS 8
-
-#if defined(ARDUINO) && ARDUINO >= 100
-	#include "arduino.h"
-#else
-	#include "WProgram.h"
-#endif
-
 class SDCard
 {
  protected:

@@ -2,12 +2,7 @@
 
 #ifndef _Program_h
 #define _Program_h
-
-#if defined(ARDUINO) && ARDUINO >= 100
-	#include "arduino.h"
-#else
-	#include "WProgram.h"
-#endif
+#include "arduino.h"
 
 class Program
 {

@@ -1,20 +1,8 @@
 // AxisPos.h
-#include "CANBus.h"
-#include <UTFT.h>
-#include "definitions.h"
 #include "Common.h"
 
 #ifndef _AxisPos_h
 #define _AxisPos_h
-
-#if defined(ARDUINO) && ARDUINO >= 100
-#include "arduino.h"
-#else
-#include "WProgram.h"
-#endif
-
-class CANBus;
-
 class AxisPos
 {
 private:
