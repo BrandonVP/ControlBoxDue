@@ -11,18 +11,6 @@ void CANBus::startCAN()
 // Send a CAN Bus message
 void CANBus::sendFrame(uint16_t id, byte* frame)
 {
-    /*
-    // TODO: What is this? Attempt to use WiFi?
-    Serial3.write(0xFE);
-    Serial3.write(0x09);
-    Serial3.write(id);
-    for (uint8_t i = 0; i < ARRAY_SIZE; i++)
-    {
-        Serial3.write(frame[i]);
-    }
-    Serial3.write(0xFD);
-    */
-    
     outgoing.extended = false;
     outgoing.id = id;
     outgoing.length = 8;

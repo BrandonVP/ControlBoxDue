@@ -3049,7 +3049,6 @@ void executeProgram()
 		uint8_t upperAxis[8] = { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
 		uint8_t executeMove[8] = { 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
 		uint16_t IDArray[3];
-		uint16_t incomingID;
 
 		// TODO: FIXME
 		if (runList.get(programProgress)->getID() == ARM1_MANUAL)
@@ -3057,14 +3056,12 @@ void executeProgram()
 			IDArray[0] = ARM1_CONTROL;
 			IDArray[1] = 1;
 			IDArray[2] = 1;
-			incomingID = CONTROL1_RX;
 		}
 		if (runList.get(programProgress)->getID() == ARM2_MANUAL)
 		{
 			IDArray[0] = ARM2_CONTROL;
 			IDArray[1] = 2;
 			IDArray[2] = 2;
-			incomingID = CONTROL2_RX;
 		}
 
 		// Populate CAN messages with angles from current linkedlist
