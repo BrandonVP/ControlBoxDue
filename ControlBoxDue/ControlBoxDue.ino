@@ -26,7 +26,8 @@ Swtich between Due & mega2560
 #include <LinkedList.h>
 #include <malloc.h>
 #include <SPI.h>
-
+#include "AxisPos.h"
+#include "definitions.h"
 #include "CANBusWiFi.h"
 #include "Program.h"
 #include "icons.h"
@@ -234,12 +235,12 @@ void bmpDraw(char* filename, int x, int y) {
 
 				// Set TFT address window to clipped image bounds
 				for (row = 0; row < h; row++) { // For each scanline...
-				  // Seek to start of scan line.  It might seem labor-
-				  // intensive to be doing this on every line, but this
-				  // method covers a lot of gritty details like cropping
-				  // and scanline padding.  Also, the seek only takes
-				  // place if the file position actually needs to change
-				  // (avoids a lot of cluster math in SD library).
+					// Seek to start of scan line.  It might seem labor-
+					// intensive to be doing this on every line, but this
+					// method covers a lot of gritty details like cropping
+					// and scanline padding.  Also, the seek only takes
+					// place if the file position actually needs to change
+					// (avoids a lot of cluster math in SD library).
 					if (flip) // Bitmap is stored bottom-to-top order (normal BMP)
 						pos = bmpImageoffset + (bmpHeight - 1 - row) * rowSize;
 					else     // Bitmap is stored top-to-bottom
@@ -249,9 +250,9 @@ void bmpDraw(char* filename, int x, int y) {
 						buffidx = sizeof(sdbuffer); // Force buffer reload
 					}
 					for (col = 0; col < w; col++) { // For each column...
-					  // Time to read more pixel data?
+						// Time to read more pixel data?
 						if (buffidx >= sizeof(sdbuffer)) { // Indeed
-						  // Push LCD buffer to the display first
+							// Push LCD buffer to the display first
 							if (lcdidx > 0) {
 								myGLCD.setColor(lcdbuffer[lcdidx]);
 								myGLCD.drawPixel(col + 117, row + 1);
@@ -364,7 +365,7 @@ void saveRamStates(uint32_t MaxUsedHeapRAM, uint32_t MaxUsedStackRAM, uint32_t M
 	drawRoundBtn(315, 190, 475, 240, String(MaxUsedStackRAM), menuBtnColor, menuBtnBorder, menuBtnText, CENTER);
 	drawRoundBtn(135, 245, 310, 295, F("FREE RAM"), menuBackground, menuBtnBorder, menuBtnText, CENTER);
 	drawRoundBtn(315, 245, 475, 295, String(MinfreeRAM), menuBtnColor, menuBtnBorder, menuBtnText, CENTER);
-	}
+}
 void memoryUse()
 {
 	uint32_t MaxUsedHeapRAM = 0;
@@ -601,7 +602,7 @@ bool drawManualControl()
 		return true;
 		break;
 	}
-return false;
+	return false;
 }
 
 // Draw page button function
@@ -614,7 +615,7 @@ void manualControlButtons()
 	uint8_t reverse = 0x10;
 
 	// CAN Bus message data
-	byte data[8] = { 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
+	byte data[8] = { 0x02, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
 
 	// Physical buttons
 	/*
@@ -1316,7 +1317,7 @@ void drawProgramEditScroll()
 {
 	myGLCD.setFont(SmallFont);
 	uint8_t nodeSize = runList.size();
-	
+
 	// Each node should be listed with all information, might need small text
 	uint16_t row = 5;
 	for (uint8_t i = 0; i < 6; i++)
@@ -1548,7 +1549,7 @@ void programEditButtons()
 						drawProgramEditScroll();
 					}
 				}
-				
+
 			}
 		}
 		if ((y >= 230) && (y <= 270))
@@ -1601,13 +1602,13 @@ void programEditButtons()
 			{
 				// 
 				waitForItRect(215, 275, 300, 315);
-				
+
 			}
 			if ((x >= 300) && (x <= 385))
 			{
 				// 
 				waitForItRect(300, 275, 385, 315);
-				
+
 			}
 			if ((x >= 385) && (x <= 475))
 			{
@@ -2587,7 +2588,7 @@ uint8_t keyboardController(uint8_t& index)
 
 		char buffer[8];
 		sprintf(buffer, "%s", keyboardInput);
-	
+
 		drawRoundBtn(245, 230, 475, 270, buffer, menuBtnColor, menuBtnBorder, menuBtnText, CENTER);
 
 		++index;
@@ -2832,7 +2833,7 @@ void pageControl()
 			{
 				//if (keyboardInput[i] != ' ')
 				//{
-					fileList[selectedProgram][i] = keyboardInput[i];
+				fileList[selectedProgram][i] = keyboardInput[i];
 				//}
 			}
 

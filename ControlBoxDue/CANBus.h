@@ -9,14 +9,14 @@ class AxisPos;
 
 class CANBus
 {
- public:
-	 CAN_FRAME incoming;
-	 CAN_FRAME outgoing;
+public:
+	CAN_FRAME incoming;
+	CAN_FRAME outgoing;
 
- public:
-	 void sendFrame(uint16_t, byte*);
-	 void processFrame(AxisPos&, UTFT&);
-	 void startCAN();
+public:
+	void sendFrame(uint16_t, byte*);
+	void processFrame(AxisPos&, UTFT&);
+	void startCAN();
 
 };
 #endif

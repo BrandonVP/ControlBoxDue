@@ -6,16 +6,16 @@
 
 class Program
 {
- protected:
-	 uint8_t gripStatus = 2;
-	 uint16_t a1 = 0;
-	 uint16_t a2 = 0;
-	 uint16_t a3 = 0;
-	 uint16_t a4 = 0;
-	 uint16_t a5 = 0;
-	 uint16_t a6 = 0;
-	 uint16_t channel = 0;
- public:
+protected:
+	uint8_t gripStatus = 2;
+	uint16_t a1 = 0;
+	uint16_t a2 = 0;
+	uint16_t a3 = 0;
+	uint16_t a4 = 0;
+	uint16_t a5 = 0;
+	uint16_t a6 = 0;
+	uint16_t channel = 0;
+public:
 	Program(uint16_t*, uint8_t, uint8_t);
 	uint16_t getA1();
 	uint16_t getA2();

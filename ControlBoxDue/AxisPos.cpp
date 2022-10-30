@@ -3,8 +3,10 @@
 // 
 #include <due_can.h>
 #include "AxisPos.h"
+#include "definitions.h"
 
-//
+#define ARM1_POSITION   0x1A0
+#define ARM2_POSITION   0x2A0
 void AxisPos::updateAxisPos(CAN_FRAME axisFrame)
 {
 	// Need these temp values to calculate "CRC"

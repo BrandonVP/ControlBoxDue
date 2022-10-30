@@ -1,5 +1,6 @@
 // CANBus manages the CAN bus hardware
 #include "CANBus.h"
+#include "definitions.h"
 
 void CANBus::startCAN()
 {

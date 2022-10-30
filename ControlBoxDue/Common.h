@@ -1,5 +1,5 @@
 #pragma once
-#include "definitions.h"
+//#include "definitions.h"
 #include "CANBusWiFi.h"
 #include <SD.h>
 #include "SDCard.h"
