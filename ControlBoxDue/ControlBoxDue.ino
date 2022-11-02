@@ -1398,6 +1398,10 @@ void addNode(int insert = -1)
 		posArray[3] = axisPos.getA4C1();
 		posArray[4] = axisPos.getA5C1();
 		posArray[5] = axisPos.getA6C1();
+
+		// Create program object with array positions, grip on/off, and channel
+		Program* node = new Program(posArray, gripStatus, ARM1_PROGRAM);
+		(insert < 0) ? runList.add(node) : runList.add(insert, node);
 	}
 	else if (txIdManual == ARM2_MANUAL)
 	{
@@ -1407,12 +1411,11 @@ void addNode(int insert = -1)
 		posArray[3] = axisPos.getA4C2();
 		posArray[4] = axisPos.getA5C2();
 		posArray[5] = axisPos.getA6C2();
+		
+		// Create program object with array positions, grip on/off, and channel
+		Program* node = new Program(posArray, gripStatus, ARM2_PROGRAM);
+		(insert < 0) ? runList.add(node) : runList.add(insert, node);
 	}
-
-	// Create program object with array positions, grip on/off, and channel
-	Program* node = new Program(posArray, gripStatus, txIdManual);
-
-	(insert < 0) ? runList.add(node) : runList.add(insert, node);
 }
 
 // Delete node from linked list
@@ -3032,135 +3035,81 @@ void menuButtons()
 // Runs the program currently loaded
 void executeProgram()
 {
+	
+
 	// Return unless enabled
 	if (programRunning == false)
 	{
 		return;
 	}
 
-	if (programProgress == runList.size())
+	uint8_t executeMove[8] = { 0, EXECUTE_PROGRAM, 0, 0, 0, MOVE_GRIP, 0, 0 };
+
+	if (Arm1Ready == true && Arm2Ready == true)
+	{
+		uint8_t data[8];
+		uint16_t a1 = runList.get(programProgress)->getA1();
+		uint16_t a2 = runList.get(programProgress)->getA2();
+		uint16_t a3 = runList.get(programProgress)->getA3();
+		uint16_t a4 = runList.get(programProgress)->getA4();
+		uint16_t a5 = runList.get(programProgress)->getA5();
+		uint16_t a6 = runList.get(programProgress)->getA6();
+
+		// TODO: Add grip value after the grip function is updated
+		uint8_t grip = 0;
+		uint8_t crc = (a1 % 2) + (a2 % 2) + (a3 % 2) + (a4 % 2) + (a5 % 2) + (a6 % 2) + (grip % 2) + 1;
+
+		data[7] = (a1 & 0xFF);
+		data[6] = (a1 >> 8);
+		data[6] |= ((a2 & 0xFF) << 1);
+		data[5] = (a2 >> 7);
+		data[5] |= ((a3 & 0x7F) << 2);
+		data[4] = (a3 >> 6);
+		data[4] |= ((a4 & 0x3F) << 3);
+		data[3] = (a4 >> 5);
+		data[3] |= ((a5 & 0x1F) << 4);
+		data[2] = (a5 >> 4);
+		data[2] |= ((a6 & 0xF) << 5);
+		data[1] = (a6 >> 3);
+		data[1] |= ((grip & 0x7) << 6);
+		data[0] = (grip >> 2);
+		data[0] |= (crc << 3);
+		
+		can1.sendFrame(runList.get(programProgress)->getID(), data);
+
+		// Grip on/off or hold based on current and next state
+		// If there was a change in the grip bool
+		executeMove[GRIP_BYTE] = SAME_GRIP;
+		if (runList.get(programProgress)->getGrip() == 0)
+		{
+			executeMove[GRIP_BYTE] = OPEN_GRIP;
+		}
+		else if (runList.get(programProgress)->getGrip() == 1)
+		{
+			executeMove[GRIP_BYTE] = CLOSE_GRIP;
+		}
+
+		// Send third frame with grip and execute command
+		if (runList.get(programProgress)->getID() == ARM1_PROGRAM)
+		{
+			can1.sendFrame(ARM1_MANUAL, executeMove);
+			Arm1Ready = false;
+			programProgress++;
+		}
+		else if (runList.get(programProgress)->getID() == ARM2_PROGRAM)
+		{
+			can1.sendFrame(ARM2_MANUAL, executeMove);
+			Arm2Ready = false;
+			programProgress++;
+		}
+	}
+
+	if (programProgress == runList.size() && loopProgram == false)
 	{
 		programRunning = false;
 		drawExecuteButton();
 	}
-	if (Arm1Ready == true && Arm2Ready == true)
-	{
-		// CAN messages for axis movements
-		uint8_t lowerAxis[8] = { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
-		uint8_t upperAxis[8] = { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
-		uint8_t executeMove[8] = { 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
-		uint16_t IDArray[3];
-
-		// TODO: FIXME
-		if (runList.get(programProgress)->getID() == ARM1_MANUAL)
-		{
-			IDArray[0] = ARM1_CONTROL;
-			IDArray[1] = 1;
-			IDArray[2] = 1;
-		}
-		if (runList.get(programProgress)->getID() == ARM2_MANUAL)
-		{
-			IDArray[0] = ARM2_CONTROL;
-			IDArray[1] = 2;
-			IDArray[2] = 2;
-		}
-
-		// Populate CAN messages with angles from current linkedlist
-		// Axis 1
-		if (runList.get(programProgress)->getA1() <= 0xFF)
-		{
-			lowerAxis[3] = runList.get(programProgress)->getA1();
-		}
-		else
-		{
-			lowerAxis[2] = runList.get(programProgress)->getA1() - 0xFF;
-			lowerAxis[3] = 0xFF;
-		}
-		// Axis 2
-		if (runList.get(programProgress)->getA2() <= 0xFF)
-		{
-			lowerAxis[5] = runList.get(programProgress)->getA2();
-		}
-		else
-		{
-			lowerAxis[4] = runList.get(programProgress)->getA2() - 0xFF;
-			lowerAxis[5] = 0xFF;
-		}
-		// Axis 3
-		if (runList.get(programProgress)->getA3() <= 0xFF)
-		{
-			lowerAxis[7] = runList.get(programProgress)->getA3();
-		}
-		else
-		{
-			lowerAxis[6] = runList.get(programProgress)->getA3() - 0xFF;
-			lowerAxis[7] = 0xFF;
-		}
-
-		// Send first frame with axis 1-3
-		can1.sendFrame(IDArray[1], lowerAxis);
-
-		// Axis 4
-		if (runList.get(programProgress)->getA4() <= 0xFF)
-		{
-			upperAxis[3] = runList.get(programProgress)->getA4();
-		}
-		else
-		{
-			upperAxis[2] = runList.get(programProgress)->getA4() - 0xFF;
-			upperAxis[3] = 0xFF;
-		}
-		// Axis 5
-		if (runList.get(programProgress)->getA5() <= 0xFF)
-		{
-			upperAxis[5] = runList.get(programProgress)->getA5();
-		}
-		else
-		{
-			upperAxis[4] = runList.get(programProgress)->getA5() - 0xFF;
-			upperAxis[5] = 0xFF;
-		}
-		// Axis 6
-		if (runList.get(programProgress)->getA5() <= 0xFF)
-		{
-			upperAxis[7] = runList.get(programProgress)->getA6();
-		}
-		else
-		{
-			upperAxis[6] = runList.get(programProgress)->getA6() - 0xFF;
-			upperAxis[7] = 0xFF;
-		}
-
-		// Send second frame with axis 4-6
-		can1.sendFrame(IDArray[2], upperAxis);
-
-		// Change to array of IDs
-		uint8_t ID = runList.get(programProgress)->getID();
-
-		// Grip on/off or hold based on current and next state
-		// If there was a change in the grip bool
-		executeMove[6] = 0x00;
-		executeMove[7] = 0x00;
-
-		if (runList.get(programProgress)->getGrip() == 0)
-		{
-			executeMove[6] = 0x01;
-		}
-		else if (runList.get(programProgress)->getGrip() == 1)
-		{
-			executeMove[7] = 0x01;
-		}
-
-		// Send third frame with grip and execute command
-		can1.sendFrame(IDArray[0], executeMove);
-
-		Arm1Ready = false;
-		Arm2Ready = false;
-		programProgress++;
-	}
-
-	// Loop if enabled
-	if (programProgress == runList.size() && loopProgram == true)
+	else if (programProgress == runList.size() && loopProgram == true)
 	{
 		programProgress = 0;
 		programRunning = true;

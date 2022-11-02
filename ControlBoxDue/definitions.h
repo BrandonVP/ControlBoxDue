@@ -14,14 +14,25 @@
 // CAN Bus Message
 #define CRC_BYTE                0x00
 #define COMMAND_BYTE            0x01
+#define ACCELERATRION_BYTE      0x02
+#define SPEED_BYTE				0x03
+#define LOOP_BYTE				0x04
+#define SUB_COMMAND_BYTE		0x05
+#define GRIP_BYTE				0x06
 
-#define SEND_AXIS_POSITIONS     0x01
-#define RESET_AXIS_POSITION     0x02
-#define SET_LOWER_AXIS_POSITION 0x03
-#define SET_UPPER_AXIS_POSITION 0x04
-#define MOVE_GRIP               0x0A
-#define SET_WAIT_TIMER          0x0B
-#define EXECUTE_PROGRAM         0x0C
+#define SEND_AXIS_POSITIONS     0x61
+#define RESET_AXIS_POSITION     0x62
+#define SET_LOWER_AXIS_POSITION 0x63
+#define SET_UPPER_AXIS_POSITION 0x64
+#define MOVE_GRIP               0x6A
+#define SAME_GRIP               0x00
+#define OPEN_GRIP               0x01
+#define CLOSE_GRIP              0x11
+#define SET_WAIT_TIMER          0x6B
+#define EXECUTE_PROGRAM         0x1E
+#define STOP_PROGRAM			0x0E
+#define CONFIRMATION			0x1C
+#define NEG_CONFIRMATION		0x0C
 
 // Arm 1 IDs
 #define CONTROL1_RX 0x1C3 // Direct communicate to controller
