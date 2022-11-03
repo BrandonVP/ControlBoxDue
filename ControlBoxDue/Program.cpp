@@ -4,7 +4,7 @@
 
 #include "Program.h"
 
-Program::Program(uint16_t* posArray, uint8_t grip, uint8_t ch)
+Program::Program(uint16_t* posArray, uint8_t grip, uint16_t ch)
 {
 	a1 = posArray[0];
 	a2 = posArray[1];

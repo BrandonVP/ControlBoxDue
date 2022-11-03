@@ -68,7 +68,7 @@ void SDCard::writeFile(String filename, String incoming)
 
 //#define DEBUG_WRITEFILE_3
 // Write string to SD Card
-void SDCard::writeFile(String filename, uint8_t incoming)
+void SDCard::writeFile(String filename, uint16_t incoming)
 {
     // File created and opened for writing
     myFile = SD.open(filename, FILE_WRITE);

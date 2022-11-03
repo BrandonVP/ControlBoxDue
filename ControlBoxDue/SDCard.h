@@ -19,7 +19,7 @@ protected:
 
 public:
 	bool startSD();
-	void writeFile(String, uint8_t);
+	void writeFile(String, uint16_t);
 	void writeFile(String, String);
 	void writeFile(char*, int, int);
 	void writeFile(char*, String);

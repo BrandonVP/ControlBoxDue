@@ -3075,6 +3075,7 @@ void executeProgram()
 		data[0] = (grip >> 2);
 		data[0] |= (crc << 3);
 		
+		Serial.println(runList.get(programProgress)->getID());
 		can1.sendFrame(runList.get(programProgress)->getID(), data);
 
 		// Grip on/off or hold based on current and next state
@@ -3114,6 +3115,7 @@ void executeProgram()
 		programProgress = 0;
 		programRunning = true;
 	}
+	delay(500);
 }
 
 // Displays time on menu

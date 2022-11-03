@@ -16,7 +16,7 @@ protected:
 	uint16_t a6 = 0;
 	uint16_t channel = 0;
 public:
-	Program(uint16_t*, uint8_t, uint8_t);
+	Program(uint16_t*, uint8_t, uint16_t);
 	uint16_t getA1();
 	uint16_t getA2();
 	uint16_t getA3();
