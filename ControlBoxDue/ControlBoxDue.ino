@@ -115,8 +115,8 @@ uint16_t txIdManual = ARM1_MANUAL;
 bool programLoaded = false;
 bool programRunning = false;
 bool loopProgram = true;
-bool Arm1Ready = false;
-bool Arm2Ready = false;
+bool Arm1Ready = true;
+bool Arm2Ready = true;
 bool programOpen = false;
 bool programEdit = false;
 uint8_t programProgress = 0; // THIS WILL LIMIT THE SIZE OF A PROGRAM TO 255 MOVEMENTS
@@ -1322,28 +1322,24 @@ void drawProgramEditScroll()
 	uint16_t row = 5;
 	for (uint8_t i = 0; i < 6; i++)
 	{
-		String gripString;
+		char gripString[5];
 		switch (runList.get(i + scroll)->getGrip())
 		{
 		case 0:
-			gripString = F("Open");
+			strcpy(gripString, "Open");
 			break;
 		case 1:
-			gripString = F("Close");
+			strcpy(gripString, "Shut");
 			break;
 		case 2:
-			gripString = F("Hold");
+			strcpy(gripString, "Hold");
 			break;
 		}
 
-		String position = String(i + scroll + 1);
-		String a = "|";
-		String b = " ";
-		String label = position + a + String(runList.get(i + scroll)->getA1()) + b + String(runList.get(i + scroll)->getA2())
-			+ b + String(runList.get(i + scroll)->getA3()) + b + String(runList.get(i + scroll)->getA4()) + b + String(runList.get(i + scroll)->getA5())
-			+ b + String(runList.get(i + scroll)->getA6()) + a + gripString + a + String(runList.get(i + scroll)->getID(), HEX);
+		char buffer[40];
+		sprintf(buffer, "%3d|%3d|%3d|%3d|%3d|%3d|%3d|%s|%3X", (i + scroll + 1), runList.get(i + scroll)->getA1(), runList.get(i + scroll)->getA2(), runList.get(i + scroll)->getA3(), runList.get(i + scroll)->getA4(), runList.get(i + scroll)->getA5(), runList.get(i + scroll)->getA6(), gripString, runList.get(i + scroll)->getID());
 
-		(i + scroll < nodeSize) ? drawSquareBtn(130, row, 425, row + 37, label, menuBackground, menuBtnBorder, menuBtnText, LEFT) : drawSquareBtn(130, row, 425, row + 37, "", menuBackground, menuBtnBorder, menuBtnText, LEFT);
+		(i + scroll < nodeSize) ? drawSquareBtn(130, row, 425, row + 37, buffer, menuBackground, menuBtnBorder, menuBtnText, LEFT) : drawSquareBtn(130, row, 425, row + 37, "", menuBackground, menuBtnBorder, menuBtnText, LEFT);
 
 		row += 37;
 	}
@@ -1704,29 +1700,24 @@ bool drawConfig()
 // Sends command to return arm to starting position
 void homeArm(uint16_t arm_control)
 {
-	uint8_t crc = 0;
-
 	byte lowerAxis[8] = { 0x00,SET_LOWER_AXIS_POSITION, 0x00, 0xB4, 0x00, 0xB4, 0x00, 0x5A };
-	crc = generateByteCRC(lowerAxis);
-	lowerAxis[0] = crc;
+	lowerAxis[CRC_BYTE] = generateByteCRC(lowerAxis);
 	can1.sendFrame(arm_control, lowerAxis);
 
 	byte upperAxis[8] = { 0x00, SET_UPPER_AXIS_POSITION, 0x00, 0xB4, 0x00, 0xB4, 0x00, 0xB4 };
-	crc = generateByteCRC(upperAxis);
-	upperAxis[0] = crc;
+	upperAxis[CRC_BYTE] = generateByteCRC(upperAxis);
 	can1.sendFrame(arm_control, upperAxis);
 
 	byte executeMove[8] = { 0x00, EXECUTE_PROGRAM, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
-	crc = generateByteCRC(executeMove);
-	executeMove[0] = crc;
+	executeMove[CRC_BYTE] = generateByteCRC(executeMove);
 	can1.sendFrame(arm_control, executeMove);
 }
 
 // Button functions for config page
 void configButtons()
 {
-	uint8_t setHomeID[8] = { 0x00, 0x03, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
-	uint8_t* setHomeIDPtr = setHomeID;
+	uint8_t setHomeID[8] = { 0x00, RESET_AXIS_POSITION, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
+	setHomeID[CRC_BYTE] = generateByteCRC(setHomeID);
 
 	// Touch screen controls
 	if (myTouch.dataAvailable())
@@ -1745,7 +1736,7 @@ void configButtons()
 			if ((x >= 310) && (x <= 460))
 			{
 				waitForIt(310, 60, 460, 100);
-				can1.sendFrame(ARM1_CONTROL, setHomeIDPtr);
+				can1.sendFrame(ARM1_CONTROL, setHomeID);
 			}
 		}
 		if ((y >= 110) && (y <= 150))
@@ -1758,7 +1749,7 @@ void configButtons()
 			if ((x >= 310) && (x <= 460))
 			{
 				waitForIt(310, 110, 460, 150);
-				can1.sendFrame(ARM2_CONTROL, setHomeIDPtr);
+				can1.sendFrame(ARM2_CONTROL, setHomeID);
 			}
 		}
 		if ((y >= 160) && (y <= 200))
@@ -3035,16 +3026,12 @@ void menuButtons()
 // Runs the program currently loaded
 void executeProgram()
 {
-	
-
 	// Return unless enabled
 	if (programRunning == false)
 	{
 		return;
 	}
-
-	uint8_t executeMove[8] = { 0, EXECUTE_PROGRAM, 0, 0, 0, MOVE_GRIP, 0, 0 };
-
+	uint8_t crc = 0;
 	if (Arm1Ready == true && Arm2Ready == true)
 	{
 		uint8_t data[8];
@@ -3057,7 +3044,7 @@ void executeProgram()
 
 		// TODO: Add grip value after the grip function is updated
 		uint8_t grip = 0;
-		uint8_t crc = (a1 % 2) + (a2 % 2) + (a3 % 2) + (a4 % 2) + (a5 % 2) + (a6 % 2) + (grip % 2) + 1;
+		crc = (a1 % 2) + (a2 % 2) + (a3 % 2) + (a4 % 2) + (a5 % 2) + (a6 % 2) + (grip % 2) + 1;
 
 		data[7] = (a1 & 0xFF);
 		data[6] = (a1 >> 8);
@@ -3080,7 +3067,10 @@ void executeProgram()
 
 		// Grip on/off or hold based on current and next state
 		// If there was a change in the grip bool
+		uint8_t executeMove[8] = { 0, EXECUTE_PROGRAM, 0, 0, 0, MOVE_GRIP, 0, 0 };
 		executeMove[GRIP_BYTE] = SAME_GRIP;
+		executeMove[CRC_BYTE] = generateByteCRC(executeMove);
+
 		if (runList.get(programProgress)->getGrip() == 0)
 		{
 			executeMove[GRIP_BYTE] = OPEN_GRIP;
@@ -3093,29 +3083,32 @@ void executeProgram()
 		// Send third frame with grip and execute command
 		if (runList.get(programProgress)->getID() == ARM1_PROGRAM)
 		{
-			can1.sendFrame(ARM1_MANUAL, executeMove);
+			can1.sendFrame(ARM1_CONTROL, executeMove);
 			Arm1Ready = false;
 			programProgress++;
 		}
 		else if (runList.get(programProgress)->getID() == ARM2_PROGRAM)
 		{
-			can1.sendFrame(ARM2_MANUAL, executeMove);
+			can1.sendFrame(ARM2_CONTROL, executeMove);
 			Arm2Ready = false;
 			programProgress++;
 		}
 	}
+	else
+	{
+		return;
+	}
 
-	if (programProgress == runList.size() && loopProgram == false)
+	if ((loopProgram == false) && (programProgress == runList.size()))
 	{
 		programRunning = false;
 		drawExecuteButton();
 	}
-	else if (programProgress == runList.size() && loopProgram == true)
+	else if ((loopProgram == true) && (programProgress == runList.size()))
 	{
 		programProgress = 0;
 		programRunning = true;
 	}
-	delay(500);
 }
 
 // Displays time on menu

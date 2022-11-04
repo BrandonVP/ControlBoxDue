@@ -205,7 +205,7 @@ void SDCard::readFile(String filename, LinkedList<Program*> &runList)
 {
     String tempStr;
     uint16_t posArray[6];
-    uint8_t channel;
+    uint16_t channel;
     uint8_t grip;
     char c[20];
     myFile = SD.open(filename);
