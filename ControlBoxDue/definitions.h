@@ -12,7 +12,7 @@
 #define RIGHT 3
 
 // CAN Bus Message
-#define CRC_BYTE                0x00
+#define CRC_BYTE                0x07
 #define COMMAND_BYTE            0x01
 #define ACCELERATRION_BYTE      0x02
 #define SPEED_BYTE				0x03

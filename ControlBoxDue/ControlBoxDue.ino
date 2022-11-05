@@ -615,7 +615,7 @@ void manualControlButtons()
 	uint8_t reverse = 0x10;
 
 	// CAN Bus message data
-	byte data[8] = { 0x02, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
+	byte data[8] = { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
 
 	// Physical buttons
 	/*
@@ -651,6 +651,7 @@ void manualControlButtons()
 			if ((x >= 131) && (x <= 185))
 			{
 				data[1] = 1 * multiply;
+				data[CRC_BYTE] = generateCRC(data, 7);
 				waitForItRect(131, 80, 185, 140, txIdManual, data);
 				data[1] = 0;
 			}
@@ -658,6 +659,7 @@ void manualControlButtons()
 			if ((x >= 189) && (x <= 243))
 			{
 				data[2] = 1 * multiply;
+				data[CRC_BYTE] = generateCRC(data, 7);
 				waitForItRect(189, 80, 243, 140, txIdManual, data);
 				data[2] = 0;
 			}
@@ -665,6 +667,7 @@ void manualControlButtons()
 			if ((x >= 247) && (x <= 301))
 			{
 				data[3] = 1 * multiply;
+				data[CRC_BYTE] = generateCRC(data, 7);
 				waitForItRect(247, 80, 301, 140, txIdManual, data);
 				data[3] = 0;
 			}
@@ -672,6 +675,7 @@ void manualControlButtons()
 			if ((x >= 305) && (x <= 359))
 			{
 				data[4] = 1 * multiply;
+				data[CRC_BYTE] = generateCRC(data, 7);
 				waitForItRect(305, 80, 359, 140, txIdManual, data);
 				data[4] = 0;
 			}
@@ -679,6 +683,7 @@ void manualControlButtons()
 			if ((x >= 363) && (x <= 417))
 			{
 				data[5] = 1 * multiply;
+				data[CRC_BYTE] = generateCRC(data, 7);
 				waitForItRect(363, 80, 417, 140, txIdManual, data);
 				data[5] = 0;
 			}
@@ -686,6 +691,7 @@ void manualControlButtons()
 			if ((x >= 421) && (x <= 475))
 			{
 				data[6] = 1 * multiply;
+				data[CRC_BYTE] = generateCRC(data, 7);
 				waitForItRect(421, 80, 475, 140, txIdManual, data);
 				data[6] = 0;
 			}
@@ -696,6 +702,7 @@ void manualControlButtons()
 			if ((x >= 131) && (x <= 185))
 			{
 				data[1] = (1 * multiply) + reverse;
+				data[CRC_BYTE] = generateCRC(data, 7);
 				waitForItRect(131, 140, 185, 200, txIdManual, data);
 				data[1] = 0;
 			}
@@ -703,6 +710,7 @@ void manualControlButtons()
 			if ((x >= 189) && (x <= 243))
 			{
 				data[2] = (1 * multiply) + reverse;
+				data[CRC_BYTE] = generateCRC(data, 7);
 				waitForItRect(189, 140, 243, 200, txIdManual, data);
 				data[2] = 0;
 			}
@@ -710,6 +718,7 @@ void manualControlButtons()
 			if ((x >= 247) && (x <= 301))
 			{
 				data[3] = (1 * multiply) + reverse;
+				data[CRC_BYTE] = generateCRC(data, 7);
 				waitForItRect(247, 140, 301, 200, txIdManual, data);
 				data[3] = 0;
 			}
@@ -717,6 +726,7 @@ void manualControlButtons()
 			if ((x >= 305) && (x <= 359))
 			{
 				data[4] = (1 * multiply) + reverse;
+				data[CRC_BYTE] = generateCRC(data, 7);
 				waitForItRect(305, 140, 359, 200, txIdManual, data);
 				data[4] = 0;
 			}
@@ -724,6 +734,7 @@ void manualControlButtons()
 			if ((x >= 363) && (x <= 417))
 			{
 				data[5] = (1 * multiply) + reverse;
+				data[CRC_BYTE] = generateCRC(data, 7);
 				waitForItRect(363, 140, 417, 200, txIdManual, data);
 				data[5] = 0;
 			}
@@ -731,6 +742,7 @@ void manualControlButtons()
 			if ((x >= 421) && (x <= 475))
 			{
 				data[6] = (1 * multiply) + reverse;
+				data[CRC_BYTE] = generateCRC(data, 7);
 				waitForItRect(421, 140, 475, 200, txIdManual, data);
 				data[6] = 0;
 			}
@@ -1701,15 +1713,15 @@ bool drawConfig()
 void homeArm(uint16_t arm_control)
 {
 	byte lowerAxis[8] = { 0x00,SET_LOWER_AXIS_POSITION, 0x00, 0xB4, 0x00, 0xB4, 0x00, 0x5A };
-	lowerAxis[CRC_BYTE] = generateByteCRC(lowerAxis);
+	lowerAxis[CRC_BYTE] = generateCRC(lowerAxis, 7);
 	can1.sendFrame(arm_control, lowerAxis);
 
 	byte upperAxis[8] = { 0x00, SET_UPPER_AXIS_POSITION, 0x00, 0xB4, 0x00, 0xB4, 0x00, 0xB4 };
-	upperAxis[CRC_BYTE] = generateByteCRC(upperAxis);
+	upperAxis[CRC_BYTE] = generateCRC(upperAxis, 7);
 	can1.sendFrame(arm_control, upperAxis);
 
 	byte executeMove[8] = { 0x00, EXECUTE_PROGRAM, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
-	executeMove[CRC_BYTE] = generateByteCRC(executeMove);
+	executeMove[CRC_BYTE] = generateCRC(executeMove, 7);
 	can1.sendFrame(arm_control, executeMove);
 }
 
@@ -1717,7 +1729,7 @@ void homeArm(uint16_t arm_control)
 void configButtons()
 {
 	uint8_t setHomeID[8] = { 0x00, RESET_AXIS_POSITION, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
-	setHomeID[CRC_BYTE] = generateByteCRC(setHomeID);
+	setHomeID[CRC_BYTE] = generateCRC(setHomeID, 7);
 
 	// Touch screen controls
 	if (myTouch.dataAvailable())
@@ -2670,6 +2682,8 @@ void setup()
 
 	// Create program folder is it does not exist
 	sdCard.createDRIVE(pDir);
+
+	initCRC();
 }
 
 // Page control framework
@@ -2931,11 +2945,72 @@ uint8_t generateBitCRC(uint8_t a1, uint8_t a2, uint8_t a3, uint8_t a4, uint8_t a
 	return (a1 % 2) + (a2 % 2) + (a3 % 2) + (a4 % 2) + (a5 % 2) + (a6 % 2) + (grip % 2) + 1;
 }
 
-//
+/*=========================================================
+CRC - https://barrgroup.com/embedded-systems/how-to/crc-calculation-c-code
+===========================================================*/
+#define POLYNOMIAL 0xD8  /* 11011 followed by 0's */
+
+/*
+ * The width of the CRC calculation and result.
+ * Modify the typedef for a 16 or 32-bit CRC standard.
+ */
+
+#define WIDTH  (8 * sizeof(uint8_t))
+#define TOPBIT (1 << (WIDTH - 1))
+
+uint8_t  crcTable[256];
+
+void initCRC(void)
+{
+	uint8_t  remainder;
+
+	// Compute the remainder of each possible dividend
+	for (int dividend = 0; dividend < 256; ++dividend)
+	{
+		//Start with the dividend followed by zeros
+		remainder = dividend << (WIDTH - 8);
+
+		// Perform modulo-2 division, a bit at a time
+		for (uint8_t bit = 8; bit > 0; --bit)
+		{
+			// Try to divide the current data bit.
+			if (remainder & TOPBIT)
+			{
+				remainder = (remainder << 1) ^ POLYNOMIAL;
+			}
+			else
+			{
+				remainder = (remainder << 1);
+			}
+		}
+
+		// Store the result into the table.
+		crcTable[dividend] = remainder;
+	}
+}
+
+uint8_t generateCRC(uint8_t const message[], int nBytes)
+{
+	uint8_t data;
+	uint8_t remainder = 0;
+
+	// Divide the message by the polynomial, a byte at a time.
+	for (int byte = 0; byte < nBytes; ++byte)
+	{
+		data = message[byte] ^ (remainder >> (WIDTH - 8));
+		remainder = crcTable[data] ^ (remainder << 8);
+	}
+
+	// The final remainder is the CRC.
+	return (remainder);
+}
+
+/*
 uint8_t generateByteCRC(uint8_t* data)
 {
 	return ((data[0] % 2) + (data[1] % 2) + (data[2] % 2) + (data[3] % 2) + (data[4] % 2) + (data[5] % 2) + (data[6] % 2) + (data[7] % 2) + 1);
 }
+*/
 
 // Buttons for the main menu
 void menuButtons()
@@ -3069,7 +3144,7 @@ void executeProgram()
 		// If there was a change in the grip bool
 		uint8_t executeMove[8] = { 0, EXECUTE_PROGRAM, 0, 0, 0, MOVE_GRIP, 0, 0 };
 		executeMove[GRIP_BYTE] = SAME_GRIP;
-		executeMove[CRC_BYTE] = generateByteCRC(executeMove);
+		executeMove[CRC_BYTE] = generateCRC(executeMove, 7);
 
 		if (runList.get(programProgress)->getGrip() == 0)
 		{
