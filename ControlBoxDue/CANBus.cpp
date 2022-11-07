@@ -24,6 +24,12 @@ void CANBus::processFrame(AxisPos& axisPos, UTFT& myGLCD)
     // If buffer inbox has a message
     if (Can0.available() > 0)
     {
+        if (Can0.available() > 1)
+        {
+            Serial.print("MSG: ");
+            Serial.println(Can0.available());
+
+        }
         Can0.read(incoming);
 
         switch (incoming.id)

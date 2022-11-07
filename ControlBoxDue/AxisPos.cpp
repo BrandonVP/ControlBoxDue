@@ -19,17 +19,16 @@ void AxisPos::updateAxisPos(CAN_FRAME axisFrame)
 
 	//|  crc  |  grip |   a6   |   a5   |   a4   |   a3   |   a2   |   a1   |
 	//|  0-4  |  5-9  |  10-18 |  19-27 |  28-36 |  37-45 |  46-54 |  55-63 |
-	a1 = ((axisFrame.data.byte[6] & 0x01) << 8) | axisFrame.data.byte[7];
-	a2 = (((axisFrame.data.byte[5] & 0x03)) << 7) | (axisFrame.data.byte[6] >> 1);
-	a3 = (((axisFrame.data.byte[4] & 0x07)) << 6) | (axisFrame.data.byte[5] >> 2);
-	a4 = (((axisFrame.data.byte[3] & 0x0F)) << 5) | (axisFrame.data.byte[4] >> 3);
-	a5 = (((axisFrame.data.byte[2] & 0x1F)) << 4) | (axisFrame.data.byte[3] >> 4);
-	a6 = (((axisFrame.data.byte[1] & 0x3F)) << 3) | (axisFrame.data.byte[2] >> 5);
-	grip = ((axisFrame.data.byte[0] & 0x7) << 2)  | (axisFrame.data.byte[1] >> 6);
-	crc = ((axisFrame.data.byte[0]) >> 3);
+	a1 = ((axisFrame.data.byte[5] & 0x01) << 8) | axisFrame.data.byte[6];
+	a2 = (((axisFrame.data.byte[4] & 0x03)) << 7) | (axisFrame.data.byte[5] >> 1);
+	a3 = (((axisFrame.data.byte[3] & 0x07)) << 6) | (axisFrame.data.byte[4] >> 2);
+	a4 = (((axisFrame.data.byte[2] & 0x0F)) << 5) | (axisFrame.data.byte[3] >> 3);
+	a5 = (((axisFrame.data.byte[1] & 0x1F)) << 4) | (axisFrame.data.byte[2] >> 4);
+	a6 = (((axisFrame.data.byte[0] & 0x3F)) << 3) | (axisFrame.data.byte[1] >> 5);
+	grip = (axisFrame.data.byte[0] >> 6);
+	crc = (axisFrame.data.byte[7]);
 
-	// A very simple "CRC"
-	if (crc == generateBitCRC(a1, a2, a3, a4, a5, a6, grip))
+	if (crc == generateCRC(axisFrame.data.byte, 7))
 	{
 		// Determine which channel to write values too
 		if (axisFrame.id == ARM1_POSITION)

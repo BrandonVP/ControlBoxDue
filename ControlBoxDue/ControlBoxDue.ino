@@ -11,13 +11,10 @@ Assign physical buttons
 Switch between LI9486 & LI9488
 Swtich between Due & mega2560
 
-1. CAN Bus message callback
-2. Put message in buffer
-3. Loop to empty buffer
-4. process message
-5. Do something
 - Use Debug for diagnostic messages
 - memcpy instead of loop
+
+- Add confirmation timeout
 ===========================================================
 	End Todo List
 =========================================================*/
@@ -1712,17 +1709,9 @@ bool drawConfig()
 // Sends command to return arm to starting position
 void homeArm(uint16_t arm_control)
 {
-	byte lowerAxis[8] = { 0x00,SET_LOWER_AXIS_POSITION, 0x00, 0xB4, 0x00, 0xB4, 0x00, 0x5A };
-	lowerAxis[CRC_BYTE] = generateCRC(lowerAxis, 7);
-	can1.sendFrame(arm_control, lowerAxis);
-
-	byte upperAxis[8] = { 0x00, SET_UPPER_AXIS_POSITION, 0x00, 0xB4, 0x00, 0xB4, 0x00, 0xB4 };
-	upperAxis[CRC_BYTE] = generateCRC(upperAxis, 7);
-	can1.sendFrame(arm_control, upperAxis);
-
-	byte executeMove[8] = { 0x00, EXECUTE_PROGRAM, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
-	executeMove[CRC_BYTE] = generateCRC(executeMove, 7);
-	can1.sendFrame(arm_control, executeMove);
+	byte cmd[8] = { 0x00,HOME_AXIS_POSITION, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
+	cmd[CRC_BYTE] = generateCRC(cmd, 7);
+	can1.sendFrame(arm_control, cmd);
 }
 
 // Button functions for config page
@@ -2676,7 +2665,7 @@ void setup()
 	myGLCD.print("Loading...", 190, 290);
 
 	// Give 6DOF arms time to start up
-	delay(5000);
+	delay(2000);
 
 	drawMenu();
 
@@ -3121,23 +3110,21 @@ void executeProgram()
 		uint8_t grip = 0;
 		crc = (a1 % 2) + (a2 % 2) + (a3 % 2) + (a4 % 2) + (a5 % 2) + (a6 % 2) + (grip % 2) + 1;
 
-		data[7] = (a1 & 0xFF);
-		data[6] = (a1 >> 8);
-		data[6] |= ((a2 & 0xFF) << 1);
-		data[5] = (a2 >> 7);
-		data[5] |= ((a3 & 0x7F) << 2);
-		data[4] = (a3 >> 6);
-		data[4] |= ((a4 & 0x3F) << 3);
-		data[3] = (a4 >> 5);
-		data[3] |= ((a5 & 0x1F) << 4);
-		data[2] = (a5 >> 4);
-		data[2] |= ((a6 & 0xF) << 5);
-		data[1] = (a6 >> 3);
-		data[1] |= ((grip & 0x7) << 6);
-		data[0] = (grip >> 2);
-		data[0] |= (crc << 3);
+		data[6] = (a1 & 0xFF);
+		data[5] = (a1 >> 8);
+		data[5] |= ((a2 & 0xFF) << 1);
+		data[4] = (a2 >> 7);
+		data[4] |= ((a3 & 0x7F) << 2);
+		data[3] = (a3 >> 6);
+		data[3] |= ((a4 & 0x3F) << 3);
+		data[2] = (a4 >> 5);
+		data[2] |= ((a5 & 0x1F) << 4);
+		data[1] = (a5 >> 4);
+		data[1] |= ((a6 & 0xF) << 5);
+		data[0] = (a6 >> 3);
+		data[0] |= ((grip & 0x7) << 6);
+		data[7] = generateCRC(data, 7);
 		
-		Serial.println(runList.get(programProgress)->getID());
 		can1.sendFrame(runList.get(programProgress)->getID(), data);
 
 		// Grip on/off or hold based on current and next state

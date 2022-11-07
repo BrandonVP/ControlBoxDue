@@ -22,8 +22,7 @@
 
 #define SEND_AXIS_POSITIONS     0x61
 #define RESET_AXIS_POSITION     0x62
-#define SET_LOWER_AXIS_POSITION 0x63
-#define SET_UPPER_AXIS_POSITION 0x64
+#define HOME_AXIS_POSITION		0x63
 #define MOVE_GRIP               0x6A
 #define SAME_GRIP               0x00
 #define OPEN_GRIP               0x01
