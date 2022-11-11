@@ -3096,7 +3096,7 @@ void executeProgram()
 		return;
 	}
 	uint8_t crc = 0;
-	if (Arm1Ready == true && Arm2Ready == true)
+	if (( ( Arm1Ready == true ) && ( runList.get(programProgress )->getID() == ARM1_PROGRAM ) ) || ( ( Arm2Ready == true ) && ( runList.get(programProgress)->getID() == ARM2_PROGRAM ) ))
 	{
 		uint8_t data[8];
 		uint16_t a1 = runList.get(programProgress)->getA1();
