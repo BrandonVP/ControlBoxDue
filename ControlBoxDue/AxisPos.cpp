@@ -81,9 +81,17 @@ int AxisPos::getA1C1()
 {
 	return a1c1;
 }
+void AxisPos::setA1C1(uint16_t newValue)
+{
+	a1c1 = newValue;
+}
 int AxisPos::getA2C1()
 {
 	return a2c1;
+}
+void AxisPos::setA1C2(uint16_t newValue)
+{
+	a1c2 = newValue;
 }
 int AxisPos::getA3C1()
 {

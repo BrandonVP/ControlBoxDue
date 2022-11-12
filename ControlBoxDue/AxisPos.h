@@ -23,6 +23,8 @@ private:
 public:
 	void drawAxisPos(UTFT);
 	void updateAxisPos(CAN_FRAME);
+	void setA1C1(uint16_t);
+	void setA1C2(uint16_t);
 	int getA1C1();
 	int getA2C1();
 	int getA3C1();

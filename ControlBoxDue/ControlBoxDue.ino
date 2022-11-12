@@ -490,6 +490,8 @@ void waitForItRect(int x1, int y1, int x2, int y2, int txId, byte data[])
 		can1.sendFrame(txId, data);
 		myTouch.read();
 		backgroundProcess();
+		printManualAxisDeg();
+		// TODO replace delay with something non blocking
 		delay(80);
 	}
 	myGLCD.setColor(menuBtnBorder);
@@ -553,27 +555,33 @@ bool drawManualControl()
 		for (i = 131; i < (480 - 45); i = i + 58) {
 			myGLCD.setColor(menuBtnColor);
 			myGLCD.setBackColor(themeBackground);
-			myGLCD.printNumI(j, i + 20, 60);
+			myGLCD.printNumI(j, i + 20, 50);
 			j++;
 		}
 		break;
 	case 4:
 		// Draw the upper row of movement buttons
 		for (i = 131; i < (480 - 54); i = i + 58) {
-			drawSquareBtn(i, 80, i + 54, 140, F("/\\"), menuBtnColor, menuBtnBorder, menuBtnText, CENTER);
+			drawSquareBtn(i, 70, i + 54, 130, F("/\\"), menuBtnColor, menuBtnBorder, menuBtnText, CENTER);
 		}
 		break;
 	case 5:
-		// Draw the bottom row of movement buttons
+		// Draw the upper row of movement buttons
 		for (i = 131; i < (480 - 54); i = i + 58) {
-			drawSquareBtn(i, 140, i + 54, 200, F("\\/"), menuBtnColor, menuBtnBorder, menuBtnText, CENTER);
+			drawSquareBtn(i, 130, i + 54, 150, String(i), menuBtnColor, menuBtnBorder, menuBtnText, CENTER);
 		}
 		break;
 	case 6:
+		// Draw the bottom row of movement buttons
+		for (i = 131; i < (480 - 54); i = i + 58) {
+			drawSquareBtn(i, 150, i + 54, 210, F("\\/"), menuBtnColor, menuBtnBorder, menuBtnText, CENTER);
+		}
+		break;
+	case 7:
 		// Draw Select arm buttons
 		drawSquareBtn(165, 225, 220, 265, F("Arm"), themeBackground, themeBackground, menuBtnColor, CENTER);
 		break;
-	case 7:
+	case 8:
 		if (txIdManual == ARM1_MANUAL)
 		{
 			drawSquareBtn(146, 260, 200, 315, F("1"), menuBtnText, menuBtnBorder, menuBtnColor, CENTER);
@@ -585,17 +593,17 @@ bool drawManualControl()
 			drawSquareBtn(200, 260, 254, 315, F("2"), menuBtnText, menuBtnBorder, menuBtnColor, CENTER);
 		}
 		break;
-	case 8:
+	case 9:
 		// Draw grip buttons
 		drawSquareBtn(270, 225, 450, 265, F("Gripper"), themeBackground, themeBackground, menuBtnColor, CENTER);
 		break;
-	case 9:
+	case 10:
 		drawSquareBtn(270, 260, 360, 315, F("Open"), menuBtnColor, menuBtnBorder, menuBtnText, CENTER);
 		break;
-	case 10:
+	case 11:
 		drawSquareBtn(360, 260, 450, 315, F("Close"), menuBtnColor, menuBtnBorder, menuBtnText, CENTER);
 		break;
-	case 11:
+	case 12:
 		return true;
 		break;
 	}
@@ -778,6 +786,51 @@ void manualControlButtons()
 	}
 }
 
+uint16_t axis1M1 = 0;
+uint16_t axis1M2 = 0;
+uint16_t axis1M3 = 0;
+uint16_t axis1M4 = 0;
+uint16_t axis1M5 = 0;
+uint16_t axis1M6 = 0;
+uint16_t axis2M1 = 0;
+uint16_t axis2M2 = 0;
+uint16_t axis2M3 = 0;
+uint16_t axis2M4 = 0;
+uint16_t axis2M5 = 0;
+uint16_t axis2M6 = 0;
+uint32_t timermAd = 0;
+
+void printManualAxisDeg()
+{
+	if (millis() - timermAd > 50)
+	{
+		// Text color
+		myGLCD.setColor(menuBtnText);
+
+		// Text background color
+		myGLCD.setBackColor(menuBtnColor);
+
+		// Draw angles 
+		
+		if (txIdManual = ARM1_MANUAL)
+		{
+			if (axisPos.getA1C1() != axis1M1)
+			{
+				myGLCD.printNumI(axisPos.getA1C1(), 134, 132, 3, '0');
+				axisPos.setA1C1(axis1M1);
+			}
+		}
+		else if (txIdManual = ARM2_MANUAL)
+		{
+			if (axisPos.getA1C2() != axis2M1)
+			{
+				myGLCD.printNumI(axisPos.getA1C2(), 134, 132, 3, '0');
+				axisPos.setA1C2(axis2M1);
+			}
+		}
+		timermAd = millis();
+	}
+}
 
 /*=========================================================
 					View page
@@ -863,6 +916,7 @@ bool drawView()
 	graphicLoaderState++;
 	return false;
 }
+
 
 /*==========================================================
 					Program Arm
@@ -2740,6 +2794,7 @@ void pageControl()
 		}
 		// Call buttons if any
 		manualControlButtons();
+		printManualAxisDeg();
 		break;
 	case 4: // Configuation page
 		// Draw page
