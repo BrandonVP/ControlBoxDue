@@ -15,10 +15,14 @@ Swtich between Due & mega2560
 - memcpy instead of loop
 
 - Add confirmation timeout
+
+- Clean up code and includes / header files
 ===========================================================
 	End Todo List
 =========================================================*/
 
+#include "Variables.h"
+#include "KeyInput.h"
 #include <DS3231.h>
 #include <LinkedList.h>
 #include <malloc.h>
@@ -29,6 +33,7 @@ Swtich between Due & mega2560
 #include "Program.h"
 #include "icons.h"
 #include "Common.h"
+#include "KeyInput.h"
 
 /*=========================================================
 	Settings
@@ -119,6 +124,10 @@ bool programEdit = false;
 uint8_t programProgress = 0; // THIS WILL LIMIT THE SIZE OF A PROGRAM TO 255 MOVEMENTS
 uint8_t selectedProgram = 0;
 
+
+const PROGMEM uint32_t hexTable[8] = { 1, 16, 256, 4096, 65536, 1048576, 16777216, 268435456 };
+
+
 // 0 = open, 1 = close, 2 = no change
 int8_t gripStatus = 2;
 
@@ -128,8 +137,8 @@ uint32_t timer = 0;
 uint32_t updateClock = 0;
 
 // Key input variables
-char keyboardInput[9];
-uint8_t keypadInput[4] = { 0, 0, 0, 0 };
+//char keyboardInput[9];
+//uint8_t keypadInput[4] = { 0, 0, 0, 0 };
 uint8_t keyIndex = 0;
 uint8_t keyResult = 0;
 
@@ -498,7 +507,7 @@ void waitForItRect(int x1, int y1, int x2, int y2, int txId, byte data[])
 	myGLCD.drawRect(x1, y1, x2, y2);
 }
 
-bool Touch_getXY(void)
+bool Touch_getXY()
 {
 #if defined LI9486
 	TSPoint p = ts.getPoint();
@@ -562,46 +571,46 @@ bool drawManualControl()
 	case 4:
 		// Draw the upper row of movement buttons
 		for (i = 131; i < (480 - 54); i = i + 58) {
-			drawSquareBtn(i, 70, i + 54, 130, F("/\\"), menuBtnColor, menuBtnBorder, menuBtnText, CENTER);
+			drawSquareBtn(i, 70, i + 54, 125, F("/\\"), menuBtnColor, menuBtnBorder, menuBtnText, CENTER);
 		}
 		break;
 	case 5:
 		// Draw the upper row of movement buttons
 		for (i = 131; i < (480 - 54); i = i + 58) {
-			drawSquareBtn(i, 130, i + 54, 150, String(i), menuBtnColor, menuBtnBorder, menuBtnText, CENTER);
+			drawSquareBtn(i, 125, i + 54, 175, "", menuBtnColor, menuBtnBorder, menuBtnText, CENTER);
 		}
 		break;
 	case 6:
 		// Draw the bottom row of movement buttons
 		for (i = 131; i < (480 - 54); i = i + 58) {
-			drawSquareBtn(i, 150, i + 54, 210, F("\\/"), menuBtnColor, menuBtnBorder, menuBtnText, CENTER);
+			drawSquareBtn(i, 175, i + 54, 230, F("\\/"), menuBtnColor, menuBtnBorder, menuBtnText, CENTER);
 		}
 		break;
 	case 7:
 		// Draw Select arm buttons
-		drawSquareBtn(165, 225, 220, 265, F("Arm"), themeBackground, themeBackground, menuBtnColor, CENTER);
+		drawSquareBtn(131, 249, 231, 259, F("Arm"), themeBackground, themeBackground, menuBtnColor, CENTER);
 		break;
 	case 8:
 		if (txIdManual == ARM1_MANUAL)
 		{
-			drawSquareBtn(146, 260, 200, 315, F("1"), menuBtnText, menuBtnBorder, menuBtnColor, CENTER);
-			drawSquareBtn(200, 260, 254, 315, F("2"), menuBtnColor, menuBtnBorder, menuBtnText, CENTER);
+			drawSquareBtn(131, 270, 181, 319, F("1"), menuBtnText, menuBtnBorder, menuBtnColor, CENTER);
+			drawSquareBtn(181, 270, 231, 319, F("2"), menuBtnColor, menuBtnBorder, menuBtnText, CENTER);
 		}
 		else if (txIdManual == ARM2_MANUAL)
 		{
-			drawSquareBtn(146, 260, 200, 315, F("1"), menuBtnColor, menuBtnBorder, menuBtnText, CENTER);
-			drawSquareBtn(200, 260, 254, 315, F("2"), menuBtnText, menuBtnBorder, menuBtnColor, CENTER);
+			drawSquareBtn(131, 270, 181, 319, F("1"), menuBtnColor, menuBtnBorder, menuBtnText, CENTER);
+			drawSquareBtn(181, 270, 231, 319, F("2"), menuBtnText, menuBtnBorder, menuBtnColor, CENTER);
 		}
 		break;
 	case 9:
 		// Draw grip buttons
-		drawSquareBtn(270, 225, 450, 265, F("Gripper"), themeBackground, themeBackground, menuBtnColor, CENTER);
+		drawSquareBtn(305, 251, 475, 269, F("Gripper"), themeBackground, themeBackground, menuBtnColor, CENTER);
 		break;
 	case 10:
-		drawSquareBtn(270, 260, 360, 315, F("Open"), menuBtnColor, menuBtnBorder, menuBtnText, CENTER);
+		drawSquareBtn(305, 270, 390, 319, F("Open"), menuBtnColor, menuBtnBorder, menuBtnText, CENTER);
 		break;
 	case 11:
-		drawSquareBtn(360, 260, 450, 315, F("Close"), menuBtnColor, menuBtnBorder, menuBtnText, CENTER);
+		drawSquareBtn(390, 270, 475, 319, F("Close"), menuBtnColor, menuBtnBorder, menuBtnText, CENTER);
 		break;
 	case 12:
 		return true;
@@ -650,14 +659,14 @@ void manualControlButtons()
 	// LCD touch funtions
 	if (Touch_getXY())
 	{
-		if ((y >= 80) && (y <= 140))
+		if ((y >= 70) && (y <= 126))
 		{
 			// A1 Up
 			if ((x >= 131) && (x <= 185))
 			{
 				data[1] = 1 * multiply;
 				data[CRC_BYTE] = generateCRC(data, 7);
-				waitForItRect(131, 80, 185, 140, txIdManual, data);
+				waitForItRect(131, 70, 185, 126, txIdManual, data);
 				data[1] = 0;
 			}
 			// A2 Up
@@ -665,7 +674,7 @@ void manualControlButtons()
 			{
 				data[2] = 1 * multiply;
 				data[CRC_BYTE] = generateCRC(data, 7);
-				waitForItRect(189, 80, 243, 140, txIdManual, data);
+				waitForItRect(189, 70, 243, 126, txIdManual, data);
 				data[2] = 0;
 			}
 			// A3 Up
@@ -673,7 +682,7 @@ void manualControlButtons()
 			{
 				data[3] = 1 * multiply;
 				data[CRC_BYTE] = generateCRC(data, 7);
-				waitForItRect(247, 80, 301, 140, txIdManual, data);
+				waitForItRect(247, 70, 301, 126, txIdManual, data);
 				data[3] = 0;
 			}
 			// A4 Up
@@ -681,7 +690,7 @@ void manualControlButtons()
 			{
 				data[4] = 1 * multiply;
 				data[CRC_BYTE] = generateCRC(data, 7);
-				waitForItRect(305, 80, 359, 140, txIdManual, data);
+				waitForItRect(305, 70, 359, 126, txIdManual, data);
 				data[4] = 0;
 			}
 			// A5 Up
@@ -689,7 +698,7 @@ void manualControlButtons()
 			{
 				data[5] = 1 * multiply;
 				data[CRC_BYTE] = generateCRC(data, 7);
-				waitForItRect(363, 80, 417, 140, txIdManual, data);
+				waitForItRect(363, 70, 417, 126, txIdManual, data);
 				data[5] = 0;
 			}
 			// A6 Up
@@ -697,18 +706,57 @@ void manualControlButtons()
 			{
 				data[6] = 1 * multiply;
 				data[CRC_BYTE] = generateCRC(data, 7);
-				waitForItRect(421, 80, 475, 140, txIdManual, data);
+				waitForItRect(421, 70, 475, 126, txIdManual, data);
 				data[6] = 0;
 			}
 		}
-		if ((y >= 140) && (y <= 200))
+		if ((y >= 125) && (y <= 175))
+		{
+			// A1 Deg
+			if ((x >= 131) && (x <= 185))
+			{
+				waitForItRect(131, 125, 185, 175);
+
+			}
+			// A2 Deg
+			if ((x >= 189) && (x <= 243))
+			{
+				waitForItRect(189, 125, 243, 175);
+
+			}
+			// A3 Deg
+			if ((x >= 247) && (x <= 301))
+			{
+				waitForItRect(247, 125, 301, 175);
+
+			}
+			// A4 Deg
+			if ((x >= 305) && (x <= 359))
+			{
+				waitForItRect(305, 125, 359, 175);
+
+			}
+			// A5 Deg
+			if ((x >= 363) && (x <= 417))
+			{
+				waitForItRect(363, 125, 417, 175);
+
+			}
+			// A6 Deg
+			if ((x >= 421) && (x <= 475))
+			{
+				waitForItRect(421, 125, 475, 175);
+				
+			}
+		}
+		if ((y >= 175) && (y <= 230))
 		{
 			// A1 Down
 			if ((x >= 131) && (x <= 185))
 			{
 				data[1] = (1 * multiply) + reverse;
 				data[CRC_BYTE] = generateCRC(data, 7);
-				waitForItRect(131, 140, 185, 200, txIdManual, data);
+				waitForItRect(131, 175, 185, 230, txIdManual, data);
 				data[1] = 0;
 			}
 			// A2 Down
@@ -716,7 +764,7 @@ void manualControlButtons()
 			{
 				data[2] = (1 * multiply) + reverse;
 				data[CRC_BYTE] = generateCRC(data, 7);
-				waitForItRect(189, 140, 243, 200, txIdManual, data);
+				waitForItRect(189, 175, 243, 230, txIdManual, data);
 				data[2] = 0;
 			}
 			// A3 Down
@@ -724,7 +772,7 @@ void manualControlButtons()
 			{
 				data[3] = (1 * multiply) + reverse;
 				data[CRC_BYTE] = generateCRC(data, 7);
-				waitForItRect(247, 140, 301, 200, txIdManual, data);
+				waitForItRect(247, 175, 301, 230, txIdManual, data);
 				data[3] = 0;
 			}
 			// A4 Down
@@ -732,7 +780,7 @@ void manualControlButtons()
 			{
 				data[4] = (1 * multiply) + reverse;
 				data[CRC_BYTE] = generateCRC(data, 7);
-				waitForItRect(305, 140, 359, 200, txIdManual, data);
+				waitForItRect(305, 175, 359, 230, txIdManual, data);
 				data[4] = 0;
 			}
 			// A5 Down
@@ -740,7 +788,7 @@ void manualControlButtons()
 			{
 				data[5] = (1 * multiply) + reverse;
 				data[CRC_BYTE] = generateCRC(data, 7);
-				waitForItRect(363, 140, 417, 200, txIdManual, data);
+				waitForItRect(363, 175, 417, 230, txIdManual, data);
 				data[5] = 0;
 			}
 			// A6 Down
@@ -748,38 +796,38 @@ void manualControlButtons()
 			{
 				data[6] = (1 * multiply) + reverse;
 				data[CRC_BYTE] = generateCRC(data, 7);
-				waitForItRect(421, 140, 475, 200, txIdManual, data);
+				waitForItRect(421, 175, 475, 230, txIdManual, data);
 				data[6] = 0;
 			}
 		}
-		if ((y >= 260) && (y <= 315))
+		if ((y >= 270) && (y <= 319))
 		{
 			if ((x >= 146) && (x <= 200))
 			{
 				// Select arm 1
-				drawSquareBtn(146, 260, 200, 315, F("1"), menuBtnText, menuBtnBorder, menuBtnColor, CENTER);
-				drawSquareBtn(200, 260, 254, 315, F("2"), menuBtnColor, menuBtnBorder, menuBtnText, CENTER);
+				drawSquareBtn(131, 270, 181, 319, F("1"), menuBtnText, menuBtnBorder, menuBtnColor, CENTER);
+				drawSquareBtn(181, 270, 231, 319, F("2"), menuBtnColor, menuBtnBorder, menuBtnText, CENTER);
 				txIdManual = ARM1_MANUAL;
 			}
 			if ((x >= 200) && (x <= 254))
 			{
 				// Select arm 2
-				drawSquareBtn(146, 260, 200, 315, F("1"), menuBtnColor, menuBtnBorder, menuBtnText, CENTER);
-				drawSquareBtn(200, 260, 254, 315, F("2"), menuBtnText, menuBtnBorder, menuBtnColor, CENTER);
+				drawSquareBtn(131, 270, 181, 319, F("1"), menuBtnColor, menuBtnBorder, menuBtnText, CENTER);
+				drawSquareBtn(181, 270, 231, 319, F("2"), menuBtnText, menuBtnBorder, menuBtnColor, CENTER);
 				txIdManual = ARM2_MANUAL;
 			}
-			if ((x >= 270) && (x <= 360))
+			if ((x >= 305) && (x <= 390))
 			{
 				// Grip open
 				data[7] = 1 * multiply;
-				waitForItRect(270, 260, 360, 315, txIdManual, data);
+				waitForItRect(305, 270, 390, 319, txIdManual, data);
 				data[7] = 0;
 			}
-			if ((x >= 360) && (x <= 450))
+			if ((x >= 390) && (x <= 475))
 			{
 				// Grip close
 				data[7] = (1 * multiply) + reverse;
-				waitForItRect(360, 260, 450, 315, txIdManual, data);
+				waitForItRect(390, 270, 475, 319, txIdManual, data);
 				data[7] = 0;
 			}
 		}
@@ -787,22 +835,23 @@ void manualControlButtons()
 }
 
 uint16_t axis1M1 = 0;
-uint16_t axis1M2 = 0;
-uint16_t axis1M3 = 0;
-uint16_t axis1M4 = 0;
-uint16_t axis1M5 = 0;
-uint16_t axis1M6 = 0;
 uint16_t axis2M1 = 0;
+uint16_t axis3M1 = 0;
+uint16_t axis4M1 = 0;
+uint16_t axis5M1 = 0;
+uint16_t axis6M1 = 0;
+uint16_t axis1M2 = 0;
 uint16_t axis2M2 = 0;
-uint16_t axis2M3 = 0;
-uint16_t axis2M4 = 0;
-uint16_t axis2M5 = 0;
-uint16_t axis2M6 = 0;
+uint16_t axis3M2 = 0;
+uint16_t axis4M2 = 0;
+uint16_t axis5M2 = 0;
+uint16_t axis6M2 = 0;
 uint32_t timermAd = 0;
+uint8_t lastID = 0;
 
 void printManualAxisDeg()
 {
-	if (millis() - timermAd > 50)
+	if (((millis() - timermAd > 50) && (page == 3)))
 	{
 		// Text color
 		myGLCD.setColor(menuBtnText);
@@ -812,23 +861,74 @@ void printManualAxisDeg()
 
 		// Draw angles 
 		
-		if (txIdManual = ARM1_MANUAL)
+		if (txIdManual == ARM1_MANUAL)
 		{
-			if (axisPos.getA1C1() != axis1M1)
+			if (axisPos.getA1C1() != axis1M1 || txIdManual != lastID)
 			{
-				myGLCD.printNumI(axisPos.getA1C1(), 134, 132, 3, '0');
-				axisPos.setA1C1(axis1M1);
+				myGLCD.printNumI(axisPos.getA1C1(), 134, 142, 3, '0');
+				axis1M1 = axisPos.getA1C1();
+			}
+			if (axisPos.getA2C1() != axis2M1 || txIdManual != lastID)
+			{
+				myGLCD.printNumI(axisPos.getA2C1(), 191, 142, 3, '0');
+				axis2M1 = axisPos.getA2C1();
+			}
+			if (axisPos.getA3C1() != axis3M1 || txIdManual != lastID)
+			{
+				myGLCD.printNumI(axisPos.getA3C1(), 249, 142, 3, '0');
+				axis3M1 = axisPos.getA3C1();
+			}
+			if (axisPos.getA4C1() != axis4M1 || txIdManual != lastID)
+			{
+				myGLCD.printNumI(axisPos.getA4C1(), 307, 142, 3, '0');
+				axis4M1 = axisPos.getA4C1();
+			}
+			if (axisPos.getA5C1() != axis5M1 || txIdManual != lastID)
+			{
+				myGLCD.printNumI(axisPos.getA5C1(), 365, 142, 3, '0');
+				axis5M1 = axisPos.getA5C1();
+			}
+			if (axisPos.getA6C1() != axis6M1 || txIdManual != lastID)
+			{
+				myGLCD.printNumI(axisPos.getA6C1(), 423, 142, 3, '0');
+				axis6M1 = axisPos.getA6C1();
 			}
 		}
-		else if (txIdManual = ARM2_MANUAL)
+		else if (txIdManual == ARM2_MANUAL)
 		{
-			if (axisPos.getA1C2() != axis2M1)
+			if (axisPos.getA1C2() != axis1M2 || txIdManual != lastID)
 			{
-				myGLCD.printNumI(axisPos.getA1C2(), 134, 132, 3, '0');
-				axisPos.setA1C2(axis2M1);
+				myGLCD.printNumI(axisPos.getA1C2(), 134, 142, 3, '0');
+				axis1M2 = axisPos.getA1C2();
+			}
+			if (axisPos.getA2C2() != axis2M2 || txIdManual != lastID)
+			{
+				myGLCD.printNumI(axisPos.getA2C2(), 191, 142, 3, '0');
+				axis2M2 = axisPos.getA2C2();
+			}
+			if (axisPos.getA3C2() != axis3M2 || txIdManual != lastID)
+			{
+				myGLCD.printNumI(axisPos.getA3C2(), 249, 142, 3, '0');
+				axis3M2 = axisPos.getA3C2();
+			}
+			if (axisPos.getA4C2() != axis4M1 || txIdManual != lastID)
+			{
+				myGLCD.printNumI(axisPos.getA4C2(), 307, 142, 3, '0');
+				axis4M2 = axisPos.getA4C2();
+			}
+			if (axisPos.getA5C2() != axis5M2 || txIdManual != lastID)
+			{
+				myGLCD.printNumI(axisPos.getA5C2(), 365, 142, 3, '0');
+				axis5M2 = axisPos.getA5C2();
+			}
+			if (axisPos.getA6C2() != axis6M2 || txIdManual != lastID)
+			{
+				myGLCD.printNumI(axisPos.getA6C2(), 423, 142, 3, '0');
+				axis6M2 = axisPos.getA6C2();
 			}
 		}
 		timermAd = millis();
+		lastID = txIdManual;
 	}
 }
 
@@ -1851,813 +1951,6 @@ void configButtons()
 }
 
 
-/*==========================================================
-					Key Inputs
-============================================================*/
-// Call before using keypad to clear out old values from array used to shift input
-void resetKeypad()
-{
-	for (uint8_t i = 0; i < 4; i++)
-	{
-		keypadInput[i] = 0;
-	}
-}
-/*============== Hex Keypad ==============*/
-// User input keypad
-void drawKeypad()
-{
-	drawSquareBtn(X_PAGE_START, 55, 479, 319, "", themeBackground, themeBackground, themeBackground, CENTER);
-	uint16_t posY = 80;
-	uint8_t numPad = 0x00;
-
-	for (uint8_t i = 0; i < 3; i++)
-	{
-		int posX = 145;
-		for (uint8_t j = 0; j < 6; j++)
-		{
-			if (numPad < 0x10)
-			{
-				drawRoundBtn(posX, posY, posX + 50, posY + 40, String(numPad, HEX), menuBtnColor, menuBtnBorder, menuBtnText, CENTER);
-				posX += 55;
-				numPad++;
-			}
-		}
-		posY += 45;
-	}
-	drawRoundBtn(365, 170, 470, 210, F("<---"), menuBtnColor, menuBtnBorder, menuBtnText, CENTER);
-	drawRoundBtn(145, 220, 250, 260, F("Input:"), menuBackground, menuBtnBorder, menuBtnText, CENTER);
-	drawRoundBtn(255, 220, 470, 260, F(" "), menuBtnColor, menuBtnBorder, menuBtnText, CENTER);
-	drawRoundBtn(145, 270, 305, 310, F("Accept"), menuBtnColor, menuBtnBorder, menuBtnText, CENTER);
-	drawRoundBtn(315, 270, 470, 310, F("Cancel"), menuBtnColor, menuBtnBorder, menuBtnText, CENTER);
-}
-
-// User input keypad
-int keypadButtons()
-{
-	// Touch screen controls
-	if (Touch_getXY())
-	{
-		if ((y >= 80) && (y <= 120))
-		{
-			// 0
-			if ((x >= 145) && (x <= 195))
-			{
-				waitForIt(145, 80, 195, 120);
-				return 0x00;
-			}
-			// 1
-			if ((x >= 200) && (x <= 250))
-			{
-				waitForIt(200, 80, 250, 120);
-				return 0x01;
-			}
-			// 2
-			if ((x >= 255) && (x <= 305))
-			{
-				waitForIt(255, 80, 305, 120);
-				return 0x02;
-			}
-			// 3
-			if ((x >= 310) && (x <= 360))
-			{
-				waitForIt(310, 80, 360, 120);
-				return 0x03;
-			}
-			// 4
-			if ((x >= 365) && (x <= 415))
-			{
-				waitForIt(365, 80, 415, 120);
-				return 0x04;
-			}
-			// 5
-			if ((x >= 420) && (x <= 470))
-			{
-				waitForIt(420, 80, 470, 120);
-				return 0x05;
-			}
-		}
-		if ((y >= 125) && (y <= 165))
-		{
-			// 6
-			if ((x >= 145) && (x <= 195))
-			{
-				waitForIt(145, 125, 195, 165);
-				return 0x06;
-			}
-			// 7
-			if ((x >= 200) && (x <= 250))
-			{
-				waitForIt(200, 125, 250, 165);
-				return 0x07;
-			}
-			// 8
-			if ((x >= 255) && (x <= 305))
-			{
-				waitForIt(255, 125, 305, 165);
-				return 0x08;
-			}
-			// 9
-			if ((x >= 310) && (x <= 360))
-			{
-				waitForIt(310, 125, 360, 165);
-				return 0x09;
-			}
-			// A
-			if ((x >= 365) && (x <= 415))
-			{
-				waitForIt(365, 125, 415, 165);
-				return 0x0A;
-			}
-			// B
-			if ((x >= 420) && (x <= 470))
-			{
-				waitForIt(420, 125, 470, 165);
-				return 0x0B;
-			}
-		}
-		if ((y >= 170) && (y <= 210))
-		{
-			// C
-			if ((x >= 145) && (x <= 195))
-			{
-				waitForIt(145, 170, 195, 210);
-				return 0x0C;
-			}
-			// D
-			if ((x >= 200) && (x <= 250))
-			{
-				waitForIt(200, 170, 250, 210);
-				return 0x0D;
-			}
-			// E
-			if ((x >= 255) && (x <= 305))
-			{
-				waitForIt(255, 170, 305, 210);
-				return 0x0E;
-			}
-			// F
-			if ((x >= 310) && (x <= 360))
-			{
-				waitForIt(310, 170, 360, 210);
-				return 0x0F;
-
-			}
-			// Backspace
-			if ((x >= 365) && (x <= 470))
-			{
-				waitForIt(365, 170, 470, 210);
-				return 0x10;
-			}
-		}
-		if ((y >= 270) && (y <= 310))
-		{
-			// Accept
-			if ((x >= 145) && (x <= 305))
-			{
-				waitForIt(145, 270, 305, 310);
-				return 0x11;
-
-			}
-			// Cancel
-			if ((x >= 315) && (x <= 470))
-			{
-				waitForIt(315, 270, 470, 310);
-				return 0x12;
-			}
-		}
-	}
-	return 0xFF;
-}
-
-/*
-* No change returns 0xFF
-* Accept returns 0xF1
-* Cancel returns 0xF0
-* Value contained in total
-*/
-uint8_t keypadController(uint8_t& index, uint16_t& total)
-{
-	uint8_t input = keypadButtons();
-	if (input >= 0x00 && input < 0x10 && index < 3)
-	{
-		keypadInput[2] = keypadInput[1];
-		keypadInput[1] = keypadInput[0];
-		keypadInput[0] = input;
-		total = keypadInput[0] * hexTable[0] + keypadInput[1] * hexTable[1] + keypadInput[2] * hexTable[2];
-		drawRoundBtn(255, 220, 470, 260, String(total, 16), menuBtnColor, menuBtnBorder, menuBtnText, CENTER);
-		++index;
-		return 0xFF;
-	}
-	if (input == 0x10)
-	{
-		switch (index)
-		{
-		case 1:
-			keypadInput[0] = 0;
-			break;
-		case 2:
-			keypadInput[0] = keypadInput[1];
-			keypadInput[1] = 0;
-			break;
-		case 3:
-			keypadInput[0] = keypadInput[1];
-			keypadInput[1] = keypadInput[2];
-			keypadInput[2] = 0;
-			break;
-		}
-		total = keypadInput[0] * hexTable[0] + keypadInput[1] * hexTable[1] + keypadInput[2] * hexTable[2];
-		drawRoundBtn(255, 220, 470, 260, String(total, 16), menuBtnColor, menuBtnBorder, menuBtnText, CENTER);
-		(index > 0) ? --index : 0;
-		return 0xFF;
-	}
-	if (input == 0x11)
-	{
-		return 0xF1;
-	}
-	else if (input == 0x12)
-	{
-		return 0xF0;
-	}
-	return input;
-}
-
-/*============== Decimal Keypad ==============*/
-// User input keypad
-void drawKeypadDec()
-{
-	drawSquareBtn(X_PAGE_START, 55, 479, 319, "", themeBackground, themeBackground, themeBackground, CENTER);
-	uint16_t posY = 125;
-	uint8_t numPad = 0x00;
-
-	for (uint8_t i = 0; i < 2; i++)
-	{
-		int posX = 145;
-		for (uint8_t j = 0; j < 6; j++)
-		{
-			if (numPad < 0x10)
-			{
-				drawRoundBtn(posX, posY, posX + 50, posY + 40, String(numPad, HEX), menuBtnColor, menuBtnBorder, menuBtnText, CENTER);
-				posX += 55;
-				numPad++;
-			}
-		}
-		posY += 45;
-	}
-	drawRoundBtn(365, 170, 470, 210, F("<---"), menuBtnColor, menuBtnBorder, menuBtnText, CENTER);
-	drawRoundBtn(145, 220, 250, 260, F("Input:"), menuBackground, menuBtnBorder, menuBtnText, CENTER);
-	drawRoundBtn(255, 220, 470, 260, F(" "), menuBtnColor, menuBtnBorder, menuBtnText, CENTER);
-	drawRoundBtn(145, 270, 305, 310, F("Accept"), menuBtnColor, menuBtnBorder, menuBtnText, CENTER);
-	drawRoundBtn(315, 270, 470, 310, F("Cancel"), menuBtnColor, menuBtnBorder, menuBtnText, CENTER);
-}
-
-// User input keypad
-int keypadButtonsDec()
-{
-	// Touch screen controls
-	if (Touch_getXY())
-	{
-		if ((y >= 125) && (y <= 165))
-		{
-			// 0
-			if ((x >= 145) && (x <= 195))
-			{
-				waitForIt(145, 125, 195, 165);
-				return 0x00;
-			}
-			// 1
-			if ((x >= 200) && (x <= 250))
-			{
-				waitForIt(200, 125, 250, 165);
-				return 0x01;
-			}
-			// 2
-			if ((x >= 255) && (x <= 305))
-			{
-				waitForIt(255, 125, 305, 165);
-				return 0x02;
-			}
-			// 3
-			if ((x >= 310) && (x <= 360))
-			{
-				waitForIt(310, 125, 360, 165);
-				return 0x03;
-			}
-			// 4
-			if ((x >= 365) && (x <= 415))
-			{
-				waitForIt(365, 125, 415, 165);
-				return 0x04;
-			}
-			// 5
-			if ((x >= 420) && (x <= 470))
-			{
-				waitForIt(420, 125, 470, 165);
-				return 0x05;
-			}
-		}
-		if ((y >= 170) && (y <= 210))
-		{
-			// 6
-			if ((x >= 145) && (x <= 195))
-			{
-				waitForIt(145, 170, 195, 210);
-				return 0x06;
-			}
-			// 7
-			if ((x >= 200) && (x <= 250))
-			{
-				waitForIt(200, 170, 250, 210);
-				return 0x07;
-			}
-			// 8
-			if ((x >= 255) && (x <= 305))
-			{
-				waitForIt(255, 170, 305, 210);
-				return 0x08;
-			}
-			// 9
-			if ((x >= 310) && (x <= 360))
-			{
-				waitForIt(310, 170, 360, 210);
-				return 0x09;
-
-			}
-			// Backspace
-			if ((x >= 365) && (x <= 470))
-			{
-				waitForIt(365, 170, 470, 210);
-				return 0x10;
-			}
-		}
-		if ((y >= 270) && (y <= 310))
-		{
-			// Accept
-			if ((x >= 145) && (x <= 305))
-			{
-				waitForIt(145, 270, 305, 310);
-				return 0x11;
-
-			}
-			// Cancel
-			if ((x >= 315) && (x <= 470))
-			{
-				waitForIt(315, 270, 470, 310);
-				return 0x12;
-			}
-		}
-	}
-	return 0xFF;
-}
-
-/*
-* No change returns 0xFF
-* Accept returns 0xF1
-* Cancel returns 0xF0
-* Value contained in total
-*/
-uint8_t keypadControllerDec(uint8_t& index, uint16_t& total)
-{
-	uint8_t input = keypadButtonsDec();
-	if (input >= 0x00 && input < 0x10 && index < 4)
-	{
-		keypadInput[3] = keypadInput[2];
-		keypadInput[2] = keypadInput[1];
-		keypadInput[1] = keypadInput[0];
-		keypadInput[0] = input;
-		total = keypadInput[0] * 1 + keypadInput[1] * 10 + keypadInput[2] * 100 + keypadInput[3] * 1000;
-		drawRoundBtn(255, 220, 470, 260, String(total), menuBtnColor, menuBtnBorder, menuBtnText, CENTER);
-		++index;
-		return 0xFF;
-	}
-	if (input == 0x10)
-	{
-		switch (index)
-		{
-		case 1:
-			keypadInput[0] = 0;
-			break;
-		case 2:
-			keypadInput[0] = keypadInput[1];
-			keypadInput[1] = 0;
-			break;
-		case 3:
-			keypadInput[0] = keypadInput[1];
-			keypadInput[1] = keypadInput[2];
-			keypadInput[2] = 0;
-			break;
-		case 4:
-			keypadInput[0] = keypadInput[1];
-			keypadInput[1] = keypadInput[2];
-			keypadInput[2] = keypadInput[3];
-			keypadInput[3] = 0;
-			break;
-		case 5:
-			keypadInput[0] = keypadInput[1];
-			keypadInput[1] = keypadInput[2];
-			keypadInput[2] = keypadInput[3];
-			keypadInput[3] = keypadInput[4];
-			keypadInput[4] = 0;
-			break;
-		}
-		total = keypadInput[0] * 1 + keypadInput[1] * 10 + keypadInput[2] * 100 + keypadInput[3] * 1000;
-		drawRoundBtn(255, 220, 470, 260, String(total), menuBtnColor, menuBtnBorder, menuBtnText, CENTER);
-		(index > 0) ? --index : 0;
-		return 0xFF;
-	}
-	if (input == 0x11)
-	{
-		return 0xF1;
-	}
-	else if (input == 0x12)
-	{
-		return 0xF0;
-	}
-	return input;
-}
-
-/*============== Keyboard ==============*/
-// User input keypad
-void drawkeyboard()
-{
-	drawSquareBtn(X_PAGE_START, 55, 479, 319, "", themeBackground, themeBackground, themeBackground, CENTER);
-	uint16_t posY = 56;
-	uint8_t numPad = 0x00;
-
-	const PROGMEM char keyboardInput[36] = { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
-									 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j',
-									 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't',
-									 'u', 'v', 'w', 'x', 'y', 'z' };
-	uint8_t count = 0;
-
-	for (uint8_t i = 0; i < 4; i++)
-	{
-		int posX = 135;
-		for (uint8_t j = 0; j < 10; j++)
-		{
-			if (count < 36)
-			{
-				drawRoundBtn(posX, posY, posX + 32, posY + 40, String(keyboardInput[count]), menuBtnColor, menuBtnBorder, menuBtnText, CENTER);
-				/* Print out button coords
-				SerialUSB.print(posX);
-				SerialUSB.print(" , ");
-				SerialUSB.print(posY);
-				SerialUSB.print(" , ");
-				SerialUSB.print((posX + 32));
-				SerialUSB.print(" , ");
-				SerialUSB.println((posY + 40));
-				*/
-				posX += 34;
-				count++;
-			}
-		}
-		posY += 43;
-	}
-	drawRoundBtn(340, 185, 474, 225, F("<--"), menuBtnColor, menuBtnBorder, menuBtnText, CENTER);
-	drawRoundBtn(135, 230, 240, 270, F("Input:"), menuBackground, menuBtnBorder, menuBtnText, CENTER);
-	drawRoundBtn(245, 230, 475, 270, F("filename"), menuBtnColor, menuBtnBorder, menuBtnText, CENTER);
-	drawRoundBtn(135, 275, 305, 315, F("Accept"), menuBtnColor, menuBtnBorder, menuBtnText, CENTER);
-	drawRoundBtn(310, 275, 475, 315, F("Cancel"), menuBtnColor, menuBtnBorder, menuBtnText, CENTER);
-}
-
-// User input keyboard
-char keyboardButtons()
-{
-	// Touch screen controls
-	if (Touch_getXY())
-	{
-		if ((y >= 56) && (y <= 96))
-		{
-			if ((x >= 135) && (x <= 167))
-			{
-				waitForIt(135, 56, 167, 96);
-				// 0
-				DEBUG_KEYBOARD("0");
-				return 0x30;
-			}
-			if ((x >= 169) && (x <= 201))
-			{
-				waitForIt(169, 56, 201, 96);
-				// 1
-				DEBUG_KEYBOARD("1");
-				return 0x31;
-			}
-			if ((x >= 203) && (x <= 235))
-			{
-				waitForIt(203, 56, 235, 96);
-				// 2
-				DEBUG_KEYBOARD("2");
-				return 0x32;
-			}
-			if ((x >= 237) && (x <= 269))
-			{
-				waitForIt(237, 56, 269, 96);
-				// 3
-				DEBUG_KEYBOARD("3");
-				return 0x33;
-			}
-			if ((x >= 271) && (x <= 303))
-			{
-				waitForIt(271, 56, 303, 96);
-				// 4
-				DEBUG_KEYBOARD("4");
-				return 0x34;
-			}
-			if ((x >= 305) && (x <= 337))
-			{
-				waitForIt(305, 56, 337, 96);
-				// 5
-				DEBUG_KEYBOARD("5");
-				return 0x35;
-			}
-			if ((x >= 339) && (x <= 371))
-			{
-				waitForIt(339, 56, 371, 96);
-				// 6
-				DEBUG_KEYBOARD("6");
-				return 0x36;
-			}
-			if ((x >= 373) && (x <= 405))
-			{
-				waitForIt(373, 56, 405, 96);
-				// 7
-				DEBUG_KEYBOARD("7");
-				return 0x37;
-			}
-			if ((x >= 407) && (x <= 439))
-			{
-				waitForIt(407, 56, 439, 96);
-				// 8
-				DEBUG_KEYBOARD("8");
-				return 0x38;
-			}
-			if ((x >= 441) && (x <= 473))
-			{
-				waitForIt(441, 56, 473, 96);
-				// 9
-				DEBUG_KEYBOARD("9");
-				return 0x39;
-			}
-		}
-		if ((y >= 99) && (y <= 139))
-		{
-			if ((x >= 135) && (x <= 167))
-			{
-				waitForIt(135, 99, 167, 139);
-				// a
-				DEBUG_KEYBOARD("a");
-				return 'a';
-			}
-			if ((x >= 169) && (x <= 201))
-			{
-				waitForIt(169, 99, 201, 139);
-				// b
-				DEBUG_KEYBOARD("b");
-				return 'b';
-			}
-			if ((x >= 203) && (x <= 235))
-			{
-				waitForIt(203, 99, 235, 139);
-				// c
-				DEBUG_KEYBOARD("c");
-				return 0x63;
-			}
-			if ((x >= 237) && (x <= 269))
-			{
-				waitForIt(237, 99, 269, 139);
-				// d
-				DEBUG_KEYBOARD("d");
-				return 0x64;
-			}
-			if ((x >= 271) && (x <= 303))
-			{
-				waitForIt(271, 99, 303, 139);
-				// e
-				DEBUG_KEYBOARD("e");
-				return 0x65;
-			}
-			if ((x >= 305) && (x <= 337))
-			{
-				waitForIt(305, 99, 337, 139);
-				// f
-				DEBUG_KEYBOARD("f");
-				return 0x66;
-			}
-			if ((x >= 339) && (x <= 371))
-			{
-				waitForIt(339, 99, 371, 139);
-				// g
-				DEBUG_KEYBOARD("g");
-				return 0x67;
-			}
-			if ((x >= 373) && (x <= 405))
-			{
-				waitForIt(373, 99, 405, 139);
-				// h
-				DEBUG_KEYBOARD("h");
-				return 0x68;
-			}
-			if ((x >= 407) && (x <= 439))
-			{
-				waitForIt(407, 99, 439, 139);
-				// i
-				DEBUG_KEYBOARD("i");
-				return 0x69;
-			}
-			if ((x >= 441) && (x <= 473))
-			{
-				waitForIt(441, 99, 473, 139);
-				// j
-				DEBUG_KEYBOARD("j");
-				return 0x6A;
-			}
-		}
-		if ((y >= 142) && (y <= 182))
-		{
-			if ((x >= 135) && (x <= 167))
-			{
-				waitForIt(135, 142, 167, 182);
-				// k
-				DEBUG_KEYBOARD("k");
-				return 0x6B;
-			}
-			if ((x >= 169) && (x <= 201))
-			{
-				waitForIt(169, 142, 201, 182);
-				// l
-				DEBUG_KEYBOARD("l");
-				return 0x6C;
-			}
-			if ((x >= 203) && (x <= 235))
-			{
-				waitForIt(203, 142, 235, 182);
-				// m
-				DEBUG_KEYBOARD("m");
-				return 0x6D;
-			}
-			if ((x >= 237) && (x <= 269))
-			{
-				waitForIt(237, 142, 269, 182);
-				// n
-				DEBUG_KEYBOARD("n");
-				return 0x6E;
-			}
-			if ((x >= 271) && (x <= 303))
-			{
-				waitForIt(271, 142, 303, 182);
-				// o
-				DEBUG_KEYBOARD("o");
-				return 0x6F;
-			}
-			if ((x >= 305) && (x <= 337))
-			{
-				waitForIt(305, 142, 337, 182);
-				// p
-				DEBUG_KEYBOARD("p");
-				return 0x70;
-			}
-			if ((x >= 339) && (x <= 371))
-			{
-				waitForIt(339, 142, 371, 182);
-				// q
-				DEBUG_KEYBOARD("q");
-				return 0x71;
-			}
-			if ((x >= 373) && (x <= 405))
-			{
-				waitForIt(373, 142, 405, 182);
-				// r
-				DEBUG_KEYBOARD("r");
-				return 0x72;
-			}
-			if ((x >= 407) && (x <= 439))
-			{
-				waitForIt(407, 142, 439, 182);
-				// s
-				DEBUG_KEYBOARD("s");
-				return 0x73;
-			}
-			if ((x >= 441) && (x <= 473))
-			{
-				waitForIt(441, 142, 473, 182);
-				// t
-				DEBUG_KEYBOARD("t");
-				return 0x74;
-			}
-		}
-		if ((y >= 185) && (y <= 225))
-		{
-			if ((x >= 135) && (x <= 167))
-			{
-				waitForIt(135, 185, 167, 225);
-				// u
-				DEBUG_KEYBOARD("u");
-				return 0x75;
-			}
-			if ((x >= 169) && (x <= 201))
-			{
-				waitForIt(169, 185, 201, 225);
-				// v
-				DEBUG_KEYBOARD("v");
-				return 0x76;
-			}
-
-			if ((x >= 203) && (x <= 235))
-			{
-				waitForIt(203, 185, 235, 225);
-				// w
-				DEBUG_KEYBOARD("w");
-				return 0x77;
-			}
-			if ((x >= 237) && (x <= 269))
-			{
-				waitForIt(237, 185, 269, 225);
-				// x
-				DEBUG_KEYBOARD("x");
-				return 0x78;
-			}
-			if ((x >= 271) && (x <= 303))
-			{
-				waitForIt(271, 185, 303, 225);
-				// y
-				DEBUG_KEYBOARD("y");
-				return 0x79;
-			}
-			if ((x >= 305) && (x <= 337))
-			{
-				waitForIt(305, 185, 337, 225);
-				// z
-				DEBUG_KEYBOARD("z");
-				return 0x7A;
-			}
-			if ((x >= 340) && (x <= 474))
-			{
-				waitForIt(340, 185, 474, 225);
-				// Backspace
-				DEBUG_KEYBOARD("Backspace");
-				return 0xF2;
-			}
-		}
-		if ((y >= 275) && (y <= 315))
-		{
-			if ((x >= 135) && (x <= 305))
-			{
-				waitForIt(135, 275, 305, 315);
-				// Accept
-				DEBUG_KEYBOARD("Accept");
-				return 0xF1;
-
-			}
-			if ((x >= 310) && (x <= 475))
-			{
-				waitForIt(310, 275, 475, 315);
-				// Cancel
-				DEBUG_KEYBOARD("Cancel");
-				return 0xF0;
-			}
-		}
-	}
-	return 0xFF;
-}
-
-/*
-* No change returns 0xFF
-* Accept returns 0xF1
-* Cancel returns 0xF0
-* Value contained in global keyboardInput
-*/
-uint8_t keyboardController(uint8_t& index)
-{
-	uint8_t input = keyboardButtons();
-	if (input > 0x29 && input < 0x7B)
-	{
-		if (index < 8)
-		{
-			keyboardInput[index] = input;
-		}
-
-		char buffer[8];
-		sprintf(buffer, "%s", keyboardInput);
-
-		drawRoundBtn(245, 230, 475, 270, buffer, menuBtnColor, menuBtnBorder, menuBtnText, CENTER);
-
-		++index;
-		return 0xFF;
-	}
-	if (input == 0xF2)
-	{
-		keyboardInput[index - 1] = 0x20;
-
-		char buffer[8];
-		sprintf(buffer, "%s", keyboardInput);
-
-		drawRoundBtn(245, 230, 475, 270, buffer, menuBtnColor, menuBtnBorder, menuBtnText, CENTER);
-		--index;
-		return 0xFF;
-	}
-	return input;
-}
-
-
 /*=========================================================
 	Framework Functions
 ===========================================================*/
@@ -2842,7 +2135,7 @@ void pageControl()
 			graphicLoaderState = 0;
 		}
 		// Call buttons if any
-		errorMSGButtons();
+		errorMSGButton(1, 2, 3);
 		break;
 	case 8:
 		if (!hasDrawn)
@@ -2920,74 +2213,63 @@ void pageControl()
 
 }
 
-// errorMSGReturn
-// 0 = false
-// 1 = true
-// 2 = no value
+/*============== Error Message ==============*/
 // Error Message function
-bool drawErrorMSG(String title, String eMessage1, String eMessage2)
+void drawErrorMSG(String title, String eMessage1, String eMessage2)
 {
 	drawSquareBtn(145, 100, 415, 220, "", menuBackground, menuBtnColor, menuBtnColor, CENTER);
 	drawSquareBtn(145, 100, 415, 130, title, themeBackground, menuBtnColor, menuBtnBorder, LEFT);
 	drawSquareBtn(146, 131, 414, 155, eMessage1, menuBackground, menuBackground, menuBtnText, CENTER);
 	drawSquareBtn(146, 155, 414, 180, eMessage2, menuBackground, menuBackground, menuBtnText, CENTER);
-	drawRoundBtn(365, 100, 415, 130, F("X"), menuBtnColor, menuBtnColor, menuBtnText, CENTER);
-	drawRoundBtn(155, 180, 275, 215, F("Confirm"), menuBtnColor, menuBtnColor, menuBtnText, CENTER);
-	drawRoundBtn(285, 180, 405, 215, F("Cancel"), menuBtnColor, menuBtnColor, menuBtnText, CENTER);
+	drawRoundBtn(365, 100, 415, 130, "X", menuBtnColor, menuBtnColor, menuBtnText, CENTER);
+	drawRoundBtn(155, 180, 275, 215, "Confirm", menuBtnColor, menuBtnColor, menuBtnText, CENTER);
+	drawRoundBtn(285, 180, 405, 215, "Cancel", menuBtnColor, menuBtnColor, menuBtnText, CENTER);
 }
 
-// Buttons for the error message function
-void errorMSGButtons()
+// Notification message
+void drawErrorMSG2(String title, String eMessage1, String eMessage2)
 {
+	drawSquareBtn(145, 100, 401, 220, "", menuBackground, menuBtnColor, menuBtnColor, CENTER);
+	drawSquareBtn(145, 100, 401, 130, title, themeBackground, menuBtnColor, menuBtnBorder, LEFT);
+	drawSquareBtn(146, 131, 400, 155, eMessage1, menuBackground, menuBackground, menuBtnText, CENTER);
+	drawSquareBtn(146, 155, 400, 180, eMessage2, menuBackground, menuBackground, menuBtnText, CENTER);
+	drawRoundBtn(365, 100, 401, 130, "X", menuBtnColor, menuBtnColor, menuBtnText, CENTER);
+}
+
+// Error Message buttons, returns 0 by default
+uint8_t errorMSGButton(uint8_t confirmPage, uint8_t cancelPage, uint8_t xPage)
+{
+	// Touch screen controls
 	if (Touch_getXY())
 	{
 		if ((x >= 365) && (x <= 415))
 		{
 			if ((y >= 100) && (y <= 130))
 			{
+				// X
 				waitForItRect(365, 100, 415, 130);
-				errorMessageReturn = 0;
+				return xPage;
 			}
 		}
 		if ((y >= 180) && (y <= 215))
 		{
 			if ((x >= 155) && (x <= 275))
 			{
+				// Confirm
 				waitForItRect(155, 180, 275, 215);
-				errorMessageReturn = 1;
-
+				return confirmPage;
 			}
 			if ((x >= 285) && (x <= 405))
 			{
+				// Cancel
 				waitForItRect(285, 180, 405, 215);
-				errorMessageReturn = 0;
+				return cancelPage;
 			}
 		}
 	}
+	return 0;
 }
 
-// Error message without confirmation
-uint8_t errorMSGBtn(uint8_t page)
-{
-	// Touch screen controls
-	if (Touch_getXY())
-	{
-		if ((x >= 400) && (x <= 450))
-		{
-			if ((y >= 140) && (y <= 170))
-			{
-				waitForItRect(400, 140, 450, 170);
-				page = oldPage;
-			}
-		}
-	}
-}
-
-// 
-uint8_t generateBitCRC(uint8_t a1, uint8_t a2, uint8_t a3, uint8_t a4, uint8_t a5, uint8_t a6, uint8_t grip)
-{
-	return (a1 % 2) + (a2 % 2) + (a3 % 2) + (a4 % 2) + (a5 % 2) + (a6 % 2) + (grip % 2) + 1;
-}
 
 /*=========================================================
 CRC - https://barrgroup.com/embedded-systems/how-to/crc-calculation-c-code
@@ -3048,13 +2330,6 @@ uint8_t generateCRC(uint8_t const message[], int nBytes)
 	// The final remainder is the CRC.
 	return (remainder);
 }
-
-/*
-uint8_t generateByteCRC(uint8_t* data)
-{
-	return ((data[0] % 2) + (data[1] % 2) + (data[2] % 2) + (data[3] % 2) + (data[4] % 2) + (data[5] % 2) + (data[6] % 2) + (data[7] % 2) + 1);
-}
-*/
 
 // Buttons for the main menu
 void menuButtons()
