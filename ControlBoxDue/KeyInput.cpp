@@ -13,7 +13,7 @@
 #define DEBUG_KEYBOARD(x)
 
 #include "KeyInput.h"
-#include "Common.h"
+#include "definitions.h"
 
 // Call before using keypad to clear out old values from array
 void resetKeypad()
@@ -21,6 +21,15 @@ void resetKeypad()
 	for (uint8_t i = 0; i < 4; i++)
 	{
 		keypadInput[i] = 0;
+	}
+}
+
+// Call before using keboard to clear out old values from array
+void resetKeyboard()
+{
+	for (uint8_t i = 0; i < 9; i++)
+	{
+		keyboardInput[i] = '\0';
 	}
 }
 
@@ -441,16 +450,17 @@ uint8_t keypadControllerDec(uint8_t& index, uint16_t& total)
 // User input keypad
 void drawkeyboard()
 {
+	resetKeyboard();
 	uint16_t posY = 56;
 	uint8_t numPad = 0x00;
 	uint8_t count = 0;
-	const char keyboardInput[37] = { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
-									 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j',
-									 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't',
-									 'u', 'v', 'w', 'x', 'y', 'z', '_' };
+	const char alpha[37] = { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
+							 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j',
+							 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't',
+							 'u', 'v', 'w', 'x', 'y', 'z', '_' };
 
 	// Clear LCD
-	drawSquareBtn(131, 55, 479, 319, "", themeBackground, themeBackground, themeBackground, CENTER);
+	drawSquareBtn(131, 55, 479, 319, "", themeBackground, themeBackground, themeBackground, 2);
 
 	for (uint8_t i = 0; i < 4; i++)
 	{
@@ -459,7 +469,7 @@ void drawkeyboard()
 		{
 			if (count < 37)
 			{
-				drawRoundBtn(posX, posY, posX + 32, posY + 40, String(keyboardInput[count]), menuBtnColor, menuBtnBorder, menuBtnText, CENTER);
+				drawRoundBtn(posX, posY, posX + 32, posY + 40, String(alpha[count]), menuBtnColor, menuBtnBorder, menuBtnText, CENTER);
 				posX += 34;
 				count++;
 			}
@@ -467,11 +477,11 @@ void drawkeyboard()
 		posY += 43;
 	}
 
-	drawRoundBtn(373, 185, 475, 225, F("<--"), menuBtnColor, menuBtnBorder, menuBtnText, CENTER);
-	drawRoundBtn(135, 230, 240, 270, F("Input:"), menuBackground, menuBtnBorder, menuBtnText, CENTER);
-	drawRoundBtn(245, 230, 475, 270, F(""), menuBtnColor, menuBtnBorder, menuBtnText, CENTER);
-	drawRoundBtn(135, 275, 305, 315, F("Accept"), menuBtnColor, menuBtnBorder, menuBtnText, CENTER);
-	drawRoundBtn(310, 275, 475, 315, F("Cancel"), menuBtnColor, menuBtnBorder, menuBtnText, CENTER);
+	drawRoundBtn(373, 185, 475, 225, F("<--"), menuBtnColor, menuBtnBorder, menuBtnText, 2);
+	drawRoundBtn(135, 230, 240, 270, F("Input:"), menuBackground, menuBtnBorder, menuBtnText, 2);
+	drawRoundBtn(245, 230, 475, 270, F(""), menuBtnColor, menuBtnBorder, menuBtnText, 2);
+	drawRoundBtn(135, 275, 305, 315, F("Accept"), menuBtnColor, menuBtnBorder, menuBtnText, 2);
+	drawRoundBtn(310, 275, 475, 315, F("Cancel"), menuBtnColor, menuBtnBorder, menuBtnText, 2);
 }
 
 // User input keyboard

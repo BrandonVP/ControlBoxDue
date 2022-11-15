@@ -1,9 +1,17 @@
+/*
+ ===========================================================================
+ Name        : Common.h
+ Author      : Brandon Van Pelt
+ Created	 :
+ Description : Shared resources
+ ===========================================================================
+ */
+
 #pragma once
-//#include "definitions.h"
-#include "CANBusWiFi.h"
+//#include "CANBusWiFi.h"
 #include <SD.h>
-#include "SDCard.h"
 #include <UTFT.h>
+#include "SDCard.h"
 #include "CANBus.h"
 #include "AxisPos.h"
 
@@ -21,13 +29,13 @@
 #define menuBtnColor 0xFC00 // Orange
 #define menuBackground 0xC618 //Silver
 
-class Program;
-class AxisPos;
-class UTFT;
-class CANBus;
+//class Program;
+//class AxisPos;
+//class UTFT;
+//class CANBus;
 
-#ifndef COMMON_H
-#define COMMON_H
+//#ifndef COMMON_H
+//#define COMMON_H
 
 // How many programs can be saved to SD card
 #define MAX_PROGRAMS 16
@@ -49,4 +57,4 @@ extern String programNames_G[MAX_PROGRAMS];
 extern uint8_t numberOfPrograms;
 extern char fileList[MAX_PROGRAMS][8];
 extern uint8_t generateCRC(uint8_t const message[], int nBytes);
-#endif
+//#endif

@@ -1,4 +1,12 @@
-#pragma once
+/*
+ ===========================================================================
+ Name        : icons.h
+ Author      : Brandon Van Pelt
+ Created	 :
+ Description : Holds custom icons
+ ===========================================================================
+ */
+
 #include <avr/pgmspace.h>
 // Robotic Arm bitmap
 // 5 columns * 8 bits = 40 x 40 rows

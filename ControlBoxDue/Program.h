@@ -1,8 +1,20 @@
-// Program.h
+/*
+ ===========================================================================
+ Name        : Program.h
+ Author      : Brandon Van Pelt
+ Created	 :
+ Description : Class object for holding program position movements
+ ===========================================================================
+ */
 
-#ifndef _Program_h
-#define _Program_h
+#ifndef _Program_H
+#define _Program_H
+
+#if defined(ARDUINO) && ARDUINO >= 100
 #include "arduino.h"
+#else
+#include "WProgram.h"
+#endif
 
 class Program
 {
@@ -27,4 +39,4 @@ public:
 	uint8_t getGrip();
 };
 
-#endif
+#endif // _Program_H

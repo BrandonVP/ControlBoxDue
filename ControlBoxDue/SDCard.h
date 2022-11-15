@@ -1,9 +1,17 @@
-// SDCard.h
+/*
+ ===========================================================================
+ Name        : SDCard.h
+ Author      : Brandon Van Pelt
+ Created	 :
+ Description : SDCard class manages the SD card reader hardware
+ ===========================================================================
+ */
+
 #include <LinkedList.h>
 #include "Program.h"
 
-#ifndef _SDCard_h
-#define _SDCard_h
+#ifndef _SDCard_H
+#define _SDCard_H
 #define SD_CARD_CS 8
 
 #if defined(ARDUINO) && ARDUINO >= 100
@@ -31,5 +39,4 @@ public:
 	void createDRIVE(String);
 	uint8_t printDirectory(File dir, MyArray& list);
 };
-
-#endif
+#endif // _SDCard_H

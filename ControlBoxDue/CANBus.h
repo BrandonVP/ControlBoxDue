@@ -8,11 +8,17 @@
  */
 
 #include <due_can.h>
-#include "variant.h"
 #include "Common.h"
 
 #ifndef _CANBus_H
 #define _CANBus_H
+
+#if defined(ARDUINO) && ARDUINO >= 100
+#include "arduino.h"
+#else
+#include "WProgram.h"
+#endif
+
 class AxisPos;
 
 class CANBus

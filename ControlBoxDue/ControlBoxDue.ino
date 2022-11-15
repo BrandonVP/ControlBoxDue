@@ -5,31 +5,27 @@
 */
 
 /*=========================================================
-	Todo List
+	TODO List
 ===========================================================
 Assign physical buttons
 Switch between LI9486 & LI9488
 Swtich between Due & mega2560
 
 - Use Debug for diagnostic messages
-- memcpy instead of loop
 
-- Add confirmation timeout
-
-- Clean up code and includes / header files
-
-- Keyboard broke
+- Add execute confirmation timeout
 ===========================================================
-	End Todo List
+	End TODO List
 =========================================================*/
 
-#include "Variables.h"
-#include "KeyInput.h"
+
 #include <DS3231.h>
 #include <LinkedList.h>
 #include <malloc.h>
 #include <SPI.h>
-#include "AxisPos.h"
+
+#include "Variables.h"
+#include "KeyInput.h"
 #include "definitions.h"
 #include "CANBusWiFi.h"
 #include "Program.h"
@@ -399,7 +395,6 @@ void memoryUse()
 ***************************************************/
 void drawRoundBtn(int x_start, int y_start, int x_stop, int y_stop, String button, int backgroundColor, int btnBorderColor, int btnTxtColor, int align) {
 	int size, temp, offset;
-
 	myGLCD.setColor(backgroundColor);
 	myGLCD.fillRoundRect(x_start, y_start, x_stop, y_stop); // H_Start, V_Start, H_Stop, V_Stop
 	myGLCD.setColor(btnBorderColor);
@@ -422,6 +417,7 @@ void drawRoundBtn(int x_start, int y_start, int x_stop, int y_stop, String butto
 		myGLCD.print(button, x_start + 55, y_start + ((y_stop - y_start) / 2) - 8); // hor, ver
 		break;
 	default:
+		SerialUSB.println("d");
 		break;
 	}
 
@@ -1070,7 +1066,6 @@ void programButtons()
 			{
 				waitForIt(420, 55, 477, 95);
 				// DEL
-				errorMessageReturn = 0;
 				drawErrorMSG(F("Confirmation"), F("Delete"), fileList[selectedProgram]);
 				oldPage = page;
 				page = 7;
@@ -1105,8 +1100,7 @@ void programButtons()
 			{
 				waitForIt(420, 100, 477, 140);
 				// DEL
-				errorMessageReturn = 2;
-				drawErrorMSG(F("Confirmation"), F("Permanently"), F("Delete File?"));
+				drawErrorMSG(F("Confirmation"), F("Delete"), fileList[selectedProgram]);
 				oldPage = page;
 				page = 7;
 				hasDrawn = false;
@@ -1140,8 +1134,7 @@ void programButtons()
 			{
 				waitForIt(420, 145, 477, 185);
 				// DEL
-				errorMessageReturn = 2;
-				drawErrorMSG(F("Confirmation"), F("Permanently"), F("Delete File?"));
+				drawErrorMSG(F("Confirmation"), F("Delete"), fileList[selectedProgram]);
 				oldPage = page;
 				page = 7;
 				hasDrawn = false;
@@ -1175,8 +1168,7 @@ void programButtons()
 			{
 				waitForIt(420, 190, 477, 230);
 				// DEL
-				errorMessageReturn = 2;
-				drawErrorMSG(F("Confirmation"), F("Permanently"), F("Delete File?"));
+				drawErrorMSG(F("Confirmation"), F("Delete"), fileList[selectedProgram]);
 				oldPage = page;
 				page = 7;
 				hasDrawn = false;
@@ -1210,8 +1202,7 @@ void programButtons()
 			{
 				waitForIt(420, 235, 477, 275);
 				// DEL
-				errorMessageReturn = 2;
-				drawErrorMSG(F("Confirmation"), F("Permanently"), F("Delete File?"));
+				drawErrorMSG(F("Confirmation"), F("Delete"), fileList[selectedProgram]);
 				oldPage = page;
 				page = 7;
 				hasDrawn = false;
@@ -1503,7 +1494,6 @@ void saveProgram()
 	// Write out linkedlist data to text file
 	for (uint8_t i = 0; i < runList.size(); i++)
 	{
-		Serial.print(F("."));
 		sdCard.writeFile(programDirectory, ",");
 		sdCard.writeFile(programDirectory, runList.get(i)->getA1());
 		sdCard.writeFile(programDirectory, space);
@@ -2028,6 +2018,7 @@ void pageControl()
 		// Draw page
 		if (!hasDrawn)
 		{
+			errorMessageReturn = 0;
 			hasDrawn = true;
 		}
 		if (errorMessageReturn == 2 || errorMessageReturn == 3)
@@ -2042,6 +2033,10 @@ void pageControl()
 			hasDrawn = false;
 			graphicLoaderState = 0;
 			programDelete();
+			for (uint8_t i = 0; i < 8; i++)
+			{
+				fileList[selectedProgram][i] = '\0';
+			}
 		}
 		// Call buttons if any
 		errorMessageReturn = errorMSGButton(1, 2, 3);
@@ -2063,15 +2058,7 @@ void pageControl()
 		if (!hasDrawn)
 		{
 			keyIndex = 0;
-			const char test = '\0';
-			keyboardInput[0] = test;
-			keyboardInput[1] = test;
-			keyboardInput[2] = test;
-			keyboardInput[3] = test;
-			keyboardInput[4] = test;
-			keyboardInput[5] = test;
-			keyboardInput[6] = test;
-			keyboardInput[7] = test;
+			resetKeyboard();
 			drawkeyboard();
 			hasDrawn = true;
 		}
@@ -2083,13 +2070,7 @@ void pageControl()
 			strcat(temp, fileList[selectedProgram]);
 
 			// Copy keyboard input to fileList name
-			for (uint8_t i = 0; i < 8; i++)
-			{
-				//if (keyboardInput[i] != ' ')
-				//{
-				fileList[selectedProgram][i] = keyboardInput[i];
-				//}
-			}
+			memcpy(fileList[selectedProgram], keyboardInput, 8);
 
 			// Save the file under the new filename
 			saveProgram();
@@ -2418,7 +2399,7 @@ void updateTime()
 	if (millis() - updateClock > 1000)
 	{
 		char time[40];
-		drawRoundBtn(1, 10, 125, 30, rtc.getTimeStr(), menuBackground, menuBackground, menuBtnText, CENTER);
+		drawSquareBtn(1, 10, 125, 30, rtc.getTimeStr(), menuBackground, menuBackground, menuBtnText, CENTER);
 		rtc.getTimeStr();
 		updateClock = millis();
 	}

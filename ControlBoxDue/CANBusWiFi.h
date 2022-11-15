@@ -1,12 +1,14 @@
 /*
- Name:		CANBusWifi.h
- Created:	10/22/2021 12:40:14 PM
- Author:	Brandon Van Pelt
- Editor:	http://www.visualmicro.com
-*/
+ ===========================================================================
+ Name        : CANBusWifi.h
+ Author      : Brandon Van Pelt
+ Created	 : 10/22/2021 12:40:14 PM
+ Description : CANBus messages over WiFi
+ ===========================================================================
+ */
 
-#ifndef _CANBusWifi_h
-#define _CANBusWifi_h
+#ifndef _CANBusWifi_H
+#define _CANBusWifi_H
 
 #if defined(ARDUINO) && ARDUINO >= 100
 #include "arduino.h"
@@ -42,6 +44,5 @@ public:
 	bool readFrame(CAN_Message&);
 	void sendFrame(CAN_Message);
 };
-
-#endif
+#endif // _CANBusWifi_H
 

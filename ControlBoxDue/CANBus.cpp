@@ -8,11 +8,12 @@
  */
 
 #include "CANBus.h"
+#include "variant.h"
 #include "definitions.h"
 
+// Initialize CAN1 and set the baud rate
 void CANBus::startCAN()
 {
-    // Initialize CAN1 and set the proper baud rates here
     Can0.begin(CAN_BPS_500K);
     Can0.watchFor();
 }
@@ -30,7 +31,7 @@ void CANBus::sendFrame(uint16_t id, byte* frame)
 // Process incoming CAN Bus messages
 void CANBus::processFrame(AxisPos& axisPos, UTFT& myGLCD)
 {
-    // If buffer inbox has a message
+    // If inbox buffer has a message
     if (Can0.available() > 0)
     {
         Can0.read(incoming);

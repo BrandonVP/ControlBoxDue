@@ -1,9 +1,11 @@
 /*
- Name:		CANBusWifi.cpp
- Created:	10/22/2021 12:40:14 PM
- Author:	brand
- Editor:	http://www.visualmicro.com
-*/
+ ===========================================================================
+ Name        : CANBusWifi.h
+ Author      : Brandon Van Pelt
+ Created	 : 10/22/2021 12:40:14 PM
+ Description : CANBus messages over WiFi
+ ===========================================================================
+ */
 
 #include "CANBusWifi.h"
 

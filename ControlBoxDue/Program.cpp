@@ -1,9 +1,15 @@
-// 
-// 
-// 
+/*
+ ===========================================================================
+ Name        : Program.cpp
+ Author      : Brandon Van Pelt
+ Created	 :
+ Description : Class object for holding program position movements
+ ===========================================================================
+ */
 
 #include "Program.h"
 
+// Default constructor
 Program::Program(uint16_t* posArray, uint8_t grip, uint16_t ch)
 {
 	a1 = posArray[0];
@@ -16,6 +22,7 @@ Program::Program(uint16_t* posArray, uint8_t grip, uint16_t ch)
 	channel = ch;
 }
 
+// Get the different axis positions returned in degrees
 uint16_t Program::getA1()
 {
 	return a1;

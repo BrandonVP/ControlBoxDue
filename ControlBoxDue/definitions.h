@@ -1,4 +1,3 @@
-#pragma once
 // For the draw shape functions
 #define LEFT 1
 #define CENTER 2
@@ -54,4 +53,4 @@
 // Used for converting keypad input to appropriate hex place
 extern const PROGMEM uint32_t hexTable[8];
 const PROGMEM String pDir = "PROGRAMS";
-const PROGMEM String version = "Version - 1.1.0";
+const PROGMEM String version = "Version 2.0.0";
