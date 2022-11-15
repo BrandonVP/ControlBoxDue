@@ -1,10 +1,18 @@
-// CANBus.h
+/*
+ ===========================================================================
+ Name        : CANBus.h
+ Author      : Brandon Van Pelt
+ Created	 :
+ Description : CANBus manages the CAN bus hardware
+ ===========================================================================
+ */
+
 #include <due_can.h>
 #include "variant.h"
 #include "Common.h"
 
-#ifndef _CANBus_h
-#define _CANBus_h
+#ifndef _CANBus_H
+#define _CANBus_H
 class AxisPos;
 
 class CANBus
@@ -19,4 +27,4 @@ public:
 	void startCAN();
 
 };
-#endif
+#endif // _CANBus_H

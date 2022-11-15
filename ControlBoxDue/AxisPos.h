@@ -1,8 +1,16 @@
-// AxisPos.h
+/*
+ ===========================================================================
+ Name        : AxisPos.h
+ Author      : Brandon Van Pelt
+ Created	 :
+ Description : Calculates movement steps
+ ===========================================================================
+ */
+
 #include "Common.h"
 
-#ifndef _AxisPos_h
-#define _AxisPos_h
+#ifndef _AxisPos_H
+#define _AxisPos_H
 class AxisPos
 {
 private:
@@ -13,7 +21,7 @@ private:
 	uint16_t a4c1 = 0;
 	uint16_t a5c1 = 0;
 	uint16_t a6c1 = 0;
-
+	// Uses 6 bits to update each of the 6 axis for channel 1
 	uint8_t printC1 = 0;
 
 	// Angle values for channel 2
@@ -23,7 +31,7 @@ private:
 	uint16_t a4c2 = 0;
 	uint16_t a5c2 = 0;
 	uint16_t a6c2 = 0;
-
+	// Uses 6 bits to update each of the 6 axis for channel 2
 	uint8_t printC2 = 0;
 	
 public:
@@ -31,8 +39,6 @@ public:
 	void drawAxisPosUpdate(UTFT);
 	void drawAxisPosUpdateM(UTFT, uint16_t, bool);
 	void updateAxisPos(CAN_FRAME);
-	void setA1C1(uint16_t);
-	void setA1C2(uint16_t);
 	int getA1C1();
 	int getA2C1();
 	int getA3C1();
@@ -46,4 +52,4 @@ public:
 	int getA5C2();
 	int getA6C2();
 };
-#endif
+#endif // _AxisPos_H

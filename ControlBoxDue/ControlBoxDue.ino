@@ -19,7 +19,6 @@ Swtich between Due & mega2560
 - Clean up code and includes / header files
 
 - Keyboard broke
-- Cant delete programs (check msg return values)
 ===========================================================
 	End Todo List
 =========================================================*/

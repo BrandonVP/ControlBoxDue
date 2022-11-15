@@ -1,4 +1,12 @@
-// CANBus manages the CAN bus hardware
+/*
+ ===========================================================================
+ Name        : CANBus.cpp
+ Author      : Brandon Van Pelt
+ Created	 :
+ Description : CANBus manages the CAN bus hardware
+ ===========================================================================
+ */
+
 #include "CANBus.h"
 #include "definitions.h"
 
@@ -19,6 +27,7 @@ void CANBus::sendFrame(uint16_t id, byte* frame)
     Can0.sendFrame(outgoing);
 }
 
+// Process incoming CAN Bus messages
 void CANBus::processFrame(AxisPos& axisPos, UTFT& myGLCD)
 {
     // If buffer inbox has a message
