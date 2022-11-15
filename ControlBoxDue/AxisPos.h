@@ -13,6 +13,9 @@ private:
 	uint16_t a4c1 = 0;
 	uint16_t a5c1 = 0;
 	uint16_t a6c1 = 0;
+
+	uint8_t printC1 = 0;
+
 	// Angle values for channel 2
 	uint16_t a1c2 = 0;
 	uint16_t a2c2 = 0;
@@ -20,8 +23,13 @@ private:
 	uint16_t a4c2 = 0;
 	uint16_t a5c2 = 0;
 	uint16_t a6c2 = 0;
+
+	uint8_t printC2 = 0;
+	
 public:
 	void drawAxisPos(UTFT);
+	void drawAxisPosUpdate(UTFT);
+	void drawAxisPosUpdateM(UTFT, uint16_t, bool);
 	void updateAxisPos(CAN_FRAME);
 	void setA1C1(uint16_t);
 	void setA1C2(uint16_t);

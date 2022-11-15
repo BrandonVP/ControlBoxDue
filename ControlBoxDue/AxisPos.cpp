@@ -1,12 +1,20 @@
-// 
-// 
-// 
+/*
+ ===========================================================================
+ Name        : AxisPos.cpp
+ Author      : Brandon Van Pelt
+ Created	 : 
+ Description : Calculates movement steps
+ ===========================================================================
+ */
+
 #include <due_can.h>
 #include "AxisPos.h"
 #include "definitions.h"
 
-#define ARM1_POSITION   0x1A0
-#define ARM2_POSITION   0x2A0
+ // Checks a single bit of binary number
+#define CHECK_BIT(var,pos) ((var) & (1<<(pos)))
+
+// Decodes incoming message and updates the current axis position in degrees
 void AxisPos::updateAxisPos(CAN_FRAME axisFrame)
 {
 	// Need these temp values to calculate "CRC"
@@ -33,6 +41,12 @@ void AxisPos::updateAxisPos(CAN_FRAME axisFrame)
 		// Determine which channel to write values too
 		if (axisFrame.id == ARM1_POSITION)
 		{
+			if (a1c1 != a1){printC1 |= (1 << 0);}
+			if (a2c1 != a2){printC1 |= (1 << 1);}
+			if (a3c1 != a3){printC1 |= (1 << 2);}
+			if (a4c1 != a4){printC1 |= (1 << 3);}
+			if (a5c1 != a5){printC1 |= (1 << 4);}
+			if (a6c1 != a6){printC1 |= (1 << 5);}
 			a1c1 = a1;
 			a2c1 = a2;
 			a3c1 = a3;
@@ -42,6 +56,12 @@ void AxisPos::updateAxisPos(CAN_FRAME axisFrame)
 		}
 		else if (axisFrame.id == ARM2_POSITION)
 		{
+			if (a1c2 != a1) { printC2 |= (1 << 0); }
+			if (a2c2 != a2) { printC2 |= (1 << 1); }
+			if (a3c2 != a3) { printC2 |= (1 << 2); }
+			if (a4c2 != a4) { printC2 |= (1 << 3); }
+			if (a5c2 != a5) { printC2 |= (1 << 4); }
+			if (a6c2 != a6) { printC2 |= (1 << 5); }
 			a1c2 = a1;
 			a2c2 = a2;
 			a3c2 = a3;
@@ -49,6 +69,20 @@ void AxisPos::updateAxisPos(CAN_FRAME axisFrame)
 			a5c2 = a5;
 			a6c2 = a6;
 		}
+		/*
+		Serial.print("updateAxisPos: ");
+		Serial.print(CHECK_BIT(printC1, 5));
+		Serial.print(" ");
+		Serial.print(CHECK_BIT(printC1, 4));
+		Serial.print(" ");
+		Serial.print(CHECK_BIT(printC1, 3));
+		Serial.print(" ");
+		Serial.print(CHECK_BIT(printC1, 2));
+		Serial.print(" ");
+		Serial.print(CHECK_BIT(printC1, 1));
+		Serial.print(" ");
+		Serial.println(CHECK_BIT(printC1, 0));
+		*/
 	}
 }
 
@@ -74,6 +108,159 @@ void AxisPos::drawAxisPos(UTFT LCD)
 	LCD.printNumI(a4c2, 305, 183, 3, '0');
 	LCD.printNumI(a5c2, 305, 228, 3, '0');
 	LCD.printNumI(a6c2, 305, 273, 3, '0');
+}
+
+// Update and draw the Axis positions on the view page
+void AxisPos::drawAxisPosUpdate(UTFT LCD)
+{
+	// Text color
+	LCD.setColor(0xFFFF);
+
+	// Text background color
+	LCD.setBackColor(0xC618);
+
+	// Draw angles 
+	if (CHECK_BIT(printC1, 0))
+	{
+		LCD.printNumI(a1c1, 195, 48, 3, '0');
+		printC1 &= ~(1 << 0);
+	}
+	if (CHECK_BIT(printC1, 1))
+	{
+		LCD.printNumI(a2c1, 195, 93, 3, '0');
+		printC1 &= ~(1 << 1);
+	}
+	if (CHECK_BIT(printC1, 2))
+	{
+		LCD.printNumI(a3c1, 195, 138, 3, '0');
+		printC1 &= ~(1 << 2);
+	}
+	if (CHECK_BIT(printC1, 3))
+	{
+		LCD.printNumI(a4c1, 195, 183, 3, '0');
+		printC1 &= ~(1 << 3);
+	}
+	if (CHECK_BIT(printC1, 4))
+	{
+		LCD.printNumI(a5c1, 195, 228, 3, '0');
+		printC1 &= ~(1 << 4);
+	}
+	if (CHECK_BIT(printC1, 5))
+	{
+		LCD.printNumI(a6c1, 195, 273, 3, '0');
+		printC1 &= ~(1 << 5);
+	}
+
+	if (CHECK_BIT(printC2, 0))
+	{
+		LCD.printNumI(a1c2, 305, 48, 3, '0');
+		printC2 &= ~(1 << 0);
+	}
+	if (CHECK_BIT(printC2, 1))
+	{
+		LCD.printNumI(a2c2, 305, 93, 3, '0');
+		printC2 &= ~(1 << 1);
+	}
+	if (CHECK_BIT(printC2, 2))
+	{
+		LCD.printNumI(a3c2, 305, 138, 3, '0');
+		printC2 &= ~(1 << 2);
+	}
+	if (CHECK_BIT(printC2, 3))
+	{
+		LCD.printNumI(a4c2, 305, 183, 3, '0');
+		printC2 &= ~(1 << 3);
+	}
+	if (CHECK_BIT(printC2, 4))
+	{
+		LCD.printNumI(a5c2, 305, 228, 3, '0');
+		printC2 &= ~(1 << 4);
+	}
+	if (CHECK_BIT(printC2, 5))
+	{
+		LCD.printNumI(a6c2, 305, 273, 3, '0');
+		printC2 &= ~(1 << 5);
+	}
+}
+
+// Update and draw the Axis positions on the view page
+void AxisPos::drawAxisPosUpdateM(UTFT LCD, uint16_t armID, bool print)
+{
+	// Text color
+	LCD.setColor(0xFFFF);
+
+	// Text background color
+	LCD.setBackColor(menuBtnColor);
+
+	// Draw angles 
+	if (armID == ARM1_MANUAL)
+	{
+		if (CHECK_BIT(printC1, 0) || print)
+		{
+			LCD.printNumI(a1c1, 134, 142, 3, '0');
+			printC1 &= ~(1 << 0);
+		}
+		if (CHECK_BIT(printC1, 1) || print)
+		{
+			LCD.printNumI(a2c1, 191, 142, 3, '0');
+			printC1 &= ~(1 << 1);
+		}
+		if (CHECK_BIT(printC1, 2) || print)
+		{
+			LCD.printNumI(a3c1, 249, 142, 3, '0');
+			printC1 &= ~(1 << 2);
+		}
+		if (CHECK_BIT(printC1, 3) || print)
+		{
+			LCD.printNumI(a4c1, 307, 142, 3, '0');
+			printC1 &= ~(1 << 3);
+		}
+		if (CHECK_BIT(printC1, 4) || print)
+		{
+			LCD.printNumI(a5c1, 365, 142, 3, '0');
+			printC1 &= ~(1 << 4);
+		}
+		if (CHECK_BIT(printC1, 5) || print)
+		{
+			LCD.printNumI(a6c1, 423, 142, 3, '0');
+			printC1 &= ~(1 << 5);
+		}
+	}
+	else if (armID == ARM2_MANUAL)
+	{
+		if (CHECK_BIT(printC2, 0) || print)
+		{
+			LCD.printNumI(a1c2, 134, 142, 3, '0');
+			printC2 &= ~(1 << 0);
+		}
+		if (CHECK_BIT(printC2, 1) || print)
+		{
+			LCD.printNumI(a2c2, 191, 142, 3, '0');
+			printC2 &= ~(1 << 1);
+		}
+		if (CHECK_BIT(printC2, 2) || print)
+		{
+			LCD.printNumI(a3c2, 249, 142, 3, '0');
+			printC2 &= ~(1 << 2);
+		}
+		if (CHECK_BIT(printC2, 3) || print)
+		{
+			LCD.printNumI(a4c2, 307, 142, 3, '0');
+			printC2 &= ~(1 << 3);
+		}
+		if (CHECK_BIT(printC2, 4) || print)
+		{
+			LCD.printNumI(a5c2, 365, 142, 3, '0');
+			printC2 &= ~(1 << 4);
+		}
+		if (CHECK_BIT(printC2, 5) || print)
+		{
+			LCD.printNumI(a6c2, 423, 142, 3, '0');
+			printC2 &= ~(1 << 5);
+		}
+	}
+
+	
 }
 
 // Get angle for programming

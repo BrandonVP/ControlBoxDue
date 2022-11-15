@@ -17,6 +17,9 @@ Swtich between Due & mega2560
 - Add confirmation timeout
 
 - Clean up code and includes / header files
+
+- Keyboard broke
+- Cant delete programs (check msg return values)
 ===========================================================
 	End Todo List
 =========================================================*/
@@ -499,9 +502,11 @@ void waitForItRect(int x1, int y1, int x2, int y2, int txId, byte data[])
 		can1.sendFrame(txId, data);
 		myTouch.read();
 		backgroundProcess();
-		printManualAxisDeg();
+		axisPos.drawAxisPosUpdateM(myGLCD, txIdManual, false);
 		// TODO replace delay with something non blocking
-		delay(80);
+		delay(40);
+		axisPos.drawAxisPosUpdateM(myGLCD, txIdManual, false);
+		delay(40);
 	}
 	myGLCD.setColor(menuBtnBorder);
 	myGLCD.drawRect(x1, y1, x2, y2);
@@ -834,104 +839,6 @@ void manualControlButtons()
 	}
 }
 
-uint16_t axis1M1 = 0;
-uint16_t axis2M1 = 0;
-uint16_t axis3M1 = 0;
-uint16_t axis4M1 = 0;
-uint16_t axis5M1 = 0;
-uint16_t axis6M1 = 0;
-uint16_t axis1M2 = 0;
-uint16_t axis2M2 = 0;
-uint16_t axis3M2 = 0;
-uint16_t axis4M2 = 0;
-uint16_t axis5M2 = 0;
-uint16_t axis6M2 = 0;
-uint32_t timermAd = 0;
-uint8_t lastID = 0;
-
-void printManualAxisDeg()
-{
-	if (((millis() - timermAd > 50) && (page == 3)))
-	{
-		// Text color
-		myGLCD.setColor(menuBtnText);
-
-		// Text background color
-		myGLCD.setBackColor(menuBtnColor);
-
-		// Draw angles 
-		
-		if (txIdManual == ARM1_MANUAL)
-		{
-			if (axisPos.getA1C1() != axis1M1 || txIdManual != lastID)
-			{
-				myGLCD.printNumI(axisPos.getA1C1(), 134, 142, 3, '0');
-				axis1M1 = axisPos.getA1C1();
-			}
-			if (axisPos.getA2C1() != axis2M1 || txIdManual != lastID)
-			{
-				myGLCD.printNumI(axisPos.getA2C1(), 191, 142, 3, '0');
-				axis2M1 = axisPos.getA2C1();
-			}
-			if (axisPos.getA3C1() != axis3M1 || txIdManual != lastID)
-			{
-				myGLCD.printNumI(axisPos.getA3C1(), 249, 142, 3, '0');
-				axis3M1 = axisPos.getA3C1();
-			}
-			if (axisPos.getA4C1() != axis4M1 || txIdManual != lastID)
-			{
-				myGLCD.printNumI(axisPos.getA4C1(), 307, 142, 3, '0');
-				axis4M1 = axisPos.getA4C1();
-			}
-			if (axisPos.getA5C1() != axis5M1 || txIdManual != lastID)
-			{
-				myGLCD.printNumI(axisPos.getA5C1(), 365, 142, 3, '0');
-				axis5M1 = axisPos.getA5C1();
-			}
-			if (axisPos.getA6C1() != axis6M1 || txIdManual != lastID)
-			{
-				myGLCD.printNumI(axisPos.getA6C1(), 423, 142, 3, '0');
-				axis6M1 = axisPos.getA6C1();
-			}
-		}
-		else if (txIdManual == ARM2_MANUAL)
-		{
-			if (axisPos.getA1C2() != axis1M2 || txIdManual != lastID)
-			{
-				myGLCD.printNumI(axisPos.getA1C2(), 134, 142, 3, '0');
-				axis1M2 = axisPos.getA1C2();
-			}
-			if (axisPos.getA2C2() != axis2M2 || txIdManual != lastID)
-			{
-				myGLCD.printNumI(axisPos.getA2C2(), 191, 142, 3, '0');
-				axis2M2 = axisPos.getA2C2();
-			}
-			if (axisPos.getA3C2() != axis3M2 || txIdManual != lastID)
-			{
-				myGLCD.printNumI(axisPos.getA3C2(), 249, 142, 3, '0');
-				axis3M2 = axisPos.getA3C2();
-			}
-			if (axisPos.getA4C2() != axis4M1 || txIdManual != lastID)
-			{
-				myGLCD.printNumI(axisPos.getA4C2(), 307, 142, 3, '0');
-				axis4M2 = axisPos.getA4C2();
-			}
-			if (axisPos.getA5C2() != axis5M2 || txIdManual != lastID)
-			{
-				myGLCD.printNumI(axisPos.getA5C2(), 365, 142, 3, '0');
-				axis5M2 = axisPos.getA5C2();
-			}
-			if (axisPos.getA6C2() != axis6M2 || txIdManual != lastID)
-			{
-				myGLCD.printNumI(axisPos.getA6C2(), 423, 142, 3, '0');
-				axis6M2 = axisPos.getA6C2();
-			}
-		}
-		timermAd = millis();
-		lastID = txIdManual;
-	}
-}
-
 /*=========================================================
 					View page
 ===========================================================*/
@@ -1164,8 +1071,8 @@ void programButtons()
 			{
 				waitForIt(420, 55, 477, 95);
 				// DEL
-				errorMessageReturn = 2;
-				drawErrorMSG(F("Confirmation"), F("Permanently"), F("Delete File?"));
+				errorMessageReturn = 0;
+				drawErrorMSG(F("Confirmation"), F("Delete"), fileList[selectedProgram]);
 				oldPage = page;
 				page = 7;
 				hasDrawn = false;
@@ -2040,10 +1947,10 @@ void pageControl()
 				break;
 			}
 			axisPos.drawAxisPos(myGLCD);
-			axisPos.drawAxisPos(myGLCD);
 			hasDrawn = true;
 		}
 		// Call buttons if any
+		axisPos.drawAxisPosUpdate(myGLCD);
 		break;
 	case 2: // Program page
 		// If program open jump to page 6
@@ -2055,11 +1962,6 @@ void pageControl()
 				page = 6;
 			}
 			break;
-		}
-		if (errorMessageReturn == 1)
-		{
-			programDelete();
-			errorMessageReturn = 2;
 		}
 		// Draw page
 		if (!hasDrawn)
@@ -2084,10 +1986,11 @@ void pageControl()
 				break;
 			}
 			hasDrawn = true;
+			axisPos.drawAxisPosUpdateM(myGLCD, txIdManual, true);
 		}
 		// Call buttons if any
 		manualControlButtons();
-		printManualAxisDeg();
+		axisPos.drawAxisPosUpdateM(myGLCD, txIdManual, false);
 		break;
 	case 4: // Configuation page
 		// Draw page
@@ -2128,14 +2031,21 @@ void pageControl()
 		{
 			hasDrawn = true;
 		}
-		if (errorMessageReturn == 0 || errorMessageReturn == 1)
+		if (errorMessageReturn == 2 || errorMessageReturn == 3)
 		{
 			page = oldPage;
 			hasDrawn = false;
 			graphicLoaderState = 0;
 		}
+		if (errorMessageReturn == 1)
+		{
+			page = oldPage;
+			hasDrawn = false;
+			graphicLoaderState = 0;
+			programDelete();
+		}
 		// Call buttons if any
-		errorMSGButton(1, 2, 3);
+		errorMessageReturn = errorMSGButton(1, 2, 3);
 		break;
 	case 8:
 		if (!hasDrawn)
