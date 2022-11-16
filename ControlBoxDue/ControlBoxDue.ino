@@ -18,7 +18,6 @@ Swtich between Due & mega2560
 	End TODO List
 =========================================================*/
 
-
 #include <DS3231.h>
 #include <LinkedList.h>
 #include <malloc.h>
@@ -26,12 +25,12 @@ Swtich between Due & mega2560
 
 #include "Variables.h"
 #include "KeyInput.h"
-#include "definitions.h"
 #include "CANBusWiFi.h"
 #include "Program.h"
 #include "icons.h"
 #include "Common.h"
 #include "KeyInput.h"
+#include "Configuration.h"
 
 /*=========================================================
 	Settings
@@ -115,7 +114,7 @@ uint16_t txIdManual = ARM1_MANUAL;
 // Execute variables
 bool programLoaded = false;
 bool programRunning = false;
-bool loopProgram = true;
+
 bool Arm1Ready = true;
 bool Arm2Ready = true;
 
@@ -126,7 +125,10 @@ bool programEdit = false;
 uint8_t programProgress = 0; // THIS WILL LIMIT THE SIZE OF A PROGRAM TO 255 MOVEMENTS
 uint8_t selectedProgram = 0;
 
-
+// Used for converting keypad input to appropriate hex place
+//extern const PROGMEM uint32_t hexTable[8];
+const PROGMEM String pDir = "PROGRAMS";
+const PROGMEM String version = "Version 2.0.0";
 const PROGMEM uint32_t hexTable[8] = { 1, 16, 256, 4096, 65536, 1048576, 16777216, 268435456 };
 
 
@@ -154,14 +156,6 @@ the device a second time to prevent updating time to last time
 device was on at every startup.
 */
 //#define UPDATE_CLOCK
-
-// https://forum.arduino.cc/t/due-software-reset/332764/5
-//Defines so the device can do a self reset
-#define SYSRESETREQ    (1<<2)
-#define VECTKEY        (0x05fa0000UL)
-#define VECTKEY_MASK   (0x0000ffffUL)
-#define AIRCR          (*(uint32_t*)0xe000ed0cUL) // fixed arch-defined address
-#define REQUEST_EXTERNAL_RESET (AIRCR=(AIRCR&VECTKEY_MASK)|VECTKEY|SYSRESETREQ)
 
 /*=========================================================
 	Framework Functions
@@ -670,7 +664,6 @@ void manualControlButtons()
 			if ((x >= 131) && (x <= 185))
 			{
 				data[1] = 1 * multiply;
-				data[CRC_BYTE] = generateCRC(data, 7);
 				waitForItRect(131, 70, 185, 126, txIdManual, data);
 				data[1] = 0;
 			}
@@ -678,7 +671,6 @@ void manualControlButtons()
 			if ((x >= 189) && (x <= 243))
 			{
 				data[2] = 1 * multiply;
-				data[CRC_BYTE] = generateCRC(data, 7);
 				waitForItRect(189, 70, 243, 126, txIdManual, data);
 				data[2] = 0;
 			}
@@ -686,7 +678,6 @@ void manualControlButtons()
 			if ((x >= 247) && (x <= 301))
 			{
 				data[3] = 1 * multiply;
-				data[CRC_BYTE] = generateCRC(data, 7);
 				waitForItRect(247, 70, 301, 126, txIdManual, data);
 				data[3] = 0;
 			}
@@ -694,7 +685,6 @@ void manualControlButtons()
 			if ((x >= 305) && (x <= 359))
 			{
 				data[4] = 1 * multiply;
-				data[CRC_BYTE] = generateCRC(data, 7);
 				waitForItRect(305, 70, 359, 126, txIdManual, data);
 				data[4] = 0;
 			}
@@ -702,7 +692,6 @@ void manualControlButtons()
 			if ((x >= 363) && (x <= 417))
 			{
 				data[5] = 1 * multiply;
-				data[CRC_BYTE] = generateCRC(data, 7);
 				waitForItRect(363, 70, 417, 126, txIdManual, data);
 				data[5] = 0;
 			}
@@ -710,7 +699,6 @@ void manualControlButtons()
 			if ((x >= 421) && (x <= 475))
 			{
 				data[6] = 1 * multiply;
-				data[CRC_BYTE] = generateCRC(data, 7);
 				waitForItRect(421, 70, 475, 126, txIdManual, data);
 				data[6] = 0;
 			}
@@ -760,7 +748,6 @@ void manualControlButtons()
 			if ((x >= 131) && (x <= 185))
 			{
 				data[1] = (1 * multiply) + reverse;
-				data[CRC_BYTE] = generateCRC(data, 7);
 				waitForItRect(131, 175, 185, 230, txIdManual, data);
 				data[1] = 0;
 			}
@@ -768,7 +755,6 @@ void manualControlButtons()
 			if ((x >= 189) && (x <= 243))
 			{
 				data[2] = (1 * multiply) + reverse;
-				data[CRC_BYTE] = generateCRC(data, 7);
 				waitForItRect(189, 175, 243, 230, txIdManual, data);
 				data[2] = 0;
 			}
@@ -776,7 +762,6 @@ void manualControlButtons()
 			if ((x >= 247) && (x <= 301))
 			{
 				data[3] = (1 * multiply) + reverse;
-				data[CRC_BYTE] = generateCRC(data, 7);
 				waitForItRect(247, 175, 301, 230, txIdManual, data);
 				data[3] = 0;
 			}
@@ -784,7 +769,6 @@ void manualControlButtons()
 			if ((x >= 305) && (x <= 359))
 			{
 				data[4] = (1 * multiply) + reverse;
-				data[CRC_BYTE] = generateCRC(data, 7);
 				waitForItRect(305, 175, 359, 230, txIdManual, data);
 				data[4] = 0;
 			}
@@ -792,7 +776,6 @@ void manualControlButtons()
 			if ((x >= 363) && (x <= 417))
 			{
 				data[5] = (1 * multiply) + reverse;
-				data[CRC_BYTE] = generateCRC(data, 7);
 				waitForItRect(363, 175, 417, 230, txIdManual, data);
 				data[5] = 0;
 			}
@@ -800,7 +783,6 @@ void manualControlButtons()
 			if ((x >= 421) && (x <= 475))
 			{
 				data[6] = (1 * multiply) + reverse;
-				data[CRC_BYTE] = generateCRC(data, 7);
 				waitForItRect(421, 175, 475, 230, txIdManual, data);
 				data[6] = 0;
 			}
@@ -838,6 +820,7 @@ void manualControlButtons()
 		}
 	}
 }
+
 
 /*=========================================================
 					View page
@@ -1732,151 +1715,6 @@ void programEditButtons()
 }
 
 
-/*==========================================================
-					Configure Arm
-============================================================*/
-// Draws the config page
-bool drawConfig()
-{
-	switch (graphicLoaderState)
-	{
-	case 0:
-		drawSquareBtn(X_PAGE_START, 1, 479, 319, "", themeBackground, themeBackground, themeBackground, CENTER);
-		break;
-	case 1:
-		print_icon(435, 5, robotarm);
-		break;
-	case 2:
-		drawSquareBtn(180, 10, 400, 45, F("Configuration"), themeBackground, themeBackground, menuBtnColor, CENTER);
-		break;
-	case 3:
-		drawRoundBtn(150, 60, 300, 100, F("Home Ch1"), menuBtnColor, menuBtnBorder, menuBtnText, CENTER);
-		break;
-	case 4:
-		drawRoundBtn(310, 60, 460, 100, F("Set Ch1"), menuBtnColor, menuBtnBorder, menuBtnText, CENTER);
-		break;
-	case 5:
-		drawRoundBtn(150, 110, 300, 150, F("Home Ch2"), menuBtnColor, menuBtnBorder, menuBtnText, CENTER);
-		break;
-	case 6:
-		drawRoundBtn(310, 110, 460, 150, F("Set Ch2"), menuBtnColor, menuBtnBorder, menuBtnText, CENTER);
-		break;
-	case 7:
-		drawRoundBtn(150, 160, 300, 200, F("Loop On"), menuBtnColor, menuBtnBorder, menuBtnText, CENTER);
-		break;
-	case 8:
-		drawRoundBtn(310, 160, 460, 200, F("Loop Off"), menuBtnColor, menuBtnBorder, menuBtnText, CENTER);
-		break;
-	case 9:
-		drawRoundBtn(150, 210, 300, 250, F("Memory"), menuBtnColor, menuBtnBorder, menuBtnText, CENTER);
-		break;
-	case 10:
-		drawRoundBtn(310, 210, 460, 250, F("Reset"), menuBtnColor, menuBtnBorder, menuBtnText, CENTER);
-		break;
-	case 11:
-		drawRoundBtn(150, 260, 300, 300, F("About"), menuBtnColor, menuBtnBorder, menuBtnText, CENTER);
-		break;
-	case 12:
-		drawSquareBtn(150, 301, 479, 319, version, themeBackground, themeBackground, menuBtnColor, CENTER);
-		return true;
-		break;
-	}
-	graphicLoaderState++;
-	return false;
-}
-
-// Sends command to return arm to starting position
-void homeArm(uint16_t arm_control)
-{
-	byte cmd[8] = { 0x00,HOME_AXIS_POSITION, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
-	cmd[CRC_BYTE] = generateCRC(cmd, 7);
-	can1.sendFrame(arm_control, cmd);
-}
-
-// Button functions for config page
-void configButtons()
-{
-	uint8_t setHomeID[8] = { 0x00, RESET_AXIS_POSITION, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
-	setHomeID[CRC_BYTE] = generateCRC(setHomeID, 7);
-
-	// Touch screen controls
-	if (myTouch.dataAvailable())
-	{
-		myTouch.read();
-		x = myTouch.getX();
-		y = myTouch.getY();
-
-		if ((y >= 60) && (y <= 100))
-		{
-			if ((x >= 150) && (x <= 300))
-			{
-				waitForIt(150, 60, 300, 100);
-				homeArm(ARM1_CONTROL);
-			}
-			if ((x >= 310) && (x <= 460))
-			{
-				waitForIt(310, 60, 460, 100);
-				can1.sendFrame(ARM1_CONTROL, setHomeID);
-			}
-		}
-		if ((y >= 110) && (y <= 150))
-		{
-			if ((x >= 150) && (x <= 300))
-			{
-				waitForIt(150, 110, 300, 150);
-				homeArm(ARM2_CONTROL);
-			}
-			if ((x >= 310) && (x <= 460))
-			{
-				waitForIt(310, 110, 460, 150);
-				can1.sendFrame(ARM2_CONTROL, setHomeID);
-			}
-		}
-		if ((y >= 160) && (y <= 200))
-		{
-			if ((x >= 150) && (x <= 300))
-			{
-				waitForIt(150, 160, 300, 200);
-				loopProgram = true;
-			}
-			if ((x >= 310) && (x <= 460))
-			{
-				waitForIt(310, 160, 460, 200);
-				loopProgram = false;
-			}
-		}
-		if ((y >= 210) && (y <= 250))
-		{
-			if ((x >= 150) && (x <= 300))
-			{
-				waitForIt(150, 210, 300, 250);
-				// Memory use
-				page = 11;
-				hasDrawn = false;
-			}
-			if ((x >= 310) && (x <= 460))
-			{
-				waitForIt(310, 210, 460, 250);
-				// Reset
-				REQUEST_EXTERNAL_RESET;
-			}
-		}
-		if ((y >= 260) && (y <= 300))
-		{
-			if ((x >= 150) && (x <= 300))
-			{
-				waitForIt(150, 260, 300, 300);
-				// About 
-				drawSquareBtn(131, 55, 479, 319, "", themeBackground, themeBackground, themeBackground, CENTER);
-				drawSquareBtn(135, 120, 479, 140, F("Software Development"), themeBackground, themeBackground, menuBtnColor, CENTER);
-				drawSquareBtn(135, 145, 479, 165, F("Brandon Van Pelt"), themeBackground, themeBackground, menuBtnColor, CENTER);
-				drawSquareBtn(135, 170, 479, 190, F("github.com/BrandonVP"), themeBackground, themeBackground, menuBtnColor, CENTER);
-			}
-		}
-	}
-}
-
-
 /*=========================================================
 	Framework Functions
 ===========================================================*/
@@ -1945,7 +1783,7 @@ void setup()
 	// Create program folder is it does not exist
 	sdCard.createDRIVE(pDir);
 
-	initCRC();
+	can1.initCRC();
 }
 
 // Page control framework
@@ -2218,67 +2056,6 @@ uint8_t errorMSGButton(uint8_t confirmPage, uint8_t cancelPage, uint8_t xPage)
 	return 0;
 }
 
-
-/*=========================================================
-CRC - https://barrgroup.com/embedded-systems/how-to/crc-calculation-c-code
-===========================================================*/
-#define POLYNOMIAL 0xD8  /* 11011 followed by 0's */
-
-/*
- * The width of the CRC calculation and result.
- * Modify the typedef for a 16 or 32-bit CRC standard.
- */
-
-#define WIDTH  (8 * sizeof(uint8_t))
-#define TOPBIT (1 << (WIDTH - 1))
-
-uint8_t  crcTable[256];
-
-void initCRC(void)
-{
-	uint8_t  remainder;
-
-	// Compute the remainder of each possible dividend
-	for (int dividend = 0; dividend < 256; ++dividend)
-	{
-		//Start with the dividend followed by zeros
-		remainder = dividend << (WIDTH - 8);
-
-		// Perform modulo-2 division, a bit at a time
-		for (uint8_t bit = 8; bit > 0; --bit)
-		{
-			// Try to divide the current data bit.
-			if (remainder & TOPBIT)
-			{
-				remainder = (remainder << 1) ^ POLYNOMIAL;
-			}
-			else
-			{
-				remainder = (remainder << 1);
-			}
-		}
-
-		// Store the result into the table.
-		crcTable[dividend] = remainder;
-	}
-}
-
-uint8_t generateCRC(uint8_t const message[], int nBytes)
-{
-	uint8_t data;
-	uint8_t remainder = 0;
-
-	// Divide the message by the polynomial, a byte at a time.
-	for (int byte = 0; byte < nBytes; ++byte)
-	{
-		data = message[byte] ^ (remainder >> (WIDTH - 8));
-		remainder = crcTable[data] ^ (remainder << 8);
-	}
-
-	// The final remainder is the CRC.
-	return (remainder);
-}
-
 // Buttons for the main menu
 void menuButtons()
 {
@@ -2401,7 +2178,6 @@ void executeProgram()
 		data[1] |= ((a6 & 0xF) << 5);
 		data[0] = (a6 >> 3);
 		data[0] |= ((grip & 0x7) << 6);
-		data[7] = generateCRC(data, 7);
 		
 		can1.sendFrame(runList.get(programProgress)->getID(), data);
 
@@ -2411,7 +2187,6 @@ void executeProgram()
 		executeWait[SET_MIN_BYTE] = 0;
 		executeWait[SET_SEC_BYTE] = runList.get(programProgress)->getWait();
 		executeWait[SET_MS_BYTE] = 0;
-		executeWait[CRC_BYTE] = generateCRC(executeWait, 7);
 
 		if (runList.get(programProgress)->getID() == ARM1_PROGRAM)
 		{
@@ -2426,7 +2201,6 @@ void executeProgram()
 		// If there was a change in the grip bool
 		uint8_t executeMove[8] = { 0, EXECUTE_PROGRAM, 0, 0, 0, MOVE_GRIP, 0, 0 };
 		executeMove[GRIP_BYTE] = HOLD_GRIP;
-		executeMove[CRC_BYTE] = generateCRC(executeMove, 7);
 
 		if (runList.get(programProgress)->getGrip() == 0)
 		{
@@ -2485,7 +2259,7 @@ void backgroundProcess()
 {
 	executeProgram();
 	updateTime();
-	can1.processFrame(axisPos, myGLCD);
+	can1.processFrame(can1, axisPos);
 }
 
 // Calls pageControl with a value of 1 to set view page as the home page

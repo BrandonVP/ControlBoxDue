@@ -14,6 +14,7 @@
 #include "SDCard.h"
 #include "CANBus.h"
 #include "AxisPos.h"
+#include "definitions.h"
 
 //#define DEBUG(x)  SerialUSB.print(x);
 //#define DEBUGLN(x)  SerialUSB.println(x);
@@ -21,18 +22,6 @@
 #define DEBUGLN(x)  Serial.println(x);
 //#define DEBUG(x)
 //#define DEBUGLN(x)
-
-// Global LCD theme color variables
-#define themeBackground 0xFFFF // White
-#define menuBtnText 0xFFFF // White
-#define menuBtnBorder 0x0000 // Black
-#define menuBtnColor 0xFC00 // Orange
-#define menuBackground 0xC618 //Silver
-
-//class Program;
-//class AxisPos;
-//class UTFT;
-//class CANBus;
 
 //#ifndef COMMON_H
 //#define COMMON_H
@@ -42,8 +31,10 @@
 
 // For touch controls
 extern int x, y;
+extern bool hasDrawn;
 
-extern const PROGMEM uint32_t hexTable[8];
+extern void print_icon(uint16_t, uint16_t, const unsigned char icon[]);
+
 extern void drawErrorMSG2(String title, String eMessage1, String eMessage2);
 extern void drawErrorMSG2(String, String, String);
 extern void drawRoundBtn(int, int, int, int, String, int, int, int, int);
@@ -52,9 +43,12 @@ extern void waitForIt(int, int, int, int);
 extern bool Touch_getXY();
 extern bool Arm1Ready;
 extern bool Arm2Ready;
+extern const PROGMEM String version;
 extern uint8_t page;
+extern const PROGMEM uint32_t hexTable[8];
 extern String programNames_G[MAX_PROGRAMS];
 extern uint8_t numberOfPrograms;
 extern char fileList[MAX_PROGRAMS][8];
-extern uint8_t generateCRC(uint8_t const message[], int nBytes);
+extern CANBus can1;
+extern uint8_t graphicLoaderState;
 //#endif

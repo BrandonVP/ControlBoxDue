@@ -3,6 +3,13 @@
 #define CENTER 2
 #define RIGHT 3
 
+// Global LCD theme color variables
+#define themeBackground 0xFFFF // White
+#define menuBtnText 0xFFFF // White
+#define menuBtnBorder 0x0000 // Black
+#define menuBtnColor 0xFC00 // Orange
+#define menuBackground 0xC618 //Silver
+
 // ** RX Command List ** //
 
 // These are fixed bytes that can not be used for anything else
@@ -61,8 +68,3 @@
 #define REFRESH_RATE 400 // Refresh what?!
 
 #define X_PAGE_START 127 // page start for what?
-
-// Used for converting keypad input to appropriate hex place
-extern const PROGMEM uint32_t hexTable[8];
-const PROGMEM String pDir = "PROGRAMS";
-const PROGMEM String version = "Version 2.0.0";

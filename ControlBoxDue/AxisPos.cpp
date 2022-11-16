@@ -15,7 +15,7 @@
 #define CHECK_BIT(var,pos) ((var) & (1<<(pos)))
 
 // Decodes incoming message and updates the current axis position in degrees
-void AxisPos::updateAxisPos(CAN_FRAME axisFrame)
+void AxisPos::updateAxisPos(CANBus can1, CAN_FRAME axisFrame)
 {
 	// Need these temp values to calculate "CRC"
 	uint8_t crc, grip;
@@ -36,7 +36,7 @@ void AxisPos::updateAxisPos(CAN_FRAME axisFrame)
 	grip = (axisFrame.data.byte[0] >> 6);
 	crc = (axisFrame.data.byte[7]);
 
-	if (crc == generateCRC(axisFrame.data.byte, 7))
+	if (crc == can1.generateCRC(axisFrame.data.byte, 7))
 	{
 		// Determine which channel to write values too
 		if (axisFrame.id == ARM1_POSITION)

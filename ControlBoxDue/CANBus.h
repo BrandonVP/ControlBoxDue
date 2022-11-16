@@ -23,14 +23,16 @@ class AxisPos;
 
 class CANBus
 {
-public:
+private:
+	uint8_t crcTable[256];
 	CAN_FRAME incoming;
 	CAN_FRAME outgoing;
 
 public:
+	void initCRC(void);
+	uint8_t generateCRC(uint8_t const message[], int);
 	void sendFrame(uint16_t, byte*);
-	void processFrame(AxisPos&, UTFT&);
+	void processFrame(CANBus, AxisPos&);
 	void startCAN();
-
 };
 #endif // _CANBus_H
