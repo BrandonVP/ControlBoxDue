@@ -213,6 +213,7 @@ void SDCard::readFile(String filename, LinkedList<Program*> &runList)
     String tempStr;
     uint16_t posArray[6];
     uint16_t channel;
+    uint16_t wait;
     uint8_t grip;
     char c[20];
     myFile = SD.open(filename);
@@ -227,7 +228,7 @@ void SDCard::readFile(String filename, LinkedList<Program*> &runList)
 
     myFile.readStringUntil(',');
     while (myFile.available()) {
-        for (int i = 0; i < 8; i++)
+        for (int i = 0; i < 9; i++)
         {
             tempStr = (myFile.readStringUntil(','));
            strcpy(c, tempStr.c_str());
@@ -241,9 +242,12 @@ void SDCard::readFile(String filename, LinkedList<Program*> &runList)
            }
            if (i == 7)
            {
+               wait = atoi(c);
+           }
+           if (i == 8)
+           {
                grip = atoi(c);
            }
-           
         }
 
 #ifdef DEBUG_READ_FILE
@@ -255,7 +259,7 @@ void SDCard::readFile(String filename, LinkedList<Program*> &runList)
             Serial.println(grip);
             Serial.println("");
 #endif // DEBUG_READ_FILE
-            Program* node = new Program(posArray, grip, channel);
+            Program* node = new Program(posArray, grip, wait, channel);
             runList.add(node);
     }
     myFile.close();

@@ -10,7 +10,7 @@
 #include "Program.h"
 
 // Default constructor
-Program::Program(uint16_t* posArray, uint8_t grip, uint16_t ch)
+Program::Program(uint16_t* posArray, uint8_t grip, uint16_t time, uint16_t ch)
 {
 	a1 = posArray[0];
 	a2 = posArray[1];
@@ -19,7 +19,8 @@ Program::Program(uint16_t* posArray, uint8_t grip, uint16_t ch)
 	a5 = posArray[4];
 	a6 = posArray[5];
 	gripStatus = grip;
-	channel = ch;
+	wait = time;
+	ID = ch;
 }
 
 // Get the different axis positions returned in degrees
@@ -51,7 +52,11 @@ uint8_t Program::getGrip()
 {
 	return gripStatus;
 }
+uint16_t Program::getWait()
+{
+	return wait;
+}
 uint16_t Program::getID()
 {
-	return channel;
+	return ID;
 }

@@ -3,27 +3,39 @@
 #define CENTER 2
 #define RIGHT 3
 
-// CAN Bus Message
-#define CRC_BYTE                0x07
-#define COMMAND_BYTE            0x01
-#define ACCELERATRION_BYTE      0x02
-#define SPEED_BYTE				0x03
-#define LOOP_BYTE				0x04
-#define SUB_COMMAND_BYTE		0x05
-#define GRIP_BYTE				0x06
+// ** RX Command List ** //
 
+// These are fixed bytes that can not be used for anything else
+#define COMMAND_BYTE            0x01
+#define SUB_COMMAND_BYTE        0x05
+#define CRC_BYTE                0x07 // For CONTROL and MANUAL
+
+// List of commands for the COMMAND_BYTE
 #define SEND_AXIS_POSITIONS     0x61
 #define RESET_AXIS_POSITION     0x62
-#define HOME_AXIS_POSITION		0x63
+#define HOME_AXIS_POSITION      0x63
+
+#define GRIP_BYTE               0x06
 #define MOVE_GRIP               0x6A
-#define SAME_GRIP               0x00
+#define HOLD_GRIP               0x00
 #define OPEN_GRIP               0x01
-#define CLOSE_GRIP              0x11
+#define SHUT_GRIP               0x11
+
 #define SET_WAIT_TIMER          0x6B
-#define EXECUTE_PROGRAM         0x1E
-#define STOP_PROGRAM			0x0E
-#define CONFIRMATION			0x1C
-#define NEG_CONFIRMATION		0x0C
+#define SET_MIN_BYTE            0x02
+#define SET_SEC_BYTE            0x03
+#define SET_MS_BYTE             0x04
+
+#define EXECUTE_PROGRAM         0x1E // Execute Steps
+#define STOP_PROGRAM            0x0E // Stop Steps
+#define ACCELERATION_BYTE       0x02
+#define SPEED_BYTE              0x03
+#define LOOP_BYTE               0x04
+
+#define CONFIRMATION            0x1C // Confirm message received
+#define NEG_CONFIRMATION        0x0C // Confirm message not received or failed CRC
+
+// ** END ** //
 
 // Arm 1 IDs
 #define CONTROL1_RX 0x1C3 // Direct communicate to controller

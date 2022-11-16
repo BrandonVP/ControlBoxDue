@@ -108,6 +108,7 @@ uint8_t state = 0;
 uint8_t programScroll = 0;
 uint16_t scroll = 0;
 
+uint16_t waitTime = 0;
 // CAN message ID and frame, value can be changed in manualControlButtons
 uint16_t txIdManual = ARM1_MANUAL;
 
@@ -117,8 +118,11 @@ bool programRunning = false;
 bool loopProgram = true;
 bool Arm1Ready = true;
 bool Arm2Ready = true;
+
+// Replace with programState
 bool programOpen = false;
 bool programEdit = false;
+
 uint8_t programProgress = 0; // THIS WILL LIMIT THE SIZE OF A PROGRAM TO 255 MOVEMENTS
 uint8_t selectedProgram = 0;
 
@@ -139,6 +143,7 @@ uint32_t updateClock = 0;
 //uint8_t keypadInput[4] = { 0, 0, 0, 0 };
 uint8_t keyIndex = 0;
 uint8_t keyResult = 0;
+uint16_t totalValue = 0;
 
 char fileList[MAX_PROGRAMS][8];
 uint8_t programCount = 0;
@@ -923,6 +928,22 @@ bool drawView()
 /*==========================================================
 					Program Arm
 ============================================================*/
+// Main program state
+void program()
+{
+	static uint8_t programState = 0;
+	switch (programState)
+	{
+	case 0:
+		
+		break;
+	case 1:
+		break;
+	case 2:
+		break;
+	}
+}
+
 // Draws scrollable box that contains 10 slots for programs
 void drawProgramScroll()
 {
@@ -1386,20 +1407,20 @@ void drawProgramEditScroll()
 		switch (runList.get(i + scroll)->getGrip())
 		{
 		case 0:
-			strcpy(gripString, "Open");
+			strcpy(gripString, "O");
 			break;
 		case 1:
-			strcpy(gripString, "Shut");
+			strcpy(gripString, "S");
 			break;
 		case 2:
-			strcpy(gripString, "Hold");
+			strcpy(gripString, "H");
 			break;
 		}
 
 		char buffer[40];
-		sprintf(buffer, "%3d|%3d|%3d|%3d|%3d|%3d|%3d|%s|%3X", (i + scroll + 1), runList.get(i + scroll)->getA1(), runList.get(i + scroll)->getA2(), runList.get(i + scroll)->getA3(), runList.get(i + scroll)->getA4(), runList.get(i + scroll)->getA5(), runList.get(i + scroll)->getA6(), gripString, runList.get(i + scroll)->getID());
+		sprintf(buffer, "%3d|%3d|%3d|%3d|%3d|%3d|%3d|%s|%3X|%3d", (i + scroll + 1), runList.get(i + scroll)->getA1(), runList.get(i + scroll)->getA2(), runList.get(i + scroll)->getA3(), runList.get(i + scroll)->getA4(), runList.get(i + scroll)->getA5(), runList.get(i + scroll)->getA6(), gripString, runList.get(i + scroll)->getID(), runList.get(i + scroll)->getWait());
 
-		(i + scroll < nodeSize) ? drawSquareBtn(130, row, 425, row + 37, buffer, menuBackground, menuBtnBorder, menuBtnText, LEFT) : drawSquareBtn(130, row, 425, row + 37, "", menuBackground, menuBtnBorder, menuBtnText, LEFT);
+		(i + scroll < nodeSize) ? drawSquareBtn(130, row, 435, row + 37, buffer, menuBackground, menuBtnBorder, menuBtnText, LEFT) : drawSquareBtn(130, row, 435, row + 37, "", menuBackground, menuBtnBorder, menuBtnText, LEFT);
 
 		row += 37;
 	}
@@ -1416,8 +1437,8 @@ void drawProgramEdit(uint8_t scroll = 0)
 	// Scroll buttons
 	myGLCD.setColor(menuBtnColor);
 	myGLCD.setBackColor(themeBackground);
-	drawSquareBtn(430, 5, 475, 116, F("/\\"), menuBtnColor, menuBtnBorder, menuBtnText, CENTER);
-	drawSquareBtn(430, 116, 475, 227, F("\\/"), menuBtnColor, menuBtnBorder, menuBtnText, CENTER);
+	drawSquareBtn(435, 5, 475, 116, F("/\\"), menuBtnColor, menuBtnBorder, menuBtnText, CENTER);
+	drawSquareBtn(435, 116, 475, 227, F("\\/"), menuBtnColor, menuBtnBorder, menuBtnText, CENTER);
 
 	// Draw program edit buttons
 	drawSquareBtn(130, 230, 215, 270, F("Add"), menuBtnColor, menuBtnBorder, menuBtnText, CENTER);
@@ -1456,7 +1477,7 @@ void addNode(int insert = -1)
 		posArray[5] = axisPos.getA6C1();
 
 		// Create program object with array positions, grip on/off, and channel
-		Program* node = new Program(posArray, gripStatus, ARM1_PROGRAM);
+		Program* node = new Program(posArray, gripStatus, waitTime, ARM1_PROGRAM);
 		(insert < 0) ? runList.add(node) : runList.add(insert, node);
 	}
 	else if (txIdManual == ARM2_MANUAL)
@@ -1469,9 +1490,12 @@ void addNode(int insert = -1)
 		posArray[5] = axisPos.getA6C2();
 		
 		// Create program object with array positions, grip on/off, and channel
-		Program* node = new Program(posArray, gripStatus, ARM2_PROGRAM);
+		Program* node = new Program(posArray, gripStatus, waitTime, ARM2_PROGRAM);
 		(insert < 0) ? runList.add(node) : runList.add(insert, node);
 	}
+
+	// Reset waitTime back to 0
+	waitTime = 0;
 }
 
 // Delete node from linked list
@@ -1509,6 +1533,8 @@ void saveProgram()
 		sdCard.writeFile(programDirectory, space);
 		sdCard.writeFile(programDirectory, runList.get(i)->getID());
 		sdCard.writeFile(programDirectory, space);
+		sdCard.writeFile(programDirectory, runList.get(i)->getWait());
+		sdCard.writeFile(programDirectory, space);
 		sdCard.writeFile(programDirectory, runList.get(i)->getGrip());
 		sdCard.writeFileln(programDirectory);
 	}
@@ -1526,56 +1552,56 @@ void programEditButtons()
 	// Touch screen controls
 	if (Touch_getXY())
 	{
-		if ((x >= 130) && (x <= 425))
+		if ((x >= 130) && (x <= 435))
 		{
 			if ((y >= 5) && (y <= 42))
 			{
-				waitForItRect(130, 5, 425, 42);
+				waitForItRect(130, 5, 435, 42);
 				//Serial.println(1 + scroll);
 				selectedNode = 0 + scroll;
 				drawProgramEditScroll();
 			}
 			if ((y >= 42) && (y <= 79))
 			{
-				waitForItRect(130, 42, 425, 79);
+				waitForItRect(130, 42, 435, 79);
 				//Serial.println(2 + scroll);
 				selectedNode = 1 + scroll;
 				drawProgramEditScroll();
 			}
 			if ((y >= 79) && (y <= 116))
 			{
-				waitForItRect(130, 79, 425, 116);
+				waitForItRect(130, 79, 435, 116);
 				//Serial.println(3 + scroll);
 				selectedNode = 2 + scroll;
 				drawProgramEditScroll();
 			}
 			if ((y >= 116) && (y <= 153))
 			{
-				waitForItRect(130, 116, 425, 153);
+				waitForItRect(130, 116, 435, 153);
 				//Serial.println(4 + scroll);
 				selectedNode = 3 + scroll;
 				drawProgramEditScroll();
 			}
 			if ((y >= 153) && (y <= 190))
 			{
-				waitForItRect(130, 153, 425, 190);
+				waitForItRect(130, 153, 435, 190);
 				//Serial.println(5 + scroll);
 				selectedNode = 4 + scroll;
 				drawProgramEditScroll();
 			}
 			if ((y >= 190) && (y <= 227))
 			{
-				waitForItRect(130, 190, 425, 227);
+				waitForItRect(130, 190, 435, 227);
 				//Serial.println(5 + scroll);
 				selectedNode = 5 + scroll;
 				drawProgramEditScroll();
 			}
 		}
-		if ((x >= 430) && (x <= 475))
+		if ((x >= 436) && (x <= 475))
 		{
 			if ((y >= 5) && (y <= 116))
 			{
-				waitForIt(430, 5, 475, 116);
+				waitForIt(435, 5, 475, 116);
 				if (scroll > 3)
 				{
 					scroll--;
@@ -1591,7 +1617,7 @@ void programEditButtons()
 			}
 			if ((y >= 116) && (y <= 227))
 			{
-				waitForIt(430, 116, 475, 227);
+				waitForIt(435, 116, 475, 227);
 				if (scroll < runList.size())
 				{
 					if (scroll < 252)
@@ -1658,9 +1684,11 @@ void programEditButtons()
 		{
 			if ((x >= 215) && (x <= 300))
 			{
-				// 
+				// wait
 				waitForItRect(215, 275, 300, 315);
-
+				hasDrawn = false;
+				graphicLoaderState = 0;
+				page = 10;
 			}
 			if ((x >= 300) && (x <= 385))
 			{
@@ -1670,8 +1698,9 @@ void programEditButtons()
 			}
 			if ((x >= 385) && (x <= 475))
 			{
-				// wait
+				// 
 				waitForItRect(385, 275, 475, 315);
+		
 			}
 			if ((x >= 130) && (x <= 215))
 			{
@@ -1821,7 +1850,8 @@ void configButtons()
 			if ((x >= 150) && (x <= 300))
 			{
 				waitForIt(150, 210, 300, 250);
-				page = 10;
+				// Memory use
+				page = 11;
 				hasDrawn = false;
 			}
 			if ((x >= 310) && (x <= 460))
@@ -2041,7 +2071,7 @@ void pageControl()
 		// Call buttons if any
 		errorMessageReturn = errorMSGButton(1, 2, 3);
 		break;
-	case 8:
+	case 8: // Edit 
 		if (!hasDrawn)
 		{
 			if (!drawEditPage())
@@ -2095,12 +2125,40 @@ void pageControl()
 		// Draw page
 		if (!hasDrawn)
 		{
+			drawKeypadDec();
+			hasDrawn = true;
+		}
+		/*
+* No change returns 0xFF
+* Accept returns 0xF1
+* Cancel returns 0xF0
+* Value contained in total
+*
+* index: Number place
+* total: Current total added value selected
+*/
+		keyResult = keypadControllerDec(keyIndex, totalValue);
+		if (keyResult == 0xF1)
+		{
+			waitTime = totalValue;
+			page = 6;
+			hasDrawn = false;
+		}
+		else if (keyResult == 0xF0)
+		{
+			page = 6;
+			hasDrawn = false;
+		}
+		break;
+	case 11: // Memory Use
+		// Draw page
+		if (!hasDrawn)
+		{
 			memoryUse();
 			hasDrawn = true;
 		}
 		break;
 	}
-
 }
 
 /*============== Error Message ==============*/
@@ -2347,10 +2405,27 @@ void executeProgram()
 		
 		can1.sendFrame(runList.get(programProgress)->getID(), data);
 
+		// Wait frame
+		uint8_t executeWait[8] = { 0, 0, 0, 0, 0, 0, 0, 0 };
+		executeWait[COMMAND_BYTE] = SET_WAIT_TIMER;
+		executeWait[SET_MIN_BYTE] = 0;
+		executeWait[SET_SEC_BYTE] = runList.get(programProgress)->getWait();
+		executeWait[SET_MS_BYTE] = 0;
+		executeWait[CRC_BYTE] = generateCRC(executeWait, 7);
+
+		if (runList.get(programProgress)->getID() == ARM1_PROGRAM)
+		{
+			can1.sendFrame(ARM1_CONTROL, executeWait);
+		}
+		else if (runList.get(programProgress)->getID() == ARM2_PROGRAM)
+		{
+			can1.sendFrame(ARM1_CONTROL, executeWait);
+		}
+
 		// Grip on/off or hold based on current and next state
 		// If there was a change in the grip bool
 		uint8_t executeMove[8] = { 0, EXECUTE_PROGRAM, 0, 0, 0, MOVE_GRIP, 0, 0 };
-		executeMove[GRIP_BYTE] = SAME_GRIP;
+		executeMove[GRIP_BYTE] = HOLD_GRIP;
 		executeMove[CRC_BYTE] = generateCRC(executeMove, 7);
 
 		if (runList.get(programProgress)->getGrip() == 0)
@@ -2359,7 +2434,7 @@ void executeProgram()
 		}
 		else if (runList.get(programProgress)->getGrip() == 1)
 		{
-			executeMove[GRIP_BYTE] = CLOSE_GRIP;
+			executeMove[GRIP_BYTE] = SHUT_GRIP;
 		}
 
 		// Send third frame with grip and execute command
