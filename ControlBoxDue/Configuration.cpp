@@ -132,8 +132,7 @@ void configButtons()
 			{
 				waitForIt(150, 210, 300, 250);
 				// Memory use
-				page = 11;
-				hasDrawn = false;
+				memoryUse();
 			}
 			if ((x >= 310) && (x <= 460))
 			{

@@ -258,6 +258,7 @@ void drawKeypadDec()
 {
 	uint16_t posY = 125;
 	uint8_t numPad = 0x00;
+	resetKeypad();
 
 	// Clear LCD
 	drawSquareBtn(131, 55, 479, 319, "", themeBackground, themeBackground, themeBackground, CENTER);

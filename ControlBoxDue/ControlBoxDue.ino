@@ -94,9 +94,7 @@ LinkedList<Program*> runList = LinkedList<Program*>();
 
 //TODO: Clean these up
 // Keeps track of current page
-uint8_t controlPage = 1;
 uint8_t page = 1;
-//uint8_t nextPage = 1;
 uint8_t oldPage = 1;
 bool hasDrawn = false;
 uint8_t graphicLoaderState = 0;
@@ -107,7 +105,9 @@ uint8_t state = 0;
 uint8_t programScroll = 0;
 uint16_t scroll = 0;
 
+// Program wait
 uint16_t waitTime = 0;
+
 // CAN message ID and frame, value can be changed in manualControlButtons
 uint16_t txIdManual = ARM1_MANUAL;
 
@@ -125,24 +125,23 @@ bool programEdit = false;
 uint8_t programProgress = 0; // THIS WILL LIMIT THE SIZE OF A PROGRAM TO 255 MOVEMENTS
 uint8_t selectedProgram = 0;
 
+uint8_t axisSelected = 0;
+
 // Used for converting keypad input to appropriate hex place
-//extern const PROGMEM uint32_t hexTable[8];
 const PROGMEM String pDir = "PROGRAMS";
 const PROGMEM String version = "Version 2.0.0";
 const PROGMEM uint32_t hexTable[8] = { 1, 16, 256, 4096, 65536, 1048576, 16777216, 268435456 };
-
 
 // 0 = open, 1 = close, 2 = no change
 int8_t gripStatus = 2;
 
 // Timer used for touch button press
 uint32_t timer = 0;
+
 // Timer used for RTC
 uint32_t updateClock = 0;
 
 // Key input variables
-//char keyboardInput[9];
-//uint8_t keypadInput[4] = { 0, 0, 0, 0 };
 uint8_t keyIndex = 0;
 uint8_t keyResult = 0;
 uint16_t totalValue = 0;
@@ -615,6 +614,7 @@ bool drawManualControl()
 		return true;
 		break;
 	}
+	graphicLoaderState++;
 	return false;
 }
 
@@ -709,7 +709,8 @@ void manualControlButtons()
 			if ((x >= 131) && (x <= 185))
 			{
 				waitForItRect(131, 125, 185, 175);
-
+				axisSelected = 1;
+				state = 1;
 			}
 			// A2 Deg
 			if ((x >= 189) && (x <= 243))
@@ -821,6 +822,102 @@ void manualControlButtons()
 	}
 }
 
+//
+void move()
+{
+	uint8_t resultMsg = 0;
+	switch (state)
+	{
+	case 0: // Main control page
+		manualControlButtons();
+		axisPos.drawAxisPosUpdateM(myGLCD, txIdManual, false);
+		break;
+	case 1: // Print decimal keyboard for user input
+		drawKeypadDec();
+		keyIndex = 0;
+		totalValue = 0;
+		state = 2;
+		break;
+	case 2: // Wait for user decimal keyboard input
+		keyResult = keypadControllerDec(keyIndex, totalValue);
+		if (keyResult == 0xF1)
+		{
+			// Accept value and move to confirmation of arm movement
+			state = 3;
+		}
+		else if (keyResult == 0xF0)
+		{
+			// Cancel and return to main control page
+			hasDrawn = false;
+			graphicLoaderState = 0;
+			state = 0;
+		}
+		break;
+	case 3: // Print confirmation
+		char buffer[10];
+		sprintf(buffer, "Move A%d", axisSelected);
+		drawErrorMSG("Confirmation", buffer, String(totalValue));
+		state = 4;
+		break;
+	case 4:
+		resultMsg = errorMSGButton(1, 2, 3);
+		if ((resultMsg == 2) || (resultMsg == 3))
+		{
+			hasDrawn = false;
+			graphicLoaderState = 0;
+			state = 0;
+		}
+		else if (resultMsg == 1)
+		{
+			state = 5;
+		}
+		break;
+	case 5:
+		uint8_t data[8];
+		uint16_t axisList[7]; // Ignoring array position 0
+		axisList[1] = axisPos.getA1C1();
+		axisList[2] = axisPos.getA2C1();
+		axisList[3] = axisPos.getA3C1();
+		axisList[4] = axisPos.getA4C1();
+		axisList[5] = axisPos.getA5C1();
+		axisList[6] = axisPos.getA6C1();
+
+		axisList[axisSelected] = totalValue;
+		SerialUSB.println(axisSelected);
+		SerialUSB.println(axisList[axisSelected]);
+		SerialUSB.println(" ");
+
+		// TODO: Add grip value after the grip function is updated
+		uint8_t grip = 0;
+
+		data[6] = (axisList[1] & 0xFF);
+		data[5] = (axisList[1] >> 8);
+		data[5] |= ((axisList[2] & 0xFF) << 1);
+		data[4] = (axisList[2] >> 7);
+		data[4] |= ((axisList[3] & 0x7F) << 2);
+		data[3] = (axisList[3] >> 6);
+		data[3] |= ((axisList[4] & 0x3F) << 3);
+		data[2] = (axisList[4] >> 5);
+		data[2] |= ((axisList[5] & 0x1F) << 4);
+		data[1] = (axisList[5] >> 4);
+		data[1] |= ((axisList[6] & 0xF) << 5);
+		data[0] = (axisList[6] >> 3);
+		data[0] |= ((grip & 0x7) << 6);
+		can1.sendFrame(runList.get(programProgress)->getID(), data);
+
+		uint8_t executeMove[8] = { 0, 0, 0, 0, 0, 0, 0, 0 };
+		executeMove[COMMAND_BYTE] = EXECUTE_PROGRAM;
+		can1.sendFrame(ARM1_CONTROL, executeMove);
+
+		hasDrawn = false;
+		graphicLoaderState = 0;
+		state = 0;
+		break;
+	}
+
+
+
+}
 
 /*=========================================================
 					View page
@@ -1832,22 +1929,13 @@ void pageControl()
 		// Call buttons if any
 		programButtons();
 		break;
-	case 3: // Move page
+	case 3:
 		// Draw page
 		if (!hasDrawn)
 		{
-			bool isDone = drawManualControl();
-			graphicLoaderState++;
-			if (!isDone)
-			{
-				break;
-			}
-			hasDrawn = true;
-			axisPos.drawAxisPosUpdateM(myGLCD, txIdManual, true);
+
 		}
 		// Call buttons if any
-		manualControlButtons();
-		axisPos.drawAxisPosUpdateM(myGLCD, txIdManual, false);
 		break;
 	case 4: // Configuation page
 		// Draw page
@@ -1862,7 +1950,7 @@ void pageControl()
 		// Call buttons if any
 		configButtons();
 		break;
-	case 5: // Execute
+	case 5:
 		// Draw page
 		if (!hasDrawn)
 		{
@@ -1966,15 +2054,7 @@ void pageControl()
 			drawKeypadDec();
 			hasDrawn = true;
 		}
-		/*
-* No change returns 0xFF
-* Accept returns 0xF1
-* Cancel returns 0xF0
-* Value contained in total
-*
-* index: Number place
-* total: Current total added value selected
-*/
+
 		keyResult = keypadControllerDec(keyIndex, totalValue);
 		if (keyResult == 0xF1)
 		{
@@ -1987,14 +2067,31 @@ void pageControl()
 			page = 6;
 			hasDrawn = false;
 		}
+
 		break;
-	case 11: // Memory Use
+	case 11: // Move Page
 		// Draw page
 		if (!hasDrawn)
 		{
-			memoryUse();
+			if (!drawManualControl())
+			{
+				break;
+			}
+			state = 0;
+			hasDrawn = true;
+			axisPos.drawAxisPosUpdateM(myGLCD, txIdManual, true);
+		}
+		// Call buttons if any
+		move();
+		break;
+	case 12: //
+		// Draw page
+		if (!hasDrawn)
+		{
 			hasDrawn = true;
 		}
+		// Call buttons if any
+	
 		break;
 	}
 }
@@ -2106,7 +2203,7 @@ void menuButtons()
 			{
 				// MOVE
 				waitForIt(4, 150, 122, 200);
-				page = 3;
+				page = 11;
 				graphicLoaderState = 0;
 				hasDrawn = false;
 			}
@@ -2150,7 +2247,6 @@ void executeProgram()
 	{
 		return;
 	}
-	uint8_t crc = 0;
 	if (( ( Arm1Ready == true ) && ( runList.get(programProgress )->getID() == ARM1_PROGRAM ) ) || ( ( Arm2Ready == true ) && ( runList.get(programProgress)->getID() == ARM2_PROGRAM ) ))
 	{
 		uint8_t data[8];
@@ -2163,7 +2259,6 @@ void executeProgram()
 
 		// TODO: Add grip value after the grip function is updated
 		uint8_t grip = 0;
-		crc = (a1 % 2) + (a2 % 2) + (a3 % 2) + (a4 % 2) + (a5 % 2) + (a6 % 2) + (grip % 2) + 1;
 
 		data[6] = (a1 & 0xFF);
 		data[5] = (a1 >> 8);

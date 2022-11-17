@@ -41,6 +41,7 @@ extern void drawRoundBtn(int, int, int, int, String, int, int, int, int);
 extern void drawSquareBtn(int, int, int, int, String, int, int, int, int);
 extern void waitForIt(int, int, int, int);
 extern bool Touch_getXY();
+extern void memoryUse();
 extern bool Arm1Ready;
 extern bool Arm2Ready;
 extern const PROGMEM String version;
