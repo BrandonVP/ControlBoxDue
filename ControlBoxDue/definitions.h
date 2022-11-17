@@ -12,9 +12,9 @@
 
 // ** RX Command List ** //
 
-// These are fixed bytes that can not be used for anything else
-#define COMMAND_BYTE            0x01
-#define SUB_COMMAND_BYTE        0x05
+    // These are fixed bytes that can not be used for anything else
+#define COMMAND_BYTE            0x00
+#define SUB_COMMAND_BYTE        0x04
 #define CRC_BYTE                0x07 // For CONTROL and MANUAL
 
 // List of commands for the COMMAND_BYTE
@@ -22,23 +22,24 @@
 #define RESET_AXIS_POSITION     0x62
 #define HOME_AXIS_POSITION      0x63
 
-#define GRIP_BYTE               0x06
+#define MOVE_GRIP_BYTE          0x05
 #define MOVE_GRIP               0x6A
 #define HOLD_GRIP               0x00
 #define OPEN_GRIP               0x01
 #define SHUT_GRIP               0x11
 
 #define SET_WAIT_TIMER          0x6B
-#define SET_MIN_BYTE            0x02
-#define SET_SEC_BYTE            0x03
-#define SET_MS_BYTE             0x04
+#define SET_WAIT_MIN_BYTE       0x01
+#define SET_WAIT_SEC_BYTE       0x02
+#define SET_WAIT_MS_BYTE        0x03
 
 #define EXECUTE_PROGRAM         0x1E // Execute Steps
 #define STOP_PROGRAM            0x0E // Stop Steps
-#define ACCELERATION_BYTE       0x02
-#define SPEED_BYTE              0x03
-#define LOOP_BYTE               0x04
+#define ACCELERATION_BYTE       0x01
+#define SPEED_BYTE              0x02
+#define LOOP_BYTE               0x03
 
+#define CONFIRMATION_BYTE       0x01
 #define CONFIRMATION            0x1C // Confirm message received
 #define NEG_CONFIRMATION        0x0C // Confirm message not received or failed CRC
 

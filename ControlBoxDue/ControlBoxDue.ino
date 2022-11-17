@@ -2279,9 +2279,9 @@ void executeProgram()
 		// Wait frame
 		uint8_t executeWait[8] = { 0, 0, 0, 0, 0, 0, 0, 0 };
 		executeWait[COMMAND_BYTE] = SET_WAIT_TIMER;
-		executeWait[SET_MIN_BYTE] = 0;
-		executeWait[SET_SEC_BYTE] = runList.get(programProgress)->getWait();
-		executeWait[SET_MS_BYTE] = 0;
+		executeWait[SET_WAIT_MIN_BYTE] = 0;
+		executeWait[SET_WAIT_SEC_BYTE] = runList.get(programProgress)->getWait();
+		executeWait[SET_WAIT_MS_BYTE] = 0;
 
 		if (runList.get(programProgress)->getID() == ARM1_PROGRAM)
 		{
@@ -2294,16 +2294,18 @@ void executeProgram()
 
 		// Grip on/off or hold based on current and next state
 		// If there was a change in the grip bool
-		uint8_t executeMove[8] = { 0, EXECUTE_PROGRAM, 0, 0, 0, MOVE_GRIP, 0, 0 };
-		executeMove[GRIP_BYTE] = HOLD_GRIP;
+		uint8_t executeMove[8] = { 0, 0, 0, 0, 0, 0, 0, 0 };
+		executeMove[COMMAND_BYTE] = EXECUTE_PROGRAM;
+		executeMove[SUB_COMMAND_BYTE] = MOVE_GRIP;
+		executeMove[MOVE_GRIP_BYTE] = HOLD_GRIP;
 
 		if (runList.get(programProgress)->getGrip() == 0)
 		{
-			executeMove[GRIP_BYTE] = OPEN_GRIP;
+			executeMove[MOVE_GRIP_BYTE] = OPEN_GRIP;
 		}
 		else if (runList.get(programProgress)->getGrip() == 1)
 		{
-			executeMove[GRIP_BYTE] = SHUT_GRIP;
+			executeMove[MOVE_GRIP_BYTE] = SHUT_GRIP;
 		}
 
 		// Send third frame with grip and execute command

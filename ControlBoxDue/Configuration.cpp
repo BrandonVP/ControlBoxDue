@@ -82,8 +82,8 @@ void homeArm(uint16_t arm_control)
 // Button functions for config page
 void configButtons()
 {
-	uint8_t setHomeID[8] = { 0x00, RESET_AXIS_POSITION, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
-
+	uint8_t setHomeID[8] = { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
+	setHomeID[COMMAND_BYTE] = RESET_AXIS_POSITION;
 	// Touch screen controls
 	if (Touch_getXY())
 	{
