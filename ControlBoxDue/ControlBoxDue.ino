@@ -716,31 +716,36 @@ void manualControlButtons()
 			if ((x >= 189) && (x <= 243))
 			{
 				waitForItRect(189, 125, 243, 175);
-
+				axisSelected = 2;
+				state = 1;
 			}
 			// A3 Deg
 			if ((x >= 247) && (x <= 301))
 			{
 				waitForItRect(247, 125, 301, 175);
-
+				axisSelected = 2;
+				state = 1;
 			}
 			// A4 Deg
 			if ((x >= 305) && (x <= 359))
 			{
 				waitForItRect(305, 125, 359, 175);
-
+				axisSelected = 2;
+				state = 1;
 			}
 			// A5 Deg
 			if ((x >= 363) && (x <= 417))
 			{
 				waitForItRect(363, 125, 417, 175);
-
+				axisSelected = 2;
+				state = 1;
 			}
 			// A6 Deg
 			if ((x >= 421) && (x <= 475))
 			{
 				waitForItRect(421, 125, 475, 175);
-				
+				axisSelected = 2;
+				state = 1;
 			}
 		}
 		if ((y >= 175) && (y <= 230))
@@ -903,7 +908,7 @@ void move()
 		data[1] |= ((axisList[6] & 0xF) << 5);
 		data[0] = (axisList[6] >> 3);
 		data[0] |= ((grip & 0x7) << 6);
-		can1.sendFrame(runList.get(programProgress)->getID(), data);
+		can1.sendFrame(ARM1_PROGRAM, data);
 
 		uint8_t executeMove[8] = { 0, 0, 0, 0, 0, 0, 0, 0 };
 		executeMove[COMMAND_BYTE] = EXECUTE_PROGRAM;
@@ -912,6 +917,9 @@ void move()
 		hasDrawn = false;
 		graphicLoaderState = 0;
 		state = 0;
+		break;
+	case 6:
+
 		break;
 	}
 
