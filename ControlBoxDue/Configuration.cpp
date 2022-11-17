@@ -75,7 +75,8 @@ bool drawConfig()
 // Sends command to return arm to starting position
 void homeArm(uint16_t arm_control)
 {
-	byte cmd[8] = { 0x00,HOME_AXIS_POSITION, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
+	byte cmd[8] = { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
+	cmd[COMMAND_BYTE] = HOME_AXIS_POSITION;
 	can1.sendFrame(arm_control, cmd);
 }
 

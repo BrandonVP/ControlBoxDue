@@ -1,8 +1,11 @@
 /*
- Name:    ControlBoxDue.ino
- Created: 11/15/2020 8:27:18 AM
- Author:  Brandon Van Pelt
-*/
+ ===========================================================================
+ Name        : ControlBoxDue.ino
+ Author      : Brandon Van Pelt
+ Created	 : 11/15/2020
+ Description : Main program file
+ ===========================================================================
+ */
 
 /*=========================================================
 	TODO List
@@ -723,28 +726,28 @@ void manualControlButtons()
 			if ((x >= 247) && (x <= 301))
 			{
 				waitForItRect(247, 125, 301, 175);
-				axisSelected = 2;
+				axisSelected = 3;
 				state = 1;
 			}
 			// A4 Deg
 			if ((x >= 305) && (x <= 359))
 			{
 				waitForItRect(305, 125, 359, 175);
-				axisSelected = 2;
+				axisSelected = 4;
 				state = 1;
 			}
 			// A5 Deg
 			if ((x >= 363) && (x <= 417))
 			{
 				waitForItRect(363, 125, 417, 175);
-				axisSelected = 2;
+				axisSelected = 5;
 				state = 1;
 			}
 			// A6 Deg
 			if ((x >= 421) && (x <= 475))
 			{
 				waitForItRect(421, 125, 475, 175);
-				axisSelected = 2;
+				axisSelected = 6;
 				state = 1;
 			}
 		}
@@ -831,6 +834,11 @@ void manualControlButtons()
 void move()
 {
 	uint8_t resultMsg = 0;
+	uint8_t grip = 0;
+	uint8_t data[8] = { 0, 0, 0, 0, 0, 0, 0, 0 };
+	uint8_t executeMove[8] = { 0, 0, 0, 0, 0, 0, 0, 0 };
+	uint16_t axisList[7] = { 0, 0, 0, 0, 0, 0, 0 }; // Ignoring array position 0
+
 	switch (state)
 	{
 	case 0: // Main control page
@@ -874,12 +882,17 @@ void move()
 		}
 		else if (resultMsg == 1)
 		{
-			state = 5;
+			if (txIdManual == ARM1_MANUAL)
+			{
+				state = 5;
+			}
+			else if (txIdManual == ARM2_MANUAL)
+			{
+				state = 6;
+			}
 		}
 		break;
 	case 5:
-		uint8_t data[8];
-		uint16_t axisList[7]; // Ignoring array position 0
 		axisList[1] = axisPos.getA1C1();
 		axisList[2] = axisPos.getA2C1();
 		axisList[3] = axisPos.getA3C1();
@@ -888,12 +901,6 @@ void move()
 		axisList[6] = axisPos.getA6C1();
 
 		axisList[axisSelected] = totalValue;
-		SerialUSB.println(axisSelected);
-		SerialUSB.println(axisList[axisSelected]);
-		SerialUSB.println(" ");
-
-		// TODO: Add grip value after the grip function is updated
-		uint8_t grip = 0;
 
 		data[6] = (axisList[1] & 0xFF);
 		data[5] = (axisList[1] >> 8);
@@ -910,7 +917,6 @@ void move()
 		data[0] |= ((grip & 0x7) << 6);
 		can1.sendFrame(ARM1_PROGRAM, data);
 
-		uint8_t executeMove[8] = { 0, 0, 0, 0, 0, 0, 0, 0 };
 		executeMove[COMMAND_BYTE] = EXECUTE_PROGRAM;
 		can1.sendFrame(ARM1_CONTROL, executeMove);
 
@@ -919,7 +925,36 @@ void move()
 		state = 0;
 		break;
 	case 6:
+		axisList[1] = axisPos.getA1C2();
+		axisList[2] = axisPos.getA2C2();
+		axisList[3] = axisPos.getA3C2();
+		axisList[4] = axisPos.getA4C2();
+		axisList[5] = axisPos.getA5C2();
+		axisList[6] = axisPos.getA6C2();
 
+		axisList[axisSelected] = totalValue;
+
+		data[6] = (axisList[1] & 0xFF);
+		data[5] = (axisList[1] >> 8);
+		data[5] |= ((axisList[2] & 0xFF) << 1);
+		data[4] = (axisList[2] >> 7);
+		data[4] |= ((axisList[3] & 0x7F) << 2);
+		data[3] = (axisList[3] >> 6);
+		data[3] |= ((axisList[4] & 0x3F) << 3);
+		data[2] = (axisList[4] >> 5);
+		data[2] |= ((axisList[5] & 0x1F) << 4);
+		data[1] = (axisList[5] >> 4);
+		data[1] |= ((axisList[6] & 0xF) << 5);
+		data[0] = (axisList[6] >> 3);
+		data[0] |= ((grip & 0x7) << 6);
+		can1.sendFrame(ARM2_PROGRAM, data);
+
+		executeMove[COMMAND_BYTE] = EXECUTE_PROGRAM;
+		can1.sendFrame(ARM2_CONTROL, executeMove);
+
+		hasDrawn = false;
+		graphicLoaderState = 0;
+		state = 0;
 		break;
 	}
 
@@ -1878,9 +1913,9 @@ void setup()
 	bmpDraw("robotarm.bmp", 0, 0);
 	myGLCD.setColor(VGA_BLACK);
 	myGLCD.setBackColor(VGA_WHITE);
-	myGLCD.print("Loading...", 190, 290);
+	myGLCD.print("6DOF Controller", 150, 290);
 
-	// Give 6DOF arms time to start up
+	// Enjoy the cool robot arm
 	delay(2000);
 
 	drawMenu();
