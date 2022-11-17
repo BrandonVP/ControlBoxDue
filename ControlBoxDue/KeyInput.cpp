@@ -41,7 +41,7 @@ void drawKeypad()
 	uint8_t numPad = 0x00;
 
 	// Clear LCD
-	drawSquareBtn(131, 55, 479, 319, "", themeBackground, themeBackground, themeBackground, CENTER);
+	drawSquareBtn(X_PAGE_START, 1, 479, 319, "", themeBackground, themeBackground, themeBackground, CENTER);
 
 	for (uint8_t i = 0; i < 3; i++)
 	{
@@ -261,7 +261,7 @@ void drawKeypadDec()
 	resetKeypad();
 
 	// Clear LCD
-	drawSquareBtn(131, 55, 479, 319, "", themeBackground, themeBackground, themeBackground, CENTER);
+	drawSquareBtn(X_PAGE_START, 1, 479, 319, "", themeBackground, themeBackground, themeBackground, CENTER);
 
 	for (uint8_t i = 0; i < 2; i++)
 	{
@@ -461,7 +461,7 @@ void drawkeyboard()
 							 'u', 'v', 'w', 'x', 'y', 'z', '_' };
 
 	// Clear LCD
-	drawSquareBtn(131, 55, 479, 319, "", themeBackground, themeBackground, themeBackground, 2);
+	drawSquareBtn(X_PAGE_START, 1, 479, 319, "", themeBackground, themeBackground, themeBackground, 2);
 
 	for (uint8_t i = 0; i < 4; i++)
 	{
