@@ -1913,7 +1913,7 @@ void setup()
 	bmpDraw("robotarm.bmp", 0, 0);
 	myGLCD.setColor(VGA_BLACK);
 	myGLCD.setBackColor(VGA_WHITE);
-	myGLCD.print("6DOF Controller", 150, 290);
+	myGLCD.print("6DOF Controller", 140, 290);
 
 	// Enjoy the cool robot arm
 	delay(2000);
