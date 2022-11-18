@@ -261,6 +261,16 @@ void AxisPos::drawAxisPosUpdateM(UTFT LCD, uint16_t armID, bool print)
 	}
 }
 
+void AxisPos::setPrintC1(uint8_t newValue)
+{
+	printC1 = newValue;
+}
+
+void AxisPos::setPrintC2(uint8_t newValue)
+{
+	printC2 = newValue;
+}
+
 // Get angle for programming
 int AxisPos::getA1C1()
 {

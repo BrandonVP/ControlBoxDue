@@ -46,6 +46,8 @@ public:
 	void drawAxisPosUpdate(UTFT);
 	void drawAxisPosUpdateM(UTFT, uint16_t, bool);
 	void updateAxisPos(CANBus, CAN_FRAME);
+	void setPrintC1(uint8_t newValue);
+	void setPrintC2(uint8_t newValue);
 	int getA1C1();
 	int getA2C1();
 	int getA3C1();

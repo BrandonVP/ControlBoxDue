@@ -804,6 +804,7 @@ void manualControlButtons()
 				drawSquareBtn(131, 270, 181, 319, F("1"), menuBtnText, menuBtnBorder, menuBtnColor, CENTER);
 				drawSquareBtn(181, 270, 231, 319, F("2"), menuBtnColor, menuBtnBorder, menuBtnText, CENTER);
 				txIdManual = ARM1_MANUAL;
+				axisPos.setPrintC1(0xFF);
 			}
 			if ((x >= 200) && (x <= 254))
 			{
@@ -811,20 +812,21 @@ void manualControlButtons()
 				drawSquareBtn(131, 270, 181, 319, F("1"), menuBtnColor, menuBtnBorder, menuBtnText, CENTER);
 				drawSquareBtn(181, 270, 231, 319, F("2"), menuBtnText, menuBtnBorder, menuBtnColor, CENTER);
 				txIdManual = ARM2_MANUAL;
+				axisPos.setPrintC2(0xFF);
 			}
 			if ((x >= 305) && (x <= 390))
 			{
 				// Grip open
-				data[7] = 1 * multiply;
+				data[0] = 1 * multiply;
 				waitForItRect(305, 270, 390, 319, txIdManual, data);
-				data[7] = 0;
+				data[0] = 0;
 			}
 			if ((x >= 390) && (x <= 475))
 			{
 				// Grip close
-				data[7] = (1 * multiply) + reverse;
+				data[0] = (1 * multiply) + reverse;
 				waitForItRect(390, 270, 475, 319, txIdManual, data);
-				data[7] = 0;
+				data[0] = 0;
 			}
 		}
 	}
